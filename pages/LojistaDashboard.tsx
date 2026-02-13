@@ -29,21 +29,21 @@ export const LojistaDashboard = () => {
     <div className="max-w-7xl mx-auto w-full pb-10">
       {/* Banner Modo Demo */}
       {isDemo && (
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 mb-8 md:mb-12 shadow-2xl relative overflow-hidden text-white flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 animate-bounce-in">
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 mb-8 md:mb-12 shadow-2xl relative overflow-hidden text-white flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 animate-bounce-in">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[100px] opacity-20 pointer-events-none" />
             <div className="relative z-10 w-full">
                 <div className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/50 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2">
                     <span>🚧</span> Modo Simulação
                 </div>
                 <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">Experimente o poder do Pede Mais</h2>
-                <p className="text-white/60 font-medium text-sm mt-2 max-w-xl">
+                <p className="text-white/60 font-medium text-sm mt-2 max-w-xl break-words">
                     Você está acessando uma loja fictícia. Sinta-se à vontade para editar configurações, despachar pedidos e explorar. 
                     <strong className="text-white block mt-1"> Nenhuma alteração será salva permanentemente.</strong>
                 </p>
             </div>
             <button 
                 onClick={() => navigate('/onboarding')}
-                className="relative z-10 w-full lg:w-auto bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-4 rounded-xl font-black shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 whitespace-nowrap text-sm md:text-base text-center"
+                className="relative z-10 w-full xl:w-auto bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-4 rounded-xl font-black shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 whitespace-nowrap text-sm md:text-base text-center shrink-0"
             >
                 CRIAR MINHA LOJA REAL
             </button>
