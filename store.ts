@@ -3,6 +3,25 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification } from './types';
 
+// Dados iniciais da Loja Demo (Restaurante Sabor)
+const LOJA_DEMO_DEFAULT: Loja = { 
+  id: 'l1', 
+  nome: 'Restaurante Sabor (DEMO)', 
+  slug: 'restaurante-sabor', 
+  planoId: '2', 
+  statusAssinatura: 'ativo', 
+  proximoVencimento: '2025-11-15', 
+  whatsapp: '5511999999999',
+  categoria: 'Restaurante',
+  endereco: 'Av. Paulista, 1000 - Bela Vista, SP',
+  taxaEntrega: 5.90,
+  tempoMin: 30,
+  tempoMax: 45,
+  banner: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop',
+  logo: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
+  stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
+};
+
 interface AppState {
   user: User | null;
   lojas: Loja[];
@@ -27,6 +46,7 @@ interface AppState {
   atribuirEntregador: (entregaId: string, entregadorId: string) => void;
   atualizarStatusPedido: (entregaId: string, novoStatus: Entrega['status']) => void;
   solicitarSaque: (saque: Saque) => void;
+  resetDemoStore: () => void;
   
   // UI Actions
   addNotification: (type: 'success' | 'error' | 'info', message: string) => void;
@@ -46,23 +66,7 @@ export const useStore = create<AppState>()(
         { id: '2', nome: 'Pro Amazônia', preco: 199.90, limitePedidos: 1000, limiteEntregadores: 10, recursos: ['Suporte prioritário 24/7', 'Dashboard avançado', 'IA de Roteirização'], cor: 'bg-emerald-600' },
         { id: '3', nome: 'Enterprise', preco: 499.90, limitePedidos: 99999, limiteEntregadores: 999, recursos: ['Gerente de conta dedicado', 'Integração API customizada', 'White Label total'] },
       ],
-      lojas: [
-        { 
-          id: 'l1', 
-          nome: 'Restaurante Sabor', 
-          slug: 'restaurante-sabor', 
-          planoId: '2', 
-          statusAssinatura: 'ativo', 
-          proximoVencimento: '2025-11-15', 
-          whatsapp: '5511999999999',
-          categoria: 'Restaurante',
-          endereco: 'Av. Paulista, 1000 - Bela Vista, SP',
-          taxaEntrega: 5.90,
-          tempoMin: 30,
-          tempoMax: 45,
-          stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
-        },
-      ],
+      lojas: [LOJA_DEMO_DEFAULT],
       entregadores: [
         { id: 'e1', nome: 'Ricardo Santos', telefone: '11 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', dataAdesao: '2023-10-24' },
         { id: 'e2', nome: 'Julia Mendes', telefone: '11 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', dataAdesao: '2023-09-12' },
@@ -143,6 +147,9 @@ export const useStore = create<AppState>()(
       solicitarSaque: (saque) => set((state) => ({
         saques: [saque, ...state.saques],
         entregadores: state.entregadores.map(e => e.id === saque.entregadorId ? { ...e, saldo: e.saldo - saque.valor } : e)
+      })),
+      resetDemoStore: () => set((state) => ({
+        lojas: [LOJA_DEMO_DEFAULT, ...state.lojas.filter(l => l.id !== 'l1')]
       })),
       
       // UI Actions

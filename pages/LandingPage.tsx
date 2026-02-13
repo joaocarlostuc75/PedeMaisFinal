@@ -2,9 +2,11 @@
 import React, { useState, useMemo } from 'react';
 import { formatCurrency } from '../utils';
 import { Link, useNavigate } from 'react-router-dom';
+import { useStore } from '../store';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
+  const { setUser, resetDemoStore } = useStore();
   const [ticket, setTicket] = useState(75);
   const [pedidos, setPedidos] = useState(500);
   const [email, setEmail] = useState('');
@@ -12,6 +14,18 @@ export const LandingPage = () => {
   const roiExtra = useMemo(() => {
     return pedidos * ticket * 0.27;
   }, [ticket, pedidos]);
+
+  const handleDemoAccess = () => {
+    resetDemoStore(); // Garante que a loja Demo (l1) esteja limpa
+    setUser({
+        id: 'demo-user',
+        nome: 'Visitante (Modo Demo)',
+        email: 'demo@pedemais.app',
+        role: 'lojista',
+        lojaId: 'l1'
+    });
+    navigate('/admin/dashboard');
+  };
 
   const cases = [
     { nome: "Padaria Pão Quente", crescimento: "40%", cidade: "São Paulo, SP", logo: "🥖" },
@@ -48,10 +62,11 @@ export const LandingPage = () => {
             COMEÇAR AGORA
           </button>
           <button 
-            onClick={() => navigate('/onboarding')}
-            className="bg-white border-2 border-gray-100 text-gray-900 px-8 py-5 md:px-12 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black text-lg md:text-2xl hover:border-emerald-500 transition-all"
+            onClick={handleDemoAccess}
+            className="bg-white border-2 border-gray-100 text-gray-900 px-8 py-5 md:px-12 md:py-6 rounded-[2rem] md:rounded-[2.5rem] font-black text-lg md:text-2xl hover:border-emerald-500 transition-all flex items-center justify-center gap-3 group"
           >
-            VER DEMONSTRAÇÃO
+            <span>VER DEMONSTRAÇÃO</span>
+            <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
       </section>

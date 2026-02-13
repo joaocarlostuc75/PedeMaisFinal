@@ -10,6 +10,7 @@ export const Sidebar = () => {
 
   // Encontra a loja do usuário atual para exibir no perfil
   const userLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) : null;
+  const isDemo = user?.id === 'demo-user';
 
   const handleLogout = () => {
     setUser(null);
@@ -59,7 +60,17 @@ export const Sidebar = () => {
           <button onClick={closeSidebar} className="lg:hidden text-white/50 hover:text-white">✕</button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar pt-6">
+        {/* Demo Badge */}
+        {isDemo && (
+            <div className="px-6 pb-4">
+                <div className="bg-amber-500/20 border border-amber-500/50 p-3 rounded-xl text-center">
+                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Ambiente de Teste</p>
+                    <p className="text-[9px] text-white/60 leading-tight">Dados não serão salvos permanentemente.</p>
+                </div>
+            </div>
+        )}
+
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar pt-2">
           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-6 mb-4">Geral</p>
           {activeItems.map((item) => (
             <Link

@@ -2,13 +2,15 @@
 import React from 'react';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const LojistaDashboard = () => {
+  const navigate = useNavigate();
   const { lojas, entregas, entregadores, user } = useStore();
   
   // Busca a loja do usuário logado ou usa a primeira como fallback (demo)
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
+  const isDemo = user?.id === 'demo-user';
 
   // Cálculo de estatísticas reais para a loja específica
   const hoje = new Date().toDateString();
@@ -25,6 +27,29 @@ export const LojistaDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-8">
+      {/* Banner Modo Demo */}
+      {isDemo && (
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[2rem] p-8 mb-12 shadow-2xl relative overflow-hidden text-white flex flex-col md:flex-row items-center justify-between gap-6 animate-bounce-in">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[100px] opacity-20" />
+            <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/50 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2">
+                    <span>🚧</span> Modo Simulação
+                </div>
+                <h2 className="text-2xl font-black tracking-tight">Experimente o poder do Pede Mais</h2>
+                <p className="text-white/60 font-medium text-sm mt-1 max-w-xl">
+                    Você está acessando uma loja fictícia. Sinta-se à vontade para editar configurações, despachar pedidos e explorar. 
+                    <strong className="text-white"> Nenhuma alteração será salva permanentemente.</strong>
+                </p>
+            </div>
+            <button 
+                onClick={() => navigate('/onboarding')}
+                className="relative z-10 bg-emerald-500 hover:bg-emerald-400 text-white px-8 py-4 rounded-xl font-black shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 whitespace-nowrap"
+            >
+                CRIAR MINHA LOJA REAL
+            </button>
+        </div>
+      )}
+
       <header className="mb-12">
         <h1 className="text-4xl font-black text-gray-900">Painel do Lojista</h1>
         <p className="text-gray-500 mt-2">Bem-vindo à gestão da sua loja: <span className="font-bold text-emerald-600">{minhaLoja.nome}</span></p>
