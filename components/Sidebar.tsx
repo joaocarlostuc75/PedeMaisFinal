@@ -4,9 +4,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 
 export const Sidebar = () => {
-  const { user, setUser, isSidebarOpen, closeSidebar } = useStore();
+  const { user, setUser, isSidebarOpen, closeSidebar, lojas } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Encontra a loja do usuário atual para exibir no perfil
+  const userLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) : null;
 
   const handleLogout = () => {
     setUser(null);
@@ -82,12 +85,15 @@ export const Sidebar = () => {
 
         <div className="p-6 border-t border-white/5 space-y-6">
           <div className="flex items-center gap-4 px-4 py-2">
-             <div className="w-10 h-10 bg-gray-600 rounded-full overflow-hidden border-2 border-white/10">
+             <div className="w-10 h-10 bg-gray-600 rounded-full overflow-hidden border-2 border-white/10 shrink-0">
                 <img src={`https://i.pravatar.cc/100?u=${user?.id}`} alt="" />
              </div>
-             <div>
-                <p className="text-xs font-black truncate max-w-[120px]">{user?.nome}</p>
-                <p className="text-[10px] text-gray-500 font-bold uppercase">{user?.role.replace('_', ' ')}</p>
+             <div className="overflow-hidden">
+                <p className="text-xs font-black truncate">{user?.nome}</p>
+                <p className="text-[9px] text-gray-400 font-bold uppercase truncate">{user?.role.replace('_', ' ')}</p>
+                {userLoja && (
+                    <p className="text-[9px] text-emerald-400 font-bold uppercase truncate mt-0.5">{userLoja.nome}</p>
+                )}
              </div>
           </div>
           <button

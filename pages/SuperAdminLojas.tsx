@@ -1,12 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../store';
 import { formatCurrency, formatDate } from '../utils';
 import { Link } from 'react-router-dom';
 
 export const SuperAdminLojas = () => {
-  const { lojas, planos, cancelarAssinatura, updatePlanoLoja, batchUpdatePlano } = useStore();
-  const [selectedLoja, setSelectedLoja] = useState<string | null>(null);
+  const { lojas, planos, cancelarAssinatura, updateLoja, deleteLoja, batchUpdatePlano, addNotification } = useStore();
+  const [editingLoja, setEditingLoja] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,7 +38,26 @@ export const SuperAdminLojas = () => {
 
   const handleSearch = (val: string) => {
     setSearchTerm(val);
-    setCurrentPage(1); // Volta para a primeira página ao buscar
+    setCurrentPage(1); 
+  };
+
+  const openEditModal = (loja: any) => {
+      setEditingLoja({ ...loja });
+  };
+
+  const handleSaveEdit = () => {
+      if (editingLoja) {
+          updateLoja(editingLoja.id, editingLoja);
+          addNotification('success', 'Loja atualizada com sucesso!');
+          setEditingLoja(null);
+      }
+  };
+
+  const handleDelete = (id: string) => {
+      if (window.confirm('Tem certeza que deseja remover esta loja permanentemente?')) {
+          deleteLoja(id);
+          addNotification('info', 'Loja removida do sistema.');
+      }
   };
 
   return (
@@ -125,11 +144,11 @@ export const SuperAdminLojas = () => {
                     </td>
                     <td className="p-8 text-right">
                         <div className="flex justify-end gap-2">
-                        <button onClick={() => setSelectedLoja(loja.id)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Editar Loja">
+                        <button onClick={() => openEditModal(loja)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Editar Loja">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
-                        <button onClick={() => cancelarAssinatura(loja.id)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all" title="Suspender">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
+                        <button onClick={() => handleDelete(loja.id)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all" title="Excluir">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                         </div>
                     </td>
@@ -146,60 +165,68 @@ export const SuperAdminLojas = () => {
             </tbody>
             </table>
         </div>
-
-        {/* Paginação */}
-        {totalPages > 0 && (
-          <div className="p-6 md:p-8 bg-gray-50/50 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-6">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center md:text-left">
-              Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, filteredLojas.length)} de {filteredLojas.length} lojas
-            </p>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className={`px-4 md:px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'bg-white border border-gray-100 text-gray-600 hover:border-emerald-500 hover:text-emerald-700'}`}
-              >
-                Anterior
-              </button>
-              <div className="flex gap-1 overflow-x-auto max-w-[150px] md:max-w-none no-scrollbar">
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`min-w-[40px] h-10 rounded-lg font-black text-xs transition-all ${currentPage === i + 1 ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400 hover:bg-emerald-50 hover:text-emerald-600'}`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className={`px-4 md:px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'bg-white border border-gray-100 text-gray-600 hover:border-emerald-500 hover:text-emerald-700'}`}
-              >
-                Próximo
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {selectedLoja && (
+      {/* Modal de Edição (CRUD) */}
+      {editingLoja && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-[3rem] p-10 w-full max-w-sm shadow-2xl animate-bounce-in">
-            <h3 className="text-2xl font-black mb-8">Alterar Plano</h3>
-            <div className="space-y-4">
-              {planos.map(p => (
-                <button 
-                  key={p.id} onClick={() => { updatePlanoLoja(selectedLoja, p.id); setSelectedLoja(null); }}
-                  className="w-full p-6 bg-gray-50 rounded-[2rem] border-2 border-transparent hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left group"
-                >
-                  <p className="font-black text-gray-800 group-hover:text-emerald-700">{p.nome}</p>
-                  <p className="text-xs text-gray-400 font-bold">{formatCurrency(p.preco)}/mês</p>
-                </button>
-              ))}
+          <div className="bg-white rounded-[3rem] p-10 w-full max-w-lg shadow-2xl animate-bounce-in max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <h3 className="text-2xl font-black mb-6">Editar Loja</h3>
+            
+            <div className="space-y-6">
+               <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Nome da Loja</label>
+                  <input 
+                    type="text" 
+                    value={editingLoja.nome} 
+                    onChange={e => setEditingLoja({...editingLoja, nome: e.target.value})}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 mt-2 font-bold outline-none focus:border-emerald-500"
+                  />
+               </div>
+
+               <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Slug (URL)</label>
+                  <input 
+                    type="text" 
+                    value={editingLoja.slug} 
+                    onChange={e => setEditingLoja({...editingLoja, slug: e.target.value})}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 mt-2 font-bold outline-none focus:border-emerald-500"
+                  />
+               </div>
+
+               <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Plano de Assinatura</label>
+                  <div className="space-y-2 mt-2">
+                    {planos.map(p => (
+                        <button 
+                        key={p.id} 
+                        onClick={() => setEditingLoja({...editingLoja, planoId: p.id})}
+                        className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${editingLoja.planoId === p.id ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-gray-100 bg-white text-gray-600'}`}
+                        >
+                        <span className="font-black">{p.nome}</span> - {formatCurrency(p.preco)}
+                        </button>
+                    ))}
+                  </div>
+               </div>
+
+               <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Status da Assinatura</label>
+                  <select 
+                    value={editingLoja.statusAssinatura}
+                    onChange={e => setEditingLoja({...editingLoja, statusAssinatura: e.target.value})}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 mt-2 font-bold outline-none"
+                  >
+                     <option value="ativo">Ativo</option>
+                     <option value="cancelado">Cancelado/Inativo</option>
+                     <option value="teste">Período de Teste</option>
+                  </select>
+               </div>
             </div>
-            <button onClick={() => setSelectedLoja(null)} className="w-full mt-10 text-[10px] font-black text-gray-400 uppercase tracking-widest">FECHAR JANELA</button>
+
+            <div className="flex gap-4 mt-8">
+               <button onClick={() => setEditingLoja(null)} className="flex-1 py-4 font-black text-gray-400 uppercase text-xs hover:text-gray-600">Cancelar</button>
+               <button onClick={handleSaveEdit} className="flex-[2] bg-emerald-600 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500 shadow-lg">Salvar Alterações</button>
+            </div>
           </div>
         </div>
       )}

@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { Link } from 'react-router-dom';
 
 export const LojistaConfig = () => {
-  const { lojas, updateLoja, addNotification } = useStore();
-  const minhaLoja = lojas[0];
+  const { lojas, updateLoja, addNotification, user } = useStore();
+  const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
 
   const [form, setForm] = useState({
     nome: minhaLoja.nome,
@@ -20,6 +20,23 @@ export const LojistaConfig = () => {
     email: minhaLoja.email || '',
     telefone: minhaLoja.telefone || ''
   });
+
+  // Atualiza o formulário se a loja mudar (ex: recarregamento)
+  useEffect(() => {
+      setForm({
+        nome: minhaLoja.nome,
+        whatsapp: minhaLoja.whatsapp,
+        endereco: minhaLoja.endereco || '',
+        taxaEntrega: minhaLoja.taxaEntrega || 5.90,
+        tempoMin: minhaLoja.tempoMin || 30,
+        tempoMax: minhaLoja.tempoMax || 45,
+        categoria: minhaLoja.categoria || 'Restaurante',
+        aceitaRetirada: minhaLoja.aceitaRetirada ?? true,
+        descricao: minhaLoja.descricao || '',
+        email: minhaLoja.email || '',
+        telefone: minhaLoja.telefone || ''
+      });
+  }, [minhaLoja]);
 
   const handleSave = () => {
     updateLoja(minhaLoja.id, form);
@@ -68,33 +85,33 @@ export const LojistaConfig = () => {
                 <div>
                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Banner da Loja (Capa)</label>
                    <div className="w-full h-48 bg-gray-100 rounded-3xl overflow-hidden relative group cursor-pointer border-2 border-dashed border-gray-200 hover:border-emerald-500 transition-all">
-                      <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover opacity-80" />
-                      <div className="absolute inset-0 bg-white/40 flex flex-col items-center justify-center">
-                         <div className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-emerald-600 mb-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                         </div>
-                         <p className="font-black text-xs text-gray-800">Clique para alterar o banner</p>
-                         <p className="text-[10px] font-bold text-gray-400 mt-1">Recomendado: 1200x400px</p>
+                      {minhaLoja.banner ? (
+                          <img src={minhaLoja.banner} className="w-full h-full object-cover" />
+                      ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                              <span className="text-4xl mb-2">🖼️</span>
+                              <span className="text-xs font-bold">Sem banner</span>
+                          </div>
+                      )}
+                      <div className="absolute inset-0 bg-white/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                         <p className="font-black text-xs text-gray-800">Clique para alterar</p>
                       </div>
                    </div>
                 </div>
 
                 <div className="flex items-center gap-8">
                    <div className="relative group">
-                      <div className="w-32 h-32 bg-emerald-600 rounded-full border-8 border-white shadow-xl overflow-hidden flex items-center justify-center">
-                        <img src={`https://picsum.photos/200/200?random=${minhaLoja.id}`} className="w-full h-full object-cover" />
+                      <div className="w-32 h-32 bg-emerald-600 rounded-full border-8 border-white shadow-xl overflow-hidden flex items-center justify-center bg-gray-100">
+                        {minhaLoja.logo ? (
+                            <img src={minhaLoja.logo} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-4xl">🏪</span>
+                        )}
                       </div>
-                      <button className="absolute bottom-1 right-1 w-10 h-10 bg-[#2d7a3a] text-white rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                      </button>
                    </div>
                    <div className="flex-1">
                       <h4 className="font-black text-gray-800 text-lg">Logo da Marca</h4>
                       <p className="text-xs text-gray-400 font-medium leading-relaxed mt-1">Este logo aparecerá no seu perfil e nas notas de pedido. Formato quadrado (1:1).</p>
-                      <div className="flex gap-4 mt-4">
-                         <button className="text-emerald-600 font-black text-xs uppercase tracking-widest hover:underline">Carregar novo</button>
-                         <button className="text-red-400 font-black text-xs uppercase tracking-widest hover:underline">Remover</button>
-                      </div>
                    </div>
                 </div>
              </div>
@@ -137,6 +154,8 @@ export const LojistaConfig = () => {
                          <option>Restaurante</option>
                          <option>Padaria</option>
                          <option>Farmácia</option>
+                         <option>Lanches</option>
+                         <option>Outros</option>
                       </select>
                    </div>
                 </div>
@@ -161,41 +180,6 @@ export const LojistaConfig = () => {
                    </div>
                 </div>
              </div>
-          </section>
-
-          {/* Contato (Nova Seção) */}
-          <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-8 border-b border-gray-50 bg-[#fafbfc]">
-                <h3 className="font-black text-gray-800 flex items-center gap-3">
-                  <span className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-sm">📞</span>
-                  Contato
-                </h3>
-              </div>
-              <div className="p-8 space-y-6">
-                <div className="space-y-2">
-                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">E-mail de Contato</label>
-                   <input 
-                      type="email" 
-                      value={form.email}
-                      onChange={e => setForm({...form, email: e.target.value})}
-                      className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                      placeholder="contato@sualoja.com"
-                   />
-                </div>
-                <div className="space-y-2">
-                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Telefone (Fixo/Celular)</label>
-                   <input 
-                      type="tel" 
-                      value={form.telefone}
-                      onChange={e => setForm({...form, telefone: e.target.value})}
-                      className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                      placeholder="(00) 0000-0000"
-                   />
-                </div>
-                <button onClick={handleSave} className="w-full bg-[#112644] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-[#1a3b66] transition-all">
-                  Salvar Contatos
-                </button>
-              </div>
           </section>
         </div>
 
@@ -239,33 +223,6 @@ export const LojistaConfig = () => {
                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${form.aceitaRetirada ? 'translate-x-6' : 'translate-x-0'}`} />
                     </div>
                  </div>
-              </div>
-           </section>
-
-           {/* Horários */}
-           <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-8 border-b border-gray-50 bg-[#fafbfc]">
-                <h3 className="font-black text-gray-800 flex items-center gap-3">
-                  <span className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-sm">🕒</span>
-                  Horários de Funcionamento
-                </h3>
-              </div>
-              <div className="p-8 space-y-6">
-                 {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'].map(dia => (
-                   <div key={dia} className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="font-black text-gray-700 text-xs">{dia}</span>
-                        <span className="text-[9px] font-black text-emerald-600 uppercase">Aberto</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="bg-[#f8fafc] border border-gray-100 rounded-lg px-3 py-2 text-[10px] font-black text-gray-600">09:00 AM</div>
-                        <span className="text-gray-300 text-xs">-</span>
-                        <div className="bg-[#f8fafc] border border-gray-100 rounded-lg px-3 py-2 text-[10px] font-black text-gray-600">06:00 PM</div>
-                      </div>
-                   </div>
-                 ))}
-                 
-                 <button className="w-full mt-4 py-4 border-2 border-dashed border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 transition-all">Editar todos os horários</button>
               </div>
            </section>
         </div>

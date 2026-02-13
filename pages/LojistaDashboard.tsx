@@ -5,10 +5,12 @@ import { formatCurrency } from '../utils';
 import { Link } from 'react-router-dom';
 
 export const LojistaDashboard = () => {
-  const { lojas, entregas, entregadores } = useStore();
-  const minhaLoja = lojas[0];
+  const { lojas, entregas, entregadores, user } = useStore();
+  
+  // Busca a loja do usuário logado ou usa a primeira como fallback (demo)
+  const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
 
-  // Cálculo de estatísticas reais
+  // Cálculo de estatísticas reais para a loja específica
   const hoje = new Date().toDateString();
   const pedidosHoje = entregas.filter(e => new Date(e.data).toDateString() === hoje && e.lojaId === minhaLoja.id);
   const faturamentoHoje = pedidosHoje.reduce((acc, curr) => acc + curr.valor, 0);
@@ -17,7 +19,7 @@ export const LojistaDashboard = () => {
   const stats = [
     { label: 'Pedidos Hoje', value: pedidosHoje.length.toString(), icon: '📦', color: 'bg-blue-100 text-blue-600' },
     { label: 'Faturamento Hoje', value: formatCurrency(faturamentoHoje), icon: '💰', color: 'bg-emerald-100 text-emerald-600' },
-    { label: 'Novos Clientes', value: '12', icon: '👥', color: 'bg-purple-100 text-purple-600' }, // Mockado pois não temos tabela de clientes
+    { label: 'Novos Clientes', value: '0', icon: '👥', color: 'bg-purple-100 text-purple-600' }, // Mockado
     { label: 'Entregadores Online', value: entregadoresOnline.toString(), icon: '🛵', color: 'bg-amber-100 text-amber-600' },
   ];
 
@@ -60,7 +62,11 @@ export const LojistaDashboard = () => {
                   </div>
                 </div>
               )) : (
-                 <p className="text-gray-400 text-sm font-bold p-4">Nenhum pedido hoje ainda.</p>
+                 <div className="text-center py-10">
+                    <p className="text-gray-300 text-4xl mb-3">📭</p>
+                    <p className="text-gray-400 text-sm font-bold">Nenhum pedido hoje ainda.</p>
+                    <p className="text-gray-300 text-xs mt-1">Compartilhe seu link para começar a vender!</p>
+                 </div>
               )}
             </div>
           </div>
@@ -89,9 +95,9 @@ export const LojistaDashboard = () => {
                 <span className="block text-2xl mb-1">🛵</span>
                 <span className="text-xs font-bold text-gray-600 uppercase">Frota</span>
               </Link>
-              <Link to="/admin/relatorio" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-emerald-50 transition-colors">
-                <span className="block text-2xl mb-1">📊</span>
-                <span className="text-xs font-bold text-gray-600 uppercase">Ganhos</span>
+              <Link to="/admin/configuracoes" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-emerald-50 transition-colors">
+                <span className="block text-2xl mb-1">⚙️</span>
+                <span className="text-xs font-bold text-gray-600 uppercase">Config</span>
               </Link>
             </div>
           </div>

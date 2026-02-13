@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { Role } from '../types';
@@ -7,15 +7,30 @@ import { Role } from '../types';
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { setUser } = useStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleLogin = (role: Role = 'lojista') => {
-    setUser({
-      id: 'u1',
-      nome: 'Ricardo (Padaria)',
-      email: 'ricardo@pedemais.app',
-      role
-    });
-    navigate('/admin/dashboard');
+  const handleLogin = () => {
+    // Validação Hardcoded para o MVP conforme solicitado
+    if (email === 'joaocarlostuc75@gmail.com') {
+        setUser({
+            id: 'super-admin-id',
+            nome: 'João Carlos (Super Admin)',
+            email: email,
+            role: 'super_admin'
+        });
+        navigate('/super-admin/dashboard');
+    } else {
+        // Login genérico para lojistas (MVP)
+        setUser({
+            id: 'u1',
+            nome: 'Lojista Pede Mais',
+            email: email || 'lojista@pedemais.app',
+            role: 'lojista',
+            lojaId: 'l1' // Vincula a loja mockada para demonstração
+        });
+        navigate('/admin/dashboard');
+    }
   };
 
   return (
@@ -31,7 +46,7 @@ export const LoginPage = () => {
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
             </div>
             <h1 className="text-3xl font-black text-[#1e293b] tracking-tight">Pede Mais</h1>
-            <p className="text-gray-400 text-sm font-medium mt-1">Acesso para Parceiros e Entregadores</p>
+            <p className="text-gray-400 text-sm font-medium mt-1">Acesso Administrativo</p>
           </div>
 
           {/* Form */}
@@ -41,7 +56,10 @@ export const LoginPage = () => {
               <div className="relative">
                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                 <input 
-                  type="email" placeholder="seu@email.com" 
+                  type="email" 
+                  placeholder="seu@email.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 pl-12 pr-4 font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
@@ -52,7 +70,10 @@ export const LoginPage = () => {
               <div className="relative">
                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 <input 
-                  type="password" placeholder="••••••••" 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 pl-12 pr-4 font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
@@ -63,7 +84,7 @@ export const LoginPage = () => {
             </div>
 
             <button 
-              onClick={() => handleLogin()}
+              onClick={handleLogin}
               className="w-full bg-[#112644] text-white py-4 rounded-xl font-black text-sm tracking-widest shadow-xl shadow-blue-900/10 hover:bg-[#1a3b66] transition-all transform active:scale-95"
             >
               ENTRAR
@@ -87,16 +108,8 @@ export const LoginPage = () => {
 
         {/* Footer info */}
         <div className="bg-[#f8fafc] p-6 text-center border-t border-gray-50">
-          <p className="text-[10px] text-gray-400 font-medium">© 2023 Pede Mais. Tecnologia da Amazônia para o mundo.</p>
+          <p className="text-[10px] text-gray-400 font-medium">© 2024 Pede Mais. Tecnologia da Amazônia para o mundo.</p>
         </div>
-      </div>
-
-      <div className="mt-8 flex gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-        <a href="#" className="hover:text-gray-600 transition-colors">Parceiros</a>
-        <span>•</span>
-        <a href="#" className="hover:text-gray-600 transition-colors">Entregadores</a>
-        <span>•</span>
-        <a href="#" className="hover:text-gray-600 transition-colors">Suporte</a>
       </div>
     </div>
   );
