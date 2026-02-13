@@ -15,13 +15,16 @@ const MAP_MOCK = [
 
 export const SuperAdminRelatorios = () => {
   const { lojas } = useStore();
-  const totalMRR = lojas.reduce((acc, curr) => acc + (curr.stats?.mrr || 0), 0);
+  
+  // Filtra dados REAIS (exclui loja demo 'l1')
+  const realLojas = lojas.filter(l => l.id !== 'l1');
+  const totalMRR = realLojas.reduce((acc, curr) => acc + (curr.stats?.mrr || 0), 0);
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 p-8">
       <header>
         <h1 className="text-5xl font-black text-gray-900 tracking-tighter uppercase">Métricas da Plataforma</h1>
-        <p className="text-gray-400 font-bold mt-2">Saúde do ecossistema Pede Mais.</p>
+        <p className="text-gray-400 font-bold mt-2">Saúde do ecossistema Pede Mais (Dados Reais).</p>
       </header>
 
       <div className="grid md:grid-cols-4 gap-8">
@@ -39,7 +42,7 @@ export const SuperAdminRelatorios = () => {
         </div>
         <div className="bg-gray-900 text-white p-10 rounded-[3rem] shadow-xl text-center">
            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Total Lojas</p>
-           <h2 className="text-5xl font-black text-white">{lojas.length}</h2>
+           <h2 className="text-5xl font-black text-white">{realLojas.length}</h2>
         </div>
       </div>
 

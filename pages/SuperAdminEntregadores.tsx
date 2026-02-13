@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { formatCurrency } from '../utils';
+import { formatCurrency, formatDate } from '../utils';
 
 export const SuperAdminEntregadores = () => {
   const { entregadores, lojas } = useStore();
@@ -9,9 +9,12 @@ export const SuperAdminEntregadores = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
 
-  const totalPages = Math.ceil(entregadores.length / ITEMS_PER_PAGE);
+  // Filtrar apenas entregadores de lojas REAIS (exclui loja 'l1')
+  const realEntregadores = entregadores.filter(e => e.lojaId !== 'l1');
+
+  const totalPages = Math.ceil(realEntregadores.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentEntregadores = entregadores.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const currentEntregadores = realEntregadores.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const toggleSuspensao = (id: string) => {
     if (suspensoIds.includes(id)) {
@@ -21,8 +24,8 @@ export const SuperAdminEntregadores = () => {
     }
   };
 
-  const totalEntregas = entregadores.reduce((acc, curr) => acc + curr.entregasHoje, 0);
-  const totalRepassado = entregadores.reduce((acc, curr) => acc + curr.saldo, 0);
+  const totalEntregas = realEntregadores.reduce((acc, curr) => acc + curr.entregasHoje, 0);
+  const totalRepassado = realEntregadores.reduce((acc, curr) => acc + curr.saldo, 0);
 
   return (
     <div className="max-w-7xl mx-auto p-8 animate-fade-in space-y-12">
@@ -33,8 +36,8 @@ export const SuperAdminEntregadores = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
         <div className="bg-emerald-600 text-white p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden">
           <div className="absolute -top-4 -right-4 text-white/10 text-8xl font-black">🌍</div>
-          <p className="text-emerald-100 font-bold text-[10px] uppercase tracking-widest mb-2">Total de Agentes</p>
-          <h3 className="text-6xl font-black">{entregadores.length}</h3>
+          <p className="text-emerald-100 font-bold text-[10px] uppercase tracking-widest mb-2">Total de Agentes (Reais)</p>
+          <h3 className="text-6xl font-black">{realEntregadores.length}</h3>
         </div>
         <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
           <p className="text-gray-400 font-bold text-[10px] uppercase tracking-widest mb-2">Entregas Hoje</p>
@@ -69,7 +72,7 @@ export const SuperAdminEntregadores = () => {
                       <div className="text-sm font-bold text-gray-400">{e.telefone}</div>
                     </td>
                     <td className="p-8">
-                      <span className="bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-black uppercase">{loja?.nome}</span>
+                      <span className="bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-black uppercase">{loja?.nome || 'Desconhecida'}</span>
                     </td>
                     <td className="p-8">
                       <div className="font-black text-gray-800">{e.entregasHoje} <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">hoje</span></div>
@@ -89,6 +92,13 @@ export const SuperAdminEntregadores = () => {
                   </tr>
                 );
               })}
+              {currentEntregadores.length === 0 && (
+                  <tr>
+                      <td colSpan={5} className="p-10 text-center text-gray-400 font-bold text-sm">
+                          Nenhum entregador encontrado em lojas reais.
+                      </td>
+                  </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -96,7 +106,7 @@ export const SuperAdminEntregadores = () => {
         {/* Paginação */}
         <div className="p-8 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-            Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, entregadores.length)} de {entregadores.length} entregadores
+            Mostrando {realEntregadores.length > 0 ? startIndex + 1 : 0} a {Math.min(startIndex + ITEMS_PER_PAGE, realEntregadores.length)} de {realEntregadores.length} entregadores
           </p>
           <div className="flex gap-2">
             <button 
@@ -119,8 +129,8 @@ export const SuperAdminEntregadores = () => {
             </div>
             <button 
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'bg-white border border-gray-100 text-gray-600 hover:border-emerald-500 hover:text-emerald-700'}`}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className={`px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${currentPage === totalPages || totalPages === 0 ? 'text-gray-300 cursor-not-allowed' : 'bg-white border border-gray-100 text-gray-600 hover:border-emerald-500 hover:text-emerald-700'}`}
             >
               Próximo
             </button>

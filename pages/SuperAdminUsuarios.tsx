@@ -6,10 +6,14 @@ import { formatCurrency } from '../utils';
 export const SuperAdminUsuarios = () => {
   const { entregadores, lojas } = useStore();
 
+  // Filtra entregadores reais (exclui loja 'l1')
+  const realEntregadores = entregadores.filter(e => e.lojaId !== 'l1');
+
+  // Constrói lista de usuários excluindo usuários de teste conhecidos
   const users = [
-    { id: 'u1', nome: 'Ricardo Dono', email: 'ricardo@pedemais.app', role: 'lojista', loja: 'Restaurante Sabor' },
     { id: 'u2', nome: 'Admin System', email: 'admin@pedemais.app', role: 'super_admin', loja: '-' },
-    ...entregadores.map(e => ({
+    // Adiciona entregadores REAIS
+    ...realEntregadores.map(e => ({
       id: e.id,
       nome: e.nome,
       email: `${e.nome.split(' ')[0].toLowerCase()}@driver.com`,
@@ -23,7 +27,7 @@ export const SuperAdminUsuarios = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Gestão de Usuários</h1>
-          <p className="text-gray-400 font-bold mt-2">Controle de acesso e permissões da plataforma.</p>
+          <p className="text-gray-400 font-bold mt-2">Controle de acesso e permissões da plataforma (Ambiente Real).</p>
         </div>
         <button className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:scale-105 transition-all">NOVO USUÁRIO</button>
       </div>
@@ -59,6 +63,11 @@ export const SuperAdminUsuarios = () => {
                 </td>
               </tr>
             ))}
+            {users.length === 0 && (
+                <tr>
+                    <td colSpan={5} className="p-10 text-center text-gray-400 font-bold">Nenhum usuário real encontrado.</td>
+                </tr>
+            )}
           </tbody>
         </table>
       </div>

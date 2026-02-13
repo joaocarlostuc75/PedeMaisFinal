@@ -14,12 +14,14 @@ export const SuperAdminLojas = () => {
   
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  // Filtragem das lojas com base na busca
+  // Filtragem das lojas com base na busca e excluindo a loja Demo (l1)
   const filteredLojas = useMemo(() => {
-    return lojas.filter(loja => 
-      loja.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      loja.slug.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return lojas
+      .filter(loja => loja.id !== 'l1') // Exclui Demo
+      .filter(loja => 
+        loja.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        loja.slug.toLowerCase().includes(searchTerm.toLowerCase())
+      );
   }, [lojas, searchTerm]);
 
   const totalPages = Math.ceil(filteredLojas.length / ITEMS_PER_PAGE);
@@ -83,7 +85,7 @@ export const SuperAdminLojas = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase">Gestão de Unidades</h1>
-          <p className="text-gray-400 font-bold mt-2">Monitore e controle as assinaturas globais.</p>
+          <p className="text-gray-400 font-bold mt-2">Monitore e controle as assinaturas globais (Demo oculta).</p>
         </div>
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <Link to="/super-admin/relatorios" className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:scale-105 transition-all text-center">ESTATÍSTICAS</Link>
@@ -105,7 +107,7 @@ export const SuperAdminLojas = () => {
         </div>
         <div className="flex gap-2 w-full md:w-auto">
            <span className="bg-gray-100 px-6 py-4 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest w-full text-center md:w-auto">
-             Total: {filteredLojas.length}
+             Total Real: {filteredLojas.length}
            </span>
         </div>
       </div>
@@ -186,7 +188,7 @@ export const SuperAdminLojas = () => {
                 {currentLojas.length === 0 && (
                 <tr>
                     <td colSpan={5} className="p-20 text-center">
-                    <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">Nenhuma loja encontrada para esta busca.</p>
+                    <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">Nenhuma loja real encontrada.</p>
                     </td>
                 </tr>
                 )}
