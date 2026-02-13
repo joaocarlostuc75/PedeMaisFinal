@@ -211,8 +211,26 @@ export const PublicShop = () => {
              </div>
           </div>
 
-          {/* Categorias Horizontal */}
-          <div className="overflow-x-auto no-scrollbar flex gap-2 pb-2">
+          {/* Categorias - Mobile Dropdown */}
+          <div className="md:hidden mb-2">
+            <div className="relative">
+              <select
+                value={categoriaAtiva}
+                onChange={(e) => setCategoriaAtiva(e.target.value)}
+                className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-black uppercase tracking-wide py-3 pl-4 pr-10 rounded-xl appearance-none outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
+              >
+                {CATEGORIAS.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Categorias - Desktop Tabs */}
+          <div className="hidden md:flex overflow-x-auto no-scrollbar gap-2 pb-2">
             {CATEGORIAS.map(cat => (
               <button
                 key={cat}

@@ -15,10 +15,16 @@ export const LojistaRelatorio = () => {
   const loja = lojas[0];
   const totalRepasse = entregas.filter(e => e.status === 'finalizada').reduce((acc, curr) => acc + curr.valor, 0);
 
+  // Fallback seguro para evitar NaN
+  const carrinhos = loja.stats?.carrinhos || 0;
+  const finalizados = loja.stats?.finalizados || 0;
+
   const conversionData = [
-    { name: 'Abandonados', value: loja.stats?.carrinhos! - loja.stats?.finalizados! },
-    { name: 'Finalizados', value: loja.stats?.finalizados }
+    { name: 'Abandonados', value: Math.max(0, carrinhos - finalizados) },
+    { name: 'Finalizados', value: finalizados }
   ];
+
+  const taxaConversao = carrinhos > 0 ? (finalizados / carrinhos) * 100 : 0;
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 pb-20">
@@ -71,7 +77,7 @@ export const LojistaRelatorio = () => {
           </div>
           <div className="mt-6">
             <h4 className="text-5xl font-black text-emerald-400 tracking-tighter">
-              {((loja.stats?.finalizados! / loja.stats?.carrinhos!) * 100).toFixed(1)}%
+              {taxaConversao.toFixed(1)}%
             </h4>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">Taxa de Finalização</p>
           </div>

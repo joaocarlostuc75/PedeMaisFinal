@@ -5,14 +5,20 @@ import { formatCurrency } from '../utils';
 import { Link } from 'react-router-dom';
 
 export const LojistaDashboard = () => {
-  const { lojas } = useStore();
+  const { lojas, entregas, entregadores } = useStore();
   const minhaLoja = lojas[0];
 
+  // Cálculo de estatísticas reais
+  const hoje = new Date().toDateString();
+  const pedidosHoje = entregas.filter(e => new Date(e.data).toDateString() === hoje && e.lojaId === minhaLoja.id);
+  const faturamentoHoje = pedidosHoje.reduce((acc, curr) => acc + curr.valor, 0);
+  const entregadoresOnline = entregadores.filter(e => e.lojaId === minhaLoja.id && e.status === 'disponível').length;
+
   const stats = [
-    { label: 'Pedidos Hoje', value: '24', icon: '📦', color: 'bg-blue-100 text-blue-600' },
-    { label: 'Faturamento Hoje', value: formatCurrency(1450.00), icon: '💰', color: 'bg-emerald-100 text-emerald-600' },
-    { label: 'Novos Clientes', value: '12', icon: '👥', color: 'bg-purple-100 text-purple-600' },
-    { label: 'Entregadores Online', value: '4', icon: '🛵', color: 'bg-amber-100 text-amber-600' },
+    { label: 'Pedidos Hoje', value: pedidosHoje.length.toString(), icon: '📦', color: 'bg-blue-100 text-blue-600' },
+    { label: 'Faturamento Hoje', value: formatCurrency(faturamentoHoje), icon: '💰', color: 'bg-emerald-100 text-emerald-600' },
+    { label: 'Novos Clientes', value: '12', icon: '👥', color: 'bg-purple-100 text-purple-600' }, // Mockado pois não temos tabela de clientes
+    { label: 'Entregadores Online', value: entregadoresOnline.toString(), icon: '🛵', color: 'bg-amber-100 text-amber-600' },
   ];
 
   return (
@@ -39,21 +45,23 @@ export const LojistaDashboard = () => {
           <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
             <h3 className="text-xl font-black mb-6">Pedidos Recentes</h3>
             <div className="space-y-4">
-              {[1, 2, 3].map(id => (
-                <div key={id} className="flex justify-between items-center p-4 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100">
+              {pedidosHoje.slice(0, 3).length > 0 ? pedidosHoje.slice(0, 3).map((pedido, idx) => (
+                <div key={pedido.id} className="flex justify-between items-center p-4 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-400">#0{id}</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-400">#{pedido.id.slice(-4)}</div>
                     <div>
-                      <p className="font-bold text-gray-800">Cliente Exemplo {id}</p>
-                      <p className="text-xs text-gray-400">Há {id * 5} minutos</p>
+                      <p className="font-bold text-gray-800">{pedido.clienteNome}</p>
+                      <p className="text-xs text-gray-400">Há {Math.floor((new Date().getTime() - new Date(pedido.data).getTime()) / 60000)} minutos</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-emerald-600">{formatCurrency(45.90 + id)}</p>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-black uppercase">Pronto</span>
+                    <p className="font-black text-emerald-600">{formatCurrency(pedido.valor)}</p>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-black uppercase">{pedido.status}</span>
                   </div>
                 </div>
-              ))}
+              )) : (
+                 <p className="text-gray-400 text-sm font-bold p-4">Nenhum pedido hoje ainda.</p>
+              )}
             </div>
           </div>
         </div>

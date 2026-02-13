@@ -53,7 +53,6 @@ export const SuperAdminRelatorios = () => {
                   <XAxis dataKey="mes" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip />
                   <Line type="monotone" dataKey="mrr" stroke="#10b981" strokeWidth={6} dot={{r: 8, fill: '#10b981'}} />
-               {/* Fix: Changed closing tag to LineChart to match opening tag and avoid "Cannot find name 'AreaChart'" error */}
                </LineChart>
              </ResponsiveContainer>
            </div>

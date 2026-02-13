@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '../store';
+import { Link } from 'react-router-dom';
 
 export const LojistaConfig = () => {
   const { lojas, updateLoja, addNotification } = useStore();
@@ -38,7 +39,13 @@ export const LojistaConfig = () => {
           <p className="text-gray-500 font-medium mt-1">Gerencie as informações principais, horário de funcionamento e identidade visual.</p>
         </div>
         <div className="flex gap-3">
-           <button className="bg-white border border-gray-200 px-6 py-3 rounded-xl font-bold text-sm text-gray-700 shadow-sm hover:bg-gray-50 transition-all">Visualizar Loja</button>
+           <Link 
+              to={`/loja/${minhaLoja.slug}`} 
+              target="_blank"
+              className="bg-white border border-gray-200 px-6 py-3 rounded-xl font-bold text-sm text-gray-700 shadow-sm hover:bg-gray-50 transition-all flex items-center"
+           >
+              Visualizar Loja
+           </Link>
            <button onClick={handleSave} className="bg-[#2d7a3a] text-white px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2 shadow-lg shadow-emerald-900/10 hover:bg-[#256631] transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               Salvar Alterações

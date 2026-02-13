@@ -1,10 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store';
 import { formatCurrency, formatDate } from '../utils';
 
 export const SuperAdminDashboard = () => {
   const { entregadores } = useStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
+  // Lógica de Paginação
+  const totalPages = Math.ceil(entregadores.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentEntregadores = entregadores.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const kpis = [
     { label: 'Lojas Ativas', value: '1.240', change: '+ 12%', icon: '🏪', trend: 'up' },
@@ -105,7 +112,7 @@ export const SuperAdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {entregadores.map(e => (
+              {currentEntregadores.map(e => (
                 <tr key={e.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="p-6 flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-black text-gray-400 text-xs overflow-hidden">
@@ -145,13 +152,35 @@ export const SuperAdminDashboard = () => {
         </div>
 
         <div className="p-6 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs font-bold text-gray-400">Mostrando 1 a {entregadores.length} de 97 resultados</p>
-          <div className="flex gap-1">
-            <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100">{'<'}</button>
-            <button className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-600 text-white font-black text-xs">1</button>
-            <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 font-bold text-xs hover:bg-gray-100">2</button>
-            <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 font-bold text-xs hover:bg-gray-100">3</button>
-            <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100">{'>'}</button>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, entregadores.length)} de {entregadores.length} entregadores
+          </p>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${currentPage === 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+                {'<'}
+            </button>
+            
+            {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs transition-all ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  {i + 1}
+                </button>
+            ))}
+
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${currentPage === totalPages ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+                {'>'}
+            </button>
           </div>
         </div>
       </section>
