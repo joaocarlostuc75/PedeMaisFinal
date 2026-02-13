@@ -6,12 +6,12 @@ import { Role } from '../types';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { setUser } = useStore();
+  const { setUser, lojas, addNotification } = useStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    // Validação Hardcoded para o MVP conforme solicitado
+    // Validação Hardcoded para Super Admin
     if (email === 'joaocarlostuc75@gmail.com') {
         setUser({
             id: 'super-admin-id',
@@ -20,16 +20,48 @@ export const LoginPage = () => {
             role: 'super_admin'
         });
         navigate('/super-admin/dashboard');
-    } else {
-        // Login genérico para lojistas (MVP)
+        return;
+    }
+
+    // Tenta encontrar uma loja vinculada ao e-mail fornecido (excluindo a demo se possível, ou priorizando a real)
+    // Normalizamos o email para comparação
+    const emailBusca = email.toLowerCase().trim();
+    
+    // Procura na lista de lojas persistidas
+    const minhaLoja = lojas.find(l => l.email?.toLowerCase() === emailBusca && l.id !== 'l1');
+
+    if (minhaLoja) {
+        // Usuário encontrado com loja real
         setUser({
-            id: 'u1',
-            nome: 'Lojista Pede Mais',
-            email: email || 'lojista@pedemais.app',
+            id: `user-${minhaLoja.id}`,
+            nome: 'Lojista Pede Mais', // Poderíamos salvar o nome do dono na loja para recuperar aqui
+            email: emailBusca,
             role: 'lojista',
-            lojaId: 'l1' // Vincula a loja mockada para demonstração
+            lojaId: minhaLoja.id
         });
+        addNotification('success', `Bem-vindo de volta à ${minhaLoja.nome}!`);
         navigate('/admin/dashboard');
+    } else {
+        // Se digitou um email mas não achou loja, sugere criar conta ou entra na demo se for vazio
+        if (emailBusca && emailBusca !== 'lojista@pedemais.app') {
+            const confirmar = window.confirm('Não encontramos uma loja com este e-mail. Deseja criar uma nova loja agora?');
+            if (confirmar) {
+                navigate('/onboarding');
+            } else {
+                addNotification('error', 'E-mail não encontrado.');
+            }
+        } else {
+            // Fallback para Demo/Teste (Login genérico sem email ou email padrão)
+            setUser({
+                id: 'u1',
+                nome: 'Lojista Visitante',
+                email: 'lojista@pedemais.app',
+                role: 'lojista',
+                lojaId: 'l1' 
+            });
+            addNotification('info', 'Acessando modo demonstração.');
+            navigate('/admin/dashboard');
+        }
     }
   };
 

@@ -5,9 +5,12 @@ import { formatCurrency } from '../utils';
 import { Entrega } from '../types';
 
 export const LojistaPedidos = () => {
-  const { entregas, entregadores, atualizarStatusPedido, atribuirEntregador, addNotification } = useStore();
+  const { entregas, entregadores, atualizarStatusPedido, atribuirEntregador, addNotification, user } = useStore();
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const [now, setNow] = useState(new Date());
+  
+  // Identifica a loja atual do usuário
+  const currentLojaId = user?.lojaId || 'l1';
   
   // Estado para controlar o modal de seleção de entregador
   const [selectingCourierForOrder, setSelectingCourierForOrder] = useState<string | null>(null);
@@ -21,7 +24,8 @@ export const LojistaPedidos = () => {
     return () => clearInterval(timer);
   }, []);
   
-  const meusEntregadores = entregadores.filter(e => e.lojaId === 'l1' && e.status !== 'suspenso');
+  // Filtra entregadores da loja atual
+  const meusEntregadores = entregadores.filter(e => e.lojaId === currentLojaId && e.status !== 'suspenso');
 
   const toggleDetails = (id: string) => {
     const newSet = new Set(expandedOrders);
@@ -56,10 +60,10 @@ export const LojistaPedidos = () => {
     return ALL_COLUMNS.filter(c => c.status === statusFilter);
   }, [statusFilter]);
 
-  // Filtra os pedidos
+  // Filtra os pedidos da loja atual
   const filteredOrders = useMemo(() => {
     return entregas.filter(e => {
-      const isMinhaLoja = e.lojaId === 'l1';
+      const isMinhaLoja = e.lojaId === currentLojaId;
       if (!isMinhaLoja) return false;
 
       if (statusFilter === 'ativos') {
@@ -67,7 +71,7 @@ export const LojistaPedidos = () => {
       }
       return e.status === statusFilter;
     });
-  }, [entregas, statusFilter]);
+  }, [entregas, statusFilter, currentLojaId]);
 
   const getNextAction = (status: Entrega['status'], id: string) => {
     switch (status) {
@@ -144,7 +148,7 @@ export const LojistaPedidos = () => {
         <div className="flex gap-3">
            <div className="px-6 py-3 bg-red-50 text-red-600 rounded-xl font-black text-sm flex items-center gap-2 border border-red-100">
              <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
-             {entregas.filter(o => o.status === 'pendente' && o.lojaId === 'l1').length} Pendentes
+             {entregas.filter(o => o.status === 'pendente' && o.lojaId === currentLojaId).length} Pendentes
            </div>
            <button className="bg-gray-900 text-white px-6 py-3 rounded-xl font-black text-sm shadow-xl">
              Pausar Loja

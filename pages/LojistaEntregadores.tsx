@@ -4,10 +4,13 @@ import { useStore } from '../store';
 import { formatCurrency, formatDate } from '../utils';
 
 export const LojistaEntregadores = () => {
-  const { entregadores, addEntregador } = useStore();
+  const { entregadores, addEntregador, user } = useStore();
   const [showModal, setShowModal] = useState(false);
   const [novo, setNovo] = useState({ nome: '', telefone: '' });
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Identifica a loja atual do usuário
+  const currentLojaId = user?.lojaId || 'l1';
 
   const handleSave = () => {
     if (!novo.nome || !novo.telefone) return;
@@ -17,7 +20,7 @@ export const LojistaEntregadores = () => {
       status: 'disponível',
       saldo: 0,
       entregasHoje: 0,
-      lojaId: 'l1'
+      lojaId: currentLojaId // Usa a loja atual dinâmica
     });
     setShowModal(false);
     setNovo({ nome: '', telefone: '' });
@@ -46,7 +49,7 @@ export const LojistaEntregadores = () => {
       </div>
 
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {entregadores.filter(e => e.lojaId === 'l1').map(e => {
+        {entregadores.filter(e => e.lojaId === currentLojaId).map(e => {
           const isExpanded = expandedIds.has(e.id);
           
           return (
@@ -123,6 +126,15 @@ export const LojistaEntregadores = () => {
             </div>
           );
         })}
+        
+        {entregadores.filter(e => e.lojaId === currentLojaId).length === 0 && (
+            <div className="col-span-full py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
+                <span className="text-4xl block mb-4">🛵</span>
+                <h3 className="text-xl font-bold text-gray-800">Sua frota está vazia</h3>
+                <p className="text-gray-400 text-sm mt-2 mb-6">Adicione entregadores para começar a gerenciar suas entregas.</p>
+                <button onClick={() => setShowModal(true)} className="text-emerald-600 font-black uppercase text-xs hover:underline">Cadastrar primeiro entregador</button>
+            </div>
+        )}
       </div>
 
       {showModal && (
