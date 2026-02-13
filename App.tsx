@@ -15,12 +15,14 @@ import { LojistaConfig } from './pages/LojistaConfig';
 import { LojistaHorarios } from './pages/LojistaHorarios';
 import { LojistaAreasEntrega } from './pages/LojistaAreasEntrega';
 import { LojistaAssinatura } from './pages/LojistaAssinatura';
+import { LojistaProdutos } from './pages/LojistaProdutos';
 import { SuperAdminLojas } from './pages/SuperAdminLojas';
 import { SuperAdminPlanos } from './pages/SuperAdminPlanos';
 import { SuperAdminEntregadores } from './pages/SuperAdminEntregadores';
 import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
 import { SuperAdminRelatorios } from './pages/SuperAdminRelatorios';
 import { SuperAdminUsuarios } from './pages/SuperAdminUsuarios';
+import { SuperAdminConfig } from './pages/SuperAdminConfig';
 import { Onboarding } from './pages/Onboarding';
 import { LoginPage } from './pages/LoginPage';
 import { Sidebar } from './components/Sidebar';
@@ -78,6 +80,7 @@ const App = () => {
           {/* Lojista Routes */}
           <Route path="/admin/dashboard" element={<LojistaDashboard />} />
           <Route path="/admin/pedidos" element={<LojistaPedidos />} />
+          <Route path="/admin/produtos" element={<LojistaProdutos />} />
           <Route path="/admin/assinatura" element={<LojistaAssinatura />} />
           <Route path="/admin/entregadores" element={<LojistaEntregadores />} />
           <Route path="/admin/relatorio" element={<LojistaRelatorio />} />
@@ -92,6 +95,7 @@ const App = () => {
           <Route path="/super-admin/entregadores" element={<SuperAdminEntregadores />} />
           <Route path="/super-admin/relatorios" element={<SuperAdminRelatorios />} />
           <Route path="/super-admin/usuarios" element={<SuperAdminUsuarios />} />
+          <Route path="/super-admin/configuracoes" element={<SuperAdminConfig />} />
           
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

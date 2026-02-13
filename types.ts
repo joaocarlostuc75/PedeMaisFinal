@@ -54,6 +54,7 @@ export interface Plano {
   limiteEntregadores: number;
   recursos: string[];
   cor?: string;
+  destaque?: boolean;
 }
 
 export interface Loja {
@@ -81,6 +82,21 @@ export interface Loja {
     finalizados: number;
     mrr: number;
   };
+}
+
+export interface Produto {
+  id: string;
+  lojaId: string;
+  nome: string;
+  categoria: string;
+  descricao: string;
+  preco: number;
+  imagem: string;
+  destaque?: boolean;
+  maisVendido?: boolean;
+  disponivel: boolean;
+  tags?: string[];
+  oldPrice?: number;
 }
 
 export interface ItemPedido {
@@ -116,4 +132,13 @@ export interface Notification {
   id: string;
   type: 'success' | 'error' | 'info';
   message: string;
+}
+
+export interface SystemSettings {
+  appName: string;
+  maintenanceMode: boolean;
+  allowNewRegistrations: boolean;
+  globalAnnouncement: string;
+  supportPhone: string;
+  pixKey: string;
 }

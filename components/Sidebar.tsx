@@ -26,10 +26,12 @@ export const Sidebar = () => {
       { label: 'Entregadores', path: '/super-admin/entregadores', icon: '🛵' },
       { label: 'Métricas', path: '/super-admin/relatorios', icon: '📈' },
       { label: 'Planos', path: '/super-admin/planos', icon: '💳' },
+      { label: 'Configurações', path: '/super-admin/configuracoes', icon: '⚙️' },
     ],
     lojista: [
       { label: 'Dashboard', path: '/admin/dashboard', icon: '🏠' },
       { label: 'Pedidos', path: '/admin/pedidos', icon: '🛍️', badge: 3 },
+      { label: 'Cardápio', path: '/admin/produtos', icon: '🍔' },
       { label: 'Entregadores', path: '/admin/entregadores', icon: '🛵' },
       { label: 'Assinatura', path: '/admin/assinatura', icon: '💳' },
       { label: 'Configurações', path: '/admin/configuracoes', icon: '⚙️' },

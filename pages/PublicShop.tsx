@@ -5,58 +5,14 @@ import { useStore } from '../store';
 import { CompartilharProduto } from '../components/CompartilharProduto';
 import { formatCurrency } from '../utils';
 
-const CATEGORIAS = ['Todos', 'Destaques', 'Combos', 'Burgers Artesanais', 'Pizzas Premium', 'Acompanhamentos', 'Bebidas', 'Sobremesas'];
-
-interface Produto {
-  id: string;
-  nome: string;
-  categoria: string;
-  descricao: string;
-  preco: number;
-  imagem: string;
-  destaque?: boolean;
-  maisVendido?: boolean;
-  disponivel: boolean;
-  tags?: string[];
-  oldPrice?: number;
-}
-
-const MOCK_PRODUTOS: Produto[] = [
-  // Destaques & Combos
-  { id: 'c1', nome: 'Combo Casal Perfeito', categoria: 'Combos', descricao: '2 Burgers Clássicos + 1 Porção de Fritas Grande + 1 Refrigerante 1.5L. Ideal para compartilhar momentos especiais com quem você gosta.', preco: 89.90, oldPrice: 110.00, imagem: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=600&auto=format&fit=crop', destaque: true, disponivel: true, tags: ['Oferta', 'Para 2'] },
-  { id: 'c2', nome: 'Box da Galera', categoria: 'Combos', descricao: '4 Smash Burgers, 400g de Fritas com Cheddar e Bacon, 4 Bebidas. A melhor pedida para assistir ao jogo ou reunir os amigos em casa.', preco: 149.90, imagem: 'https://images.unsplash.com/photo-1625937759426-34f7b6b6cb8e?q=80&w=600&auto=format&fit=crop', destaque: true, disponivel: true, tags: ['Família'] },
-
-  // Burgers
-  { id: 'b1', nome: 'Double Bacon Master', categoria: 'Burgers Artesanais', descricao: 'Pão brioche selado na manteiga, dois blends de 160g de carne angus, muito cheddar inglês cremoso, farofa de bacon crocante e maionese defumada da casa.', preco: 42.90, imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop', destaque: true, maisVendido: true, disponivel: true, tags: ['Matador de Fome'] },
-  { id: 'b2', nome: 'Classic Salad', categoria: 'Burgers Artesanais', descricao: 'O tradicional que nunca erra. Blend 160g, queijo prato, alface americana crocante, tomate fresco e cebola roxa.', preco: 32.90, imagem: 'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=600&auto=format&fit=crop', disponivel: true },
-  { id: 'b3', nome: 'Veggie Future', categoria: 'Burgers Artesanais', descricao: 'Burger à base de plantas com textura e sabor de carne, queijo vegano, rúcula, tomate seco e molho pesto no pão australiano.', preco: 38.90, imagem: 'https://images.unsplash.com/photo-1525059696034-4967a8e1dca2?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['🌱 Vegano'] },
-  { id: 'b4', nome: 'Chicken Crispy', categoria: 'Burgers Artesanais', descricao: 'Sobrecoxa de frango marinada por 12h e empanada na farinha panko, coleslaw (salada de repolho cremosa) e picles artesanal.', preco: 29.90, imagem: 'https://images.unsplash.com/photo-1615557960916-5f4791effe9d?q=80&w=600&auto=format&fit=crop', disponivel: true },
-
-  // Pizzas
-  { id: 'p1', nome: 'Margherita Especial', categoria: 'Pizzas Premium', descricao: 'Molho de tomate pelati italiano, mozzarella di bufala fresca, folhas de manjericão gigante e finalizada com azeite trufado.', preco: 65.00, imagem: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['Vegetariano'] },
-  { id: 'p2', nome: 'Calabresa Acebolada', categoria: 'Pizzas Premium', descricao: 'A queridinha dos brasileiros. Calabresa artesanal defumada fatiada fininha, muita cebola roxa e azeitonas pretas azapa.', preco: 58.00, imagem: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?q=80&w=600&auto=format&fit=crop', maisVendido: true, disponivel: true },
-  { id: 'p3', nome: 'Quatro Queijos', categoria: 'Pizzas Premium', descricao: 'Uma explosão de sabor com Mozzarella, Gorgonzola suave, Parmesão capa preta maturado e Catupiry original.', preco: 62.00, imagem: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=600&auto=format&fit=crop', disponivel: true },
-
-  // Acompanhamentos
-  { id: 'a1', nome: 'Batata Frita Rústica', categoria: 'Acompanhamentos', descricao: 'Corte caseiro com casca, temperada com alecrim fresco e alho confitado.', preco: 18.00, imagem: 'https://images.unsplash.com/photo-1630384060421-a4323ceca0ad?q=80&w=600&auto=format&fit=crop', disponivel: true },
-  { id: 'a2', nome: 'Onion Rings', categoria: 'Acompanhamentos', descricao: 'Anéis de cebola empanados e super crocantes. Acompanha molho barbecue caseiro.', preco: 22.00, imagem: 'https://images.unsplash.com/photo-1639024471283-03518883512d?q=80&w=600&auto=format&fit=crop', disponivel: true },
-  { id: 'a3', nome: 'Nuggets (10 un)', categoria: 'Acompanhamentos', descricao: 'Crocantes por fora, macios por dentro. Acompanha molho mostarda e mel.', preco: 19.90, imagem: 'https://images.unsplash.com/photo-1562967914-608f82629710?q=80&w=600&auto=format&fit=crop', disponivel: false },
-
-  // Bebidas
-  { id: 'd1', nome: 'Coca-Cola 350ml', categoria: 'Bebidas', descricao: 'Lata gelada.', preco: 6.00, imagem: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=600&auto=format&fit=crop', disponivel: true },
-  { id: 'd2', nome: 'Suco Natural de Laranja', categoria: 'Bebidas', descricao: '500ml, espremido na hora. Sem açúcar e sem conservantes.', preco: 12.00, imagem: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['Saudável'] },
-  { id: 'd3', nome: 'Cerveja Artesanal IPA', categoria: 'Bebidas', descricao: '500ml. Notas cítricas de maracujá e amargor equilibrado. IBU 45.', preco: 24.00, imagem: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['+18'] },
-
-  // Sobremesas
-  { id: 's1', nome: 'Brownie Supremo', categoria: 'Sobremesas', descricao: 'Feito com chocolate belga 70%, nozes e calda de chocolate quente. Acompanha bola de sorvete de creme.', preco: 22.00, imagem: 'https://images.unsplash.com/photo-1564355808539-22fda35bed7e?q=80&w=600&auto=format&fit=crop', disponivel: true, destaque: true },
-  { id: 's2', nome: 'Pudim de Leite', categoria: 'Sobremesas', descricao: 'Aquele clássico sem furinhos, super cremoso e com bastante calda de caramelo.', preco: 14.00, imagem: 'https://images.unsplash.com/photo-1517594593442-5e43c5240217?q=80&w=600&auto=format&fit=crop', disponivel: true },
-];
+// Lista base de categorias para filtro, pode ser dinâmica no futuro
+const CATEGORIAS_PADRAO = ['Todos', 'Destaques', 'Geral', 'Lanches', 'Bebidas', 'Sobremesas', 'Pizzas', 'Combos'];
 
 export const PublicShop = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { lojas } = useStore();
-  const loja = lojas.find(l => l.slug === slug) || lojas[0];
+  const { lojas, produtos } = useStore();
+  const loja = lojas.find(l => l.slug === slug);
   
   const [busca, setBusca] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
@@ -69,7 +25,7 @@ export const PublicShop = () => {
   const [scrolled, setScrolled] = useState(false);
   
   // Estado para o modal de descrição longa
-  const [selectedProductDesc, setSelectedProductDesc] = useState<Produto | null>(null);
+  const [selectedProductDesc, setSelectedProductDesc] = useState<any | null>(null);
 
   // Efeito de scroll para o header
   useEffect(() => {
@@ -78,14 +34,41 @@ export const PublicShop = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  if (!loja) {
+      return (
+          <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+              <h1 className="text-4xl font-black text-gray-900 mb-2">Loja não encontrada</h1>
+              <p className="text-gray-500 mb-8">Verifique o endereço digitado.</p>
+              <button onClick={() => navigate('/')} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black">Ir para Início</button>
+          </div>
+      )
+  }
+
+  // Filtra produtos desta loja específica
+  const produtosDaLoja = produtos.filter(p => p.lojaId === loja.id);
+
+  // Extrai categorias dinâmicas baseadas nos produtos existentes + padrão
+  const categoriasDisponiveis = useMemo(() => {
+      const cats = new Set(['Todos', 'Destaques']);
+      produtosDaLoja.forEach(p => cats.add(p.categoria));
+      // Garante ordem, mantendo Todos e Destaques primeiro
+      return Array.from(cats).sort((a, b) => {
+          if (a === 'Todos') return -1;
+          if (b === 'Todos') return 1;
+          if (a === 'Destaques') return -1;
+          if (b === 'Destaques') return 1;
+          return a.localeCompare(b);
+      });
+  }, [produtosDaLoja]);
+
   const totalItens = carrinho.reduce((acc, curr) => acc + curr.qtd, 0);
   const totalValor = carrinho.reduce((acc, curr) => {
-    const prod = MOCK_PRODUTOS.find(p => p.id === curr.id);
+    const prod = produtosDaLoja.find(p => p.id === curr.id);
     return acc + (prod?.preco || 0) * curr.qtd;
   }, 0);
 
   const produtosFiltrados = useMemo(() => {
-    return MOCK_PRODUTOS.filter(p => {
+    return produtosDaLoja.filter(p => {
       const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || 
                        p.descricao.toLowerCase().includes(busca.toLowerCase());
       
@@ -95,7 +78,7 @@ export const PublicShop = () => {
 
       return bateBusca && bateCategoria;
     });
-  }, [busca, categoriaAtiva]);
+  }, [busca, categoriaAtiva, produtosDaLoja]);
 
   const addAoCarrinho = (id: string) => {
     setCarrinho(prev => {
@@ -156,15 +139,23 @@ export const PublicShop = () => {
       
       {/* Hero / Banner da Loja */}
       <div className="relative h-64 md:h-80 w-full overflow-hidden">
-        <img 
-            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop" 
-            alt="Capa da Loja" 
-            className="w-full h-full object-cover"
-        />
+        {loja.banner ? (
+            <img 
+                src={loja.banner} 
+                alt="Capa da Loja" 
+                className="w-full h-full object-cover"
+            />
+        ) : (
+            <div className="w-full h-full bg-gradient-to-br from-emerald-800 to-gray-900" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 max-w-7xl mx-auto flex items-end gap-6">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl p-1 shadow-2xl border-4 border-white transform translate-y-8">
-                <img src={`https://picsum.photos/200/200?random=${loja.id}`} alt="Logo" className="w-full h-full object-cover rounded-2xl" />
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl p-1 shadow-2xl border-4 border-white transform translate-y-8 overflow-hidden">
+                {loja.logo ? (
+                    <img src={loja.logo} alt="Logo" className="w-full h-full object-cover rounded-2xl" />
+                ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-4xl">🏪</div>
+                )}
             </div>
             <div className="mb-4 text-white flex-1">
                 <h1 className="text-3xl md:text-5xl font-black tracking-tighter shadow-black drop-shadow-lg">{loja.nome}</h1>
@@ -173,9 +164,9 @@ export const PublicShop = () => {
                     <span>•</span>
                     <span>⭐ 4.9 (1.2k avaliações)</span>
                     <span>•</span>
-                    <span>Burgers & Pizzas</span>
+                    <span>{loja.categoria}</span>
                     <span>•</span>
-                    <span>30-45 min</span>
+                    <span>{loja.tempoMin}-{loja.tempoMax} min</span>
                 </div>
             </div>
         </div>
@@ -219,7 +210,7 @@ export const PublicShop = () => {
                 onChange={(e) => setCategoriaAtiva(e.target.value)}
                 className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-black uppercase tracking-wide py-3 pl-4 pr-10 rounded-xl appearance-none outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
               >
-                {CATEGORIAS.map(cat => (
+                {categoriasDisponiveis.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
@@ -231,7 +222,7 @@ export const PublicShop = () => {
 
           {/* Categorias - Desktop Tabs */}
           <div className="hidden md:flex overflow-x-auto no-scrollbar gap-2 pb-2">
-            {CATEGORIAS.map(cat => (
+            {categoriasDisponiveis.map(cat => (
               <button
                 key={cat}
                 onClick={() => setCategoriaAtiva(cat)}
@@ -273,12 +264,16 @@ export const PublicShop = () => {
                 return (
                     <div key={p.id} className={`bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${!p.disponivel ? 'opacity-70 grayscale' : ''}`}>
                     {/* Imagem do Produto */}
-                    <div className="relative aspect-[4/3] w-full overflow-hidden">
-                        <img 
-                        src={p.imagem} 
-                        alt={p.nome} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                        />
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+                        {p.imagem ? (
+                            <img 
+                            src={p.imagem} 
+                            alt={p.nome} 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📷</div>
+                        )}
                         
                         {/* Badges */}
                         <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
@@ -399,13 +394,13 @@ export const PublicShop = () => {
                  </div>
                ) : (
                  carrinho.map(item => {
-                   const produto = MOCK_PRODUTOS.find(p => p.id === item.id);
+                   const produto = produtosDaLoja.find(p => p.id === item.id);
                    if (!produto) return null;
                    
                    return (
                      <div key={item.id} className="flex gap-4 border-b border-gray-50 pb-6 last:border-0 last:pb-0">
                         <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
-                           <img src={produto.imagem} alt={produto.nome} className="w-full h-full object-cover" />
+                           {produto.imagem && <img src={produto.imagem} alt={produto.nome} className="w-full h-full object-cover" />}
                         </div>
                         <div className="flex-1">
                            <div className="flex justify-between items-start mb-1">

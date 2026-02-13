@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification } from './types';
+import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto } from './types';
 
 // Dados iniciais da Loja Demo (Restaurante Sabor)
 const LOJA_DEMO_DEFAULT: Loja = { 
@@ -22,10 +22,18 @@ const LOJA_DEMO_DEFAULT: Loja = {
   stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
 };
 
+// Produtos Iniciais (Mock Demo)
+const PRODUTOS_DEMO: Produto[] = [
+  { id: 'b1', lojaId: 'l1', nome: 'Double Bacon Master', categoria: 'Burgers Artesanais', descricao: 'Pão brioche, dois blends de 160g, cheddar inglês, bacon crocante.', preco: 42.90, imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop', destaque: true, maisVendido: true, disponivel: true, tags: ['Matador de Fome'] },
+  { id: 'p1', lojaId: 'l1', nome: 'Margherita Especial', categoria: 'Pizzas Premium', descricao: 'Molho de tomate pelati, mozzarella di bufala, manjericão e azeite trufado.', preco: 65.00, imagem: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['Vegetariano'] },
+  { id: 'd1', lojaId: 'l1', nome: 'Coca-Cola 350ml', categoria: 'Bebidas', descricao: 'Lata gelada.', preco: 6.00, imagem: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=600&auto=format&fit=crop', disponivel: true },
+];
+
 interface AppState {
   user: User | null;
   lojas: Loja[];
   planos: Plano[];
+  produtos: Produto[];
   entregadores: Entregador[];
   entregas: Entrega[];
   saques: Saque[];
@@ -33,6 +41,7 @@ interface AppState {
   meiosPagamento: MeioPagamento[];
   notifications: Notification[];
   isSidebarOpen: boolean;
+  systemSettings: SystemSettings;
   
   // Actions
   setUser: (user: User | null) => void;
@@ -40,6 +49,17 @@ interface AppState {
   updateLoja: (lojaId: string, data: Partial<Loja>) => void;
   addLoja: (loja: Loja) => void;
   deleteLoja: (lojaId: string) => void;
+  
+  // Produtos CRUD
+  addProduto: (produto: Produto) => void;
+  updateProduto: (id: string, data: Partial<Produto>) => void;
+  deleteProduto: (id: string) => void;
+  
+  // Planos CRUD
+  addPlano: (plano: Plano) => void;
+  updatePlano: (id: string, data: Partial<Plano>) => void;
+  deletePlano: (id: string) => void;
+
   addEntregador: (entregador: any) => void;
   cancelarAssinatura: (lojaId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
@@ -47,6 +67,7 @@ interface AppState {
   atualizarStatusPedido: (entregaId: string, novoStatus: Entrega['status']) => void;
   solicitarSaque: (saque: Saque) => void;
   resetDemoStore: () => void;
+  updateSystemSettings: (settings: Partial<SystemSettings>) => void;
   
   // UI Actions
   addNotification: (type: 'success' | 'error' | 'info', message: string) => void;
@@ -61,12 +82,21 @@ export const useStore = create<AppState>()(
       user: null, // Usuário inicial nulo para forçar login
       isSidebarOpen: false,
       notifications: [],
+      systemSettings: {
+        appName: 'Pede Mais',
+        maintenanceMode: false,
+        allowNewRegistrations: true,
+        globalAnnouncement: '',
+        supportPhone: '5511999999999',
+        pixKey: 'financeiro@pedemais.app'
+      },
       planos: [
-        { id: '1', nome: 'Básico', preco: 99.90, limitePedidos: 500, limiteEntregadores: 5, recursos: ['WhatsApp Pay', 'Cardápio Digital', 'Suporte por e-mail'] },
-        { id: '2', nome: 'Pro Amazônia', preco: 199.90, limitePedidos: 1000, limiteEntregadores: 10, recursos: ['Suporte prioritário 24/7', 'Dashboard avançado', 'IA de Roteirização'], cor: 'bg-emerald-600' },
-        { id: '3', nome: 'Enterprise', preco: 499.90, limitePedidos: 99999, limiteEntregadores: 999, recursos: ['Gerente de conta dedicado', 'Integração API customizada', 'White Label total'] },
+        { id: '1', nome: 'Básico', preco: 99.90, limitePedidos: 500, limiteEntregadores: 5, recursos: ['WhatsApp Pay', 'Cardápio Digital', 'Suporte por e-mail'], cor: 'bg-gray-100' },
+        { id: '2', nome: 'Pro Amazônia', preco: 199.90, limitePedidos: 1000, limiteEntregadores: 10, recursos: ['Suporte prioritário 24/7', 'Dashboard avançado', 'IA de Roteirização'], cor: 'bg-emerald-600', destaque: true },
+        { id: '3', nome: 'Enterprise', preco: 499.90, limitePedidos: 99999, limiteEntregadores: 999, recursos: ['Gerente de conta dedicado', 'Integração API customizada', 'White Label total'], cor: 'bg-purple-600' },
       ],
       lojas: [LOJA_DEMO_DEFAULT],
+      produtos: PRODUTOS_DEMO,
       entregadores: [
         { id: 'e1', nome: 'Ricardo Santos', telefone: '11 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', dataAdesao: '2023-10-24' },
         { id: 'e2', nome: 'Julia Mendes', telefone: '11 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', dataAdesao: '2023-09-12' },
@@ -121,6 +151,29 @@ export const useStore = create<AppState>()(
       deleteLoja: (lojaId) => set((state) => ({
         lojas: state.lojas.filter(l => l.id !== lojaId)
       })),
+      
+      // Implementação CRUD Produtos
+      addProduto: (produto) => set((state) => ({
+        produtos: [...state.produtos, produto]
+      })),
+      updateProduto: (id, data) => set((state) => ({
+        produtos: state.produtos.map(p => p.id === id ? { ...p, ...data } : p)
+      })),
+      deleteProduto: (id) => set((state) => ({
+        produtos: state.produtos.filter(p => p.id !== id)
+      })),
+
+      // Implementação CRUD Planos
+      addPlano: (plano) => set((state) => ({
+        planos: [...state.planos, plano]
+      })),
+      updatePlano: (id, data) => set((state) => ({
+        planos: state.planos.map(p => p.id === id ? { ...p, ...data } : p)
+      })),
+      deletePlano: (id) => set((state) => ({
+        planos: state.planos.filter(p => p.id !== id)
+      })),
+
       addEntregador: (entregador) => set((state) => ({
         entregadores: [...state.entregadores, { 
           ...entregador, 
@@ -149,7 +202,11 @@ export const useStore = create<AppState>()(
         entregadores: state.entregadores.map(e => e.id === saque.entregadorId ? { ...e, saldo: e.saldo - saque.valor } : e)
       })),
       resetDemoStore: () => set((state) => ({
-        lojas: [LOJA_DEMO_DEFAULT, ...state.lojas.filter(l => l.id !== 'l1')]
+        lojas: [LOJA_DEMO_DEFAULT, ...state.lojas.filter(l => l.id !== 'l1')],
+        produtos: PRODUTOS_DEMO // Reseta produtos também
+      })),
+      updateSystemSettings: (settings) => set((state) => ({
+        systemSettings: { ...state.systemSettings, ...settings }
       })),
       
       // UI Actions
@@ -169,7 +226,10 @@ export const useStore = create<AppState>()(
         user: state.user,
         lojas: state.lojas,
         entregadores: state.entregadores,
-        entregas: state.entregas
+        entregas: state.entregas,
+        planos: state.planos,
+        systemSettings: state.systemSettings,
+        produtos: state.produtos
       }),
     }
   )

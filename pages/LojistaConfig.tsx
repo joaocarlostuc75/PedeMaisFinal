@@ -1,11 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
 import { Link } from 'react-router-dom';
+import { convertFileToBase64 } from '../utils';
 
 export const LojistaConfig = () => {
   const { lojas, updateLoja, addNotification, user } = useStore();
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
+  
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     nome: minhaLoja.nome,
@@ -21,7 +25,7 @@ export const LojistaConfig = () => {
     telefone: minhaLoja.telefone || ''
   });
 
-  // Atualiza o formulário se a loja mudar (ex: recarregamento)
+  // Atualiza o formulário se a loja mudar
   useEffect(() => {
       setForm({
         nome: minhaLoja.nome,
@@ -41,6 +45,23 @@ export const LojistaConfig = () => {
   const handleSave = () => {
     updateLoja(minhaLoja.id, form);
     addNotification('success', 'Configurações da loja atualizadas com sucesso!');
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        addNotification('error', 'A imagem deve ter no máximo 2MB.');
+        return;
+      }
+      try {
+        const base64 = await convertFileToBase64(file);
+        updateLoja(minhaLoja.id, { [field]: base64 });
+        addNotification('success', `${field === 'logo' ? 'Logo' : 'Banner'} atualizado!`);
+      } catch (err) {
+        addNotification('error', 'Erro ao processar imagem.');
+      }
+    }
   };
 
   return (
@@ -84,7 +105,11 @@ export const LojistaConfig = () => {
              <div className="p-8 space-y-8">
                 <div>
                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Banner da Loja (Capa)</label>
-                   <div className="w-full h-48 bg-gray-100 rounded-3xl overflow-hidden relative group cursor-pointer border-2 border-dashed border-gray-200 hover:border-emerald-500 transition-all">
+                   <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'banner')} />
+                   <div 
+                      onClick={() => bannerInputRef.current?.click()}
+                      className="w-full h-48 bg-gray-100 rounded-3xl overflow-hidden relative group cursor-pointer border-2 border-dashed border-gray-200 hover:border-emerald-500 transition-all"
+                   >
                       {minhaLoja.banner ? (
                           <img src={minhaLoja.banner} className="w-full h-full object-cover" />
                       ) : (
@@ -93,25 +118,30 @@ export const LojistaConfig = () => {
                               <span className="text-xs font-bold">Sem banner</span>
                           </div>
                       )}
-                      <div className="absolute inset-0 bg-white/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                         <p className="font-black text-xs text-gray-800">Clique para alterar</p>
+                      <div className="absolute inset-0 bg-white/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                         <p className="font-black text-xs text-gray-800 uppercase tracking-widest">Alterar Capa</p>
                       </div>
                    </div>
                 </div>
 
                 <div className="flex items-center gap-8">
-                   <div className="relative group">
-                      <div className="w-32 h-32 bg-emerald-600 rounded-full border-8 border-white shadow-xl overflow-hidden flex items-center justify-center bg-gray-100">
+                   <div className="relative group cursor-pointer" onClick={() => logoInputRef.current?.click()}>
+                      <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
+                      <div className="w-32 h-32 bg-emerald-600 rounded-full border-8 border-white shadow-xl overflow-hidden flex items-center justify-center bg-gray-100 relative group-hover:scale-105 transition-transform">
                         {minhaLoja.logo ? (
                             <img src={minhaLoja.logo} className="w-full h-full object-cover" />
                         ) : (
                             <span className="text-4xl">🏪</span>
                         )}
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-white text-xs font-black">EDITAR</span>
+                        </div>
                       </div>
                    </div>
                    <div className="flex-1">
                       <h4 className="font-black text-gray-800 text-lg">Logo da Marca</h4>
                       <p className="text-xs text-gray-400 font-medium leading-relaxed mt-1">Este logo aparecerá no seu perfil e nas notas de pedido. Formato quadrado (1:1).</p>
+                      <button onClick={() => logoInputRef.current?.click()} className="mt-4 text-emerald-600 font-black text-xs uppercase hover:underline">Carregar nova imagem</button>
                    </div>
                 </div>
              </div>
