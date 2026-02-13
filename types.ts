@@ -58,6 +58,19 @@ export interface Plano {
   destaque?: boolean;
 }
 
+export interface AreaEntrega {
+  id: string;
+  nome: string;
+  taxa: number;
+  tempoMin: number;
+  tempoMax: number;
+  raioKm: number;
+  ativa: boolean;
+  tipoTaxa: 'fixa' | 'km';
+  lat?: number;
+  lng?: number;
+}
+
 export interface Loja {
   id: string;
   nome: string;
@@ -78,6 +91,7 @@ export interface Loja {
   tempoMin?: number;
   tempoMax?: number;
   aceitaRetirada?: boolean;
+  areasEntrega?: AreaEntrega[]; // Novo campo
   stats?: {
     carrinhos: number;
     finalizados: number;

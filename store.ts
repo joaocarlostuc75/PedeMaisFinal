@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto } from './types';
 
-// Dados iniciais da Loja Demo (Restaurante Sabor)
+// Dados iniciais da Loja Demo (Restaurante Sabor - Tucuruí)
 const LOJA_DEMO_DEFAULT: Loja = { 
   id: 'l1', 
   nome: 'Restaurante Sabor (DEMO)', 
@@ -11,14 +11,19 @@ const LOJA_DEMO_DEFAULT: Loja = {
   planoId: '2', 
   statusAssinatura: 'ativo', 
   proximoVencimento: '2025-11-15', 
-  whatsapp: '5511999999999',
+  whatsapp: '5594999999999',
   categoria: 'Restaurante',
-  endereco: 'Av. Paulista, 1000 - Bela Vista, SP',
+  endereco: 'Av. Raimundo Veridiano Cardoso, Tucuruí - PA',
   taxaEntrega: 5.90,
   tempoMin: 30,
   tempoMax: 45,
   banner: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop',
   logo: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
+  areasEntrega: [
+    // Coordenadas aproximadas de bairros em Tucuruí
+    { id: 'a1', nome: 'Centro Comercial', taxa: 4.00, tempoMin: 15, tempoMax: 25, raioKm: 2, ativa: true, tipoTaxa: 'fixa', lat: -3.766052, lng: -49.672367 },
+    { id: 'a2', nome: 'Vila Permanente', taxa: 7.00, tempoMin: 30, tempoMax: 45, raioKm: 4, ativa: true, tipoTaxa: 'fixa', lat: -3.722839, lng: -49.654308 }
+  ],
   stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
 };
 
@@ -100,11 +105,11 @@ export const useStore = create<AppState>()(
       lojas: [LOJA_DEMO_DEFAULT],
       produtos: PRODUTOS_DEMO,
       entregadores: [
-        { id: 'e1', nome: 'Ricardo Santos', telefone: '11 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', dataAdesao: '2023-10-24' },
-        { id: 'e2', nome: 'Julia Mendes', telefone: '11 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', dataAdesao: '2023-09-12' },
-        { id: 'e3', nome: 'Marcos Almeida', telefone: '11 95555-4444', status: 'suspenso', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1', tipoVeiculo: 'Van', dataAdesao: '2023-01-05' },
-        { id: 'e4', nome: 'Carlos Vega', telefone: '11 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Leve)', dataAdesao: '2023-11-15' },
-        { id: 'e5', nome: 'Sarah Wilson', telefone: '11 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1', tipoVeiculo: 'Sedan', dataAdesao: '2024-02-28' },
+        { id: 'e1', nome: 'Ricardo Santos', telefone: '94 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', dataAdesao: '2023-10-24' },
+        { id: 'e2', nome: 'Julia Mendes', telefone: '94 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', dataAdesao: '2023-09-12' },
+        { id: 'e3', nome: 'Marcos Almeida', telefone: '94 95555-4444', status: 'suspenso', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1', tipoVeiculo: 'Van', dataAdesao: '2023-01-05' },
+        { id: 'e4', nome: 'Carlos Vega', telefone: '94 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Leve)', dataAdesao: '2023-11-15' },
+        { id: 'e5', nome: 'Sarah Wilson', telefone: '94 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1', tipoVeiculo: 'Sedan', dataAdesao: '2024-02-28' },
       ],
       entregas: [
         { 
