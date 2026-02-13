@@ -53,9 +53,6 @@ export const PublicShop = () => {
       // Ordena: Destaques (se houver items com destaque) primeiro, depois alfabético
       const catsArr = Array.from(cats).sort();
       
-      // Verifica se tem destaques para criar uma pseudo-categoria se necessário, 
-      // mas neste layout de scroll, geralmente agrupamos por categoria real.
-      // Vamos manter a ordem alfabética simples ou customizada.
       return catsArr;
   }, [produtosDaLoja]);
 
@@ -152,7 +149,7 @@ export const PublicShop = () => {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
         <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 max-w-7xl mx-auto flex items-end gap-6">
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl p-1 shadow-2xl border-4 border-white transform translate-y-8 overflow-hidden">
+            <div className="w-20 h-20 md:w-32 md:h-32 bg-white rounded-3xl p-1 shadow-2xl border-4 border-white transform translate-y-8 overflow-hidden shrink-0">
                 {loja.logo ? (
                     <img src={loja.logo} alt="Logo" className="w-full h-full object-cover rounded-2xl" />
                 ) : (
@@ -160,13 +157,11 @@ export const PublicShop = () => {
                 )}
             </div>
             <div className="mb-4 text-white flex-1">
-                <h1 className="text-3xl md:text-5xl font-black tracking-tighter shadow-black drop-shadow-lg">{loja.nome}</h1>
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm font-medium">
+                <h1 className="text-2xl md:text-5xl font-black tracking-tighter shadow-black drop-shadow-lg leading-tight">{loja.nome}</h1>
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 text-xs md:text-sm font-medium">
                     <span className="bg-emerald-500 text-white px-2 py-0.5 rounded-md font-black uppercase text-[10px] tracking-widest">Aberto</span>
-                    <span>•</span>
+                    <span className="hidden md:inline">•</span>
                     <span>⭐ 4.9 (1.2k avaliações)</span>
-                    <span>•</span>
-                    <span>{loja.categoria}</span>
                     <span>•</span>
                     <span>{loja.tempoMin}-{loja.tempoMax} min</span>
                 </div>
@@ -205,12 +200,12 @@ export const PublicShop = () => {
           </div>
 
           {/* Categorias - Navegação Horizontal */}
-          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2">
+          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4 md:mx-0 md:px-0">
             {categoriasDisponiveis.map(cat => (
               <button
                 key={cat}
                 onClick={() => scrollToCategory(cat)}
-                className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-xs font-black transition-all border transform active:scale-95 ${
+                className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-xs font-black transition-all border transform active:scale-95 flex-shrink-0 ${
                   activeCategory === cat 
                     ? 'bg-gray-900 text-white border-gray-900 shadow-lg' 
                     : 'bg-white text-gray-500 border-gray-100 hover:border-emerald-500 hover:text-emerald-600'
@@ -235,7 +230,7 @@ export const PublicShop = () => {
 
             return (
                 <section key={categoria} id={`cat-${categoria}`} className="mb-12 scroll-mt-48">
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-6 flex items-center gap-3">
+                    <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight mb-6 flex items-center gap-3">
                        {categoria}
                        <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">{produtosDaCategoria.length}</span>
                     </h2>
@@ -376,7 +371,7 @@ export const PublicShop = () => {
       {isCartOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end md:items-center justify-center animate-fade-in" onClick={() => setIsCartOpen(false)}>
           <div 
-            className="bg-white w-full max-w-lg md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden" 
+            className="bg-white w-full md:max-w-lg md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden" 
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#fafbfc]">
@@ -407,7 +402,7 @@ export const PublicShop = () => {
                         </div>
                         <div className="flex-1">
                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-bold text-gray-900 leading-tight pr-4">{produto.nome}</h4>
+                              <h4 className="font-bold text-gray-900 leading-tight pr-4 text-sm md:text-base">{produto.nome}</h4>
                               <p className="font-black text-emerald-700 text-sm whitespace-nowrap">{formatCurrency(produto.preco * item.qtd)}</p>
                            </div>
                            
@@ -425,7 +420,7 @@ export const PublicShop = () => {
                            <div className="mt-3 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100">
                               <label className="block text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                 Quando entregar este item?
+                                 Quando entregar?
                               </label>
                               <select 
                                 value={item.agendamento}
@@ -446,7 +441,7 @@ export const PublicShop = () => {
                )}
             </div>
 
-            <div className="p-8 border-t border-gray-100 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-10">
+            <div className="p-6 md:p-8 border-t border-gray-100 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-10 pb-10 md:pb-8">
                <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Subtotal</span>
                   <span className="text-lg font-bold text-gray-800">{formatCurrency(totalValor)}</span>
@@ -520,7 +515,7 @@ export const PublicShop = () => {
       )}
 
       {/* CTA Sticky Botão Ver Carrinho NOVO */}
-      <div className={`fixed bottom-0 left-0 w-full p-4 md:p-6 z-40 pointer-events-none transition-transform duration-500 ease-in-out ${isCartOpen ? 'translate-y-[120%]' : 'translate-y-0'}`}>
+      <div className={`fixed bottom-0 left-0 w-full p-4 z-40 pointer-events-none transition-transform duration-500 ease-in-out ${isCartOpen ? 'translate-y-[120%]' : 'translate-y-0'}`}>
         <div className="max-w-4xl mx-auto flex justify-center pointer-events-auto">
             {totalItens > 0 ? (
                 <button

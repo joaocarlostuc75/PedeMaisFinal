@@ -1,14 +1,17 @@
 
 -- =============================================================================
--- SCRIPT DE REINICIALIZAÇÃO TOTAL (CORREÇÃO DE SCHEMA)
+-- SCRIPT DE REINICIALIZAÇÃO TOTAL (SCHEMA COMPLETO MVP PEDE MAIS)
 -- =============================================================================
--- Este script remove as tabelas antigas para garantir que não haja conflitos de colunas ou tipos.
 
 -- 1. Limpeza de Triggers e Funções Antigas
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 
 -- 2. Limpeza de Tabelas (Ordem importa devido às chaves estrangeiras)
+DROP TABLE IF EXISTS avaliacoes CASCADE;
+DROP TABLE IF EXISTS system_settings CASCADE;
+DROP TABLE IF EXISTS metodos_pagamento CASCADE;
+DROP TABLE IF EXISTS faturas CASCADE;
 DROP TABLE IF EXISTS saques CASCADE;
 DROP TABLE IF EXISTS entregas CASCADE;
 DROP TABLE IF EXISTS entregadores CASCADE;
@@ -35,17 +38,18 @@ CREATE TYPE entrega_status AS ENUM ('pendente', 'preparando', 'pronto', 'em_tran
 CREATE TYPE loja_status_assinatura AS ENUM ('ativo', 'cancelado', 'teste');
 CREATE TYPE saque_status AS ENUM ('processando', 'pago', 'recusado');
 
--- 5. Tabela de Perfis
+-- 5. Tabela de Perfis (Usuários)
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   nome TEXT NOT NULL,
   email TEXT NOT NULL,
   role user_role DEFAULT 'lojista',
+  avatar_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. Planos
+-- 6. Planos (SaaS)
 CREATE TABLE planos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   nome TEXT NOT NULL,
@@ -54,6 +58,7 @@ CREATE TABLE planos (
   limite_entregadores INT DEFAULT 0,
   recursos TEXT[] DEFAULT '{}',
   cor TEXT,
+  destaque BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -64,6 +69,7 @@ CREATE TABLE lojas (
   plano_id UUID REFERENCES planos(id),
   nome TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
+  documento TEXT, -- CNPJ ou CPF (Conformidade Legal)
   status_assinatura loja_status_assinatura DEFAULT 'teste',
   proximo_vencimento DATE,
   whatsapp TEXT,
@@ -75,10 +81,16 @@ CREATE TABLE lojas (
   cor_primaria TEXT DEFAULT '#059669',
   categoria TEXT DEFAULT 'Restaurante',
   descricao TEXT,
-  taxa_entrega DECIMAL(10, 2) DEFAULT 0.00,
+  taxa_entrega DECIMAL(10, 2) DEFAULT 5.90,
   tempo_min INT DEFAULT 30,
   tempo_max INT DEFAULT 45,
   aceita_retirada BOOLEAN DEFAULT TRUE,
+  
+  -- Campos JSONB para configurações complexas
+  horarios JSONB DEFAULT '{}', -- Armazena estrutura de dias/horas
+  areas_entrega JSONB DEFAULT '[]', -- Armazena zonas, taxas e polígonos
+  stats JSONB DEFAULT '{"carrinhos": 0, "finalizados": 0, "mrr": 0}',
+  
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -104,7 +116,7 @@ CREATE TABLE produtos (
 CREATE TABLE entregadores (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES auth.users(id), -- Opcional, se o entregador tiver login próprio
   nome TEXT NOT NULL,
   telefone TEXT NOT NULL,
   status entregador_status DEFAULT 'disponível',
@@ -113,11 +125,12 @@ CREATE TABLE entregadores (
   entregas_total INT DEFAULT 0,
   nivel TEXT DEFAULT 'Bronze',
   xp INT DEFAULT 0,
+  badges JSONB DEFAULT '[]', -- Gamificação
   tipo_veiculo TEXT DEFAULT 'Moto',
   data_adesao TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 10. Entregas
+-- 10. Entregas (Pedidos)
 CREATE TABLE entregas (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
@@ -126,7 +139,7 @@ CREATE TABLE entregas (
   cliente_telefone TEXT,
   endereco_entrega TEXT,
   tipo_entrega TEXT DEFAULT 'entrega',
-  itens JSONB NOT NULL,
+  itens JSONB NOT NULL, -- Array de itens do pedido
   valor_total DECIMAL(10, 2) NOT NULL,
   taxa_entrega_aplicada DECIMAL(10, 2) DEFAULT 0.00,
   metodo_pagamento TEXT,
@@ -135,12 +148,56 @@ CREATE TABLE entregas (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 11. Saques
+-- 11. Saques (Financeiro Entregador)
 CREATE TABLE saques (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   entregador_id UUID REFERENCES entregadores(id) ON DELETE CASCADE NOT NULL,
   valor DECIMAL(10, 2) NOT NULL,
   status saque_status DEFAULT 'processando',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 12. Faturas (Assinatura Lojista)
+CREATE TABLE faturas (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
+  mes_referencia TEXT NOT NULL, -- Ex: 'Outubro 2023'
+  valor DECIMAL(10, 2) NOT NULL,
+  status TEXT DEFAULT 'Pendente', -- 'Pago', 'Pendente', 'Atrasado'
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. Métodos de Pagamento (Lojista pagando Plataforma)
+CREATE TABLE metodos_pagamento (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
+  tipo TEXT NOT NULL, -- 'Cartão', 'PIX'
+  detalhe TEXT NOT NULL, -- Ex: 'Final 4242'
+  extra TEXT, -- Ex: 'Validade 12/29'
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 14. Configurações do Sistema (Super Admin)
+CREATE TABLE system_settings (
+  id INT PRIMARY KEY DEFAULT 1,
+  app_name TEXT DEFAULT 'Pede Mais',
+  maintenance_mode BOOLEAN DEFAULT FALSE,
+  allow_new_registrations BOOLEAN DEFAULT TRUE,
+  global_announcement TEXT,
+  support_phone TEXT DEFAULT '5511999999999',
+  pix_key TEXT DEFAULT 'financeiro@pedemais.app',
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT single_row CHECK (id = 1) -- Garante apenas uma linha de configuração
+);
+
+-- 15. Avaliações (Ratings)
+CREATE TABLE avaliacoes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
+  pedido_id UUID REFERENCES entregas(id),
+  cliente_nome TEXT,
+  nota INT NOT NULL CHECK (nota >= 1 AND nota <= 5),
+  comentario TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -177,6 +234,17 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- =============================================================================
+-- PERFORMANCE INDEXES (Essenciais para RLS)
+-- =============================================================================
+CREATE INDEX idx_lojas_owner ON lojas(owner_id);
+CREATE INDEX idx_produtos_loja ON produtos(loja_id);
+CREATE INDEX idx_entregadores_loja ON entregadores(loja_id);
+CREATE INDEX idx_entregas_loja ON entregas(loja_id);
+CREATE INDEX idx_entregas_entregador ON entregas(entregador_id);
+CREATE INDEX idx_entregas_status ON entregas(status);
+CREATE INDEX idx_avaliacoes_loja ON avaliacoes(loja_id);
+
+-- =============================================================================
 -- POLÍTICAS DE SEGURANÇA (RLS)
 -- =============================================================================
 
@@ -187,58 +255,58 @@ ALTER TABLE produtos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE entregadores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE entregas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saques ENABLE ROW LEVEL SECURITY;
+ALTER TABLE faturas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE metodos_pagamento ENABLE ROW LEVEL SECURITY;
+ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE avaliacoes ENABLE ROW LEVEL SECURITY;
 
--- 1. POLÍTICAS DO SUPER ADMIN (Acesso Universal)
+-- 1. POLÍTICAS DO SUPER ADMIN (Acesso Total)
+-- Usando uma função auxiliar para evitar repetição e potencial recursão direta em profiles
+CREATE OR REPLACE FUNCTION is_super_admin() RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE id = auth.uid() AND role = 'super_admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
 
-CREATE POLICY "Super Admin: Manage Profiles" ON profiles FOR ALL USING (
-  (SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin'
-);
-CREATE POLICY "Super Admin: Manage Planos" ON planos FOR ALL USING (
-  (SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin'
-);
-CREATE POLICY "Super Admin: Manage Lojas" ON lojas FOR ALL USING (
-  (SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin'
-);
-CREATE POLICY "Super Admin: Manage Produtos" ON produtos FOR ALL USING (
-  (SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin'
-);
-CREATE POLICY "Super Admin: Manage Entregadores" ON entregadores FOR ALL USING (
-  (SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin'
-);
-CREATE POLICY "Super Admin: Manage Entregas" ON entregas FOR ALL USING (
-  (SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin'
-);
-CREATE POLICY "Super Admin: Manage Saques" ON saques FOR ALL USING (
-  (SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin'
-);
+CREATE POLICY "Super Admin Profiles" ON profiles FOR ALL USING (is_super_admin());
+CREATE POLICY "Super Admin Planos" ON planos FOR ALL USING (is_super_admin());
+CREATE POLICY "Super Admin Lojas" ON lojas FOR ALL USING (is_super_admin());
+CREATE POLICY "Super Admin Configs" ON system_settings FOR ALL USING (is_super_admin());
 
--- 2. POLÍTICAS DE USUÁRIOS COMUNS
+-- 2. SYSTEM SETTINGS
+CREATE POLICY "Public Read Settings" ON system_settings FOR SELECT USING (true);
 
--- Profiles
+-- 3. PROFILES
 CREATE POLICY "Users view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
--- Planos
+-- 4. PLANOS
 CREATE POLICY "Public read plans" ON planos FOR SELECT USING (true);
 
--- Lojas
+-- 5. LOJAS
 CREATE POLICY "Public view lojas" ON lojas FOR SELECT USING (true);
 CREATE POLICY "Lojista update own loja" ON lojas FOR UPDATE USING (auth.uid() = owner_id);
 CREATE POLICY "Lojista insert loja" ON lojas FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
--- Produtos
+-- 6. FATURAS & MÉTODOS PAGAMENTO (Apenas dono da loja)
+CREATE POLICY "Lojista view faturas" ON faturas FOR SELECT USING (EXISTS (SELECT 1 FROM lojas WHERE lojas.id = faturas.loja_id AND lojas.owner_id = auth.uid()));
+CREATE POLICY "Lojista view methods" ON metodos_pagamento FOR SELECT USING (EXISTS (SELECT 1 FROM lojas WHERE lojas.id = metodos_pagamento.loja_id AND lojas.owner_id = auth.uid()));
+CREATE POLICY "Lojista manage methods" ON metodos_pagamento FOR ALL USING (EXISTS (SELECT 1 FROM lojas WHERE lojas.id = metodos_pagamento.loja_id AND lojas.owner_id = auth.uid()));
+
+-- 7. PRODUTOS
 CREATE POLICY "Public view produtos" ON produtos FOR SELECT USING (true);
 CREATE POLICY "Lojista manage produtos" ON produtos FOR ALL USING (
   EXISTS (SELECT 1 FROM lojas WHERE lojas.id = produtos.loja_id AND lojas.owner_id = auth.uid())
 );
 
--- Entregadores
+-- 8. ENTREGADORES
 CREATE POLICY "Lojista manage entregadores" ON entregadores FOR ALL USING (
   EXISTS (SELECT 1 FROM lojas WHERE lojas.id = entregadores.loja_id AND lojas.owner_id = auth.uid())
 );
 CREATE POLICY "Entregador view self" ON entregadores FOR SELECT USING (user_id = auth.uid());
 
--- Entregas
+-- 9. ENTREGAS
 CREATE POLICY "Anon create pedidos" ON entregas FOR INSERT WITH CHECK (true);
 CREATE POLICY "Lojista view pedidos" ON entregas FOR SELECT USING (
   EXISTS (SELECT 1 FROM lojas WHERE lojas.id = entregas.loja_id AND lojas.owner_id = auth.uid())
@@ -253,7 +321,7 @@ CREATE POLICY "Entregador update assigned" ON entregas FOR UPDATE USING (
   EXISTS (SELECT 1 FROM entregadores WHERE entregadores.id = entregas.entregador_id AND entregadores.user_id = auth.uid())
 );
 
--- Saques
+-- 10. SAQUES
 CREATE POLICY "Entregador view saques" ON saques FOR SELECT USING (
   EXISTS (SELECT 1 FROM entregadores WHERE entregadores.id = saques.entregador_id AND entregadores.user_id = auth.uid())
 );
@@ -268,19 +336,24 @@ CREATE POLICY "Lojista view saques" ON saques FOR SELECT USING (
   )
 );
 
--- =============================================================================
--- INSERÇÃO DE DADOS INICIAIS (PLANOS PADRÃO)
--- =============================================================================
-INSERT INTO planos (nome, preco, limite_pedidos, limite_entregadores, recursos, cor) VALUES
-('Básico', 99.90, 500, 5, '{WhatsApp Pay, Cardápio Digital, Suporte Email}', 'bg-gray-100'),
-('Pro Amazônia', 199.90, 1000, 10, '{Suporte 24/7, Dashboard Avançado, Roteirização}', 'bg-emerald-600'),
-('Enterprise', 499.90, 99999, 999, '{Gerente Dedicado, API, White Label}', 'bg-purple-600');
+-- 11. AVALIAÇÕES
+CREATE POLICY "Public read avaliacoes" ON avaliacoes FOR SELECT USING (true);
+CREATE POLICY "Anon insert avaliacoes" ON avaliacoes FOR INSERT WITH CHECK (true);
 
 -- =============================================================================
--- GARANTIA FINAL PARA USUÁRIO EXISTENTE
+-- INSERÇÃO DE DADOS INICIAIS
 -- =============================================================================
--- Caso o usuário já tenha sido criado no Auth antes de rodar este script,
--- tentamos inserir o perfil dele agora manualmente, pois o trigger não rodou lá atrás.
+
+-- Inserir Configuração Padrão
+INSERT INTO system_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
+
+-- Inserir Planos Padrão
+INSERT INTO planos (nome, preco, limite_pedidos, limite_entregadores, recursos, cor, destaque) VALUES
+('Básico', 99.90, 500, 5, '{WhatsApp Pay, Cardápio Digital, Suporte Email}', 'bg-gray-100', false),
+('Pro Amazônia', 199.90, 1000, 10, '{Suporte 24/7, Dashboard Avançado, Roteirização}', 'bg-emerald-600', true),
+('Enterprise', 499.90, 99999, 999, '{Gerente Dedicado, API, White Label}', 'bg-purple-600', false);
+
+-- Inserir Super Admin se já existir no Auth
 INSERT INTO profiles (id, email, nome, role)
 SELECT id, email, COALESCE(raw_user_meta_data->>'nome', 'Super Admin'), 'super_admin'
 FROM auth.users
