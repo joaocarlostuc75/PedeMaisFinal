@@ -1,16 +1,18 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useStore } from '../store';
-import { formatCurrency, formatDate } from '../utils';
+import { formatCurrency, convertFileToBase64 } from '../utils';
 import { Link } from 'react-router-dom';
 
 export const SuperAdminLojas = () => {
-  const { lojas, planos, cancelarAssinatura, updateLoja, deleteLoja, batchUpdatePlano, addNotification } = useStore();
+  const { lojas, planos, updateLoja, deleteLoja, batchUpdatePlano, addNotification } = useStore();
   const [editingLoja, setEditingLoja] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
+  
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Filtragem das lojas com base na busca
   const filteredLojas = useMemo(() => {
@@ -58,6 +60,22 @@ export const SuperAdminLojas = () => {
           deleteLoja(id);
           addNotification('info', 'Loja removida do sistema.');
       }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && editingLoja) {
+      if (file.size > 2 * 1024 * 1024) {
+        addNotification('error', 'A imagem deve ter no máximo 2MB.');
+        return;
+      }
+      try {
+        const base64 = await convertFileToBase64(file);
+        setEditingLoja({...editingLoja, logo: base64});
+      } catch (err) {
+        addNotification('error', 'Erro ao processar imagem.');
+      }
+    }
   };
 
   return (
@@ -131,8 +149,15 @@ export const SuperAdminLojas = () => {
                         <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(loja.id)} className="w-5 h-5 rounded accent-emerald-600" />
                     </td>
                     <td className="p-8">
-                        <div className="font-black text-gray-800 text-lg">{loja.nome}</div>
-                        <div className="text-xs font-bold text-emerald-600">pedemais.app/loja/{loja.slug}</div>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shrink-0 border border-gray-200">
+                                {loja.logo ? <img src={loja.logo} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl">🏪</div>}
+                            </div>
+                            <div>
+                                <div className="font-black text-gray-800 text-lg">{loja.nome}</div>
+                                <Link to={`/loja/${loja.slug}`} target="_blank" className="text-xs font-bold text-emerald-600 hover:underline">pedemais.app/loja/{loja.slug}</Link>
+                            </div>
+                        </div>
                     </td>
                     <td className="p-8">
                         <span className="bg-gray-100 px-4 py-1 rounded-full text-xs font-black text-gray-500 uppercase">{plano?.nome}</span>
@@ -144,6 +169,9 @@ export const SuperAdminLojas = () => {
                     </td>
                     <td className="p-8 text-right">
                         <div className="flex justify-end gap-2">
+                        <Link to={`/loja/${loja.slug}`} target="_blank" className="p-3 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center" title="Ver Loja Pública">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </Link>
                         <button onClick={() => openEditModal(loja)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all" title="Editar Loja">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
@@ -174,6 +202,27 @@ export const SuperAdminLojas = () => {
             <h3 className="text-2xl font-black mb-6">Editar Loja</h3>
             
             <div className="space-y-6">
+               <div className="flex items-center gap-6 mb-4">
+                  <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                  <div 
+                    onClick={() => logoInputRef.current?.click()}
+                    className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-emerald-500 overflow-hidden relative group"
+                  >
+                     {editingLoja.logo ? (
+                        <img src={editingLoja.logo} className="w-full h-full object-cover" />
+                     ) : (
+                        <span className="text-2xl text-gray-300">📷</span>
+                     )}
+                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-[10px] text-white font-black uppercase">Alterar</span>
+                     </div>
+                  </div>
+                  <div>
+                     <p className="font-bold text-gray-800">Logotipo da Loja</p>
+                     <p className="text-xs text-gray-400 cursor-pointer hover:text-emerald-600" onClick={() => logoInputRef.current?.click()}>Clique para alterar</p>
+                  </div>
+               </div>
+
                <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Nome da Loja</label>
                   <input 

@@ -49,11 +49,17 @@ export const SuperAdminPlanos = () => {
     handleCloseModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // IMPORTANTE: Previne clicar no card ao clicar em excluir
     if (window.confirm('Tem certeza que deseja excluir este plano? Lojas assinantes podem ser afetadas.')) {
       deletePlano(id);
       addNotification('info', 'Plano removido.');
     }
+  };
+
+  const handleEditClick = (e: React.MouseEvent, p: Plano) => {
+      e.stopPropagation();
+      handleOpenModal(p);
   };
 
   const updateRecursos = (text: string) => {
@@ -120,9 +126,10 @@ export const SuperAdminPlanos = () => {
               </ul>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => handleOpenModal(p)} className="bg-gray-100 text-gray-600 py-3 rounded-xl font-black text-xs uppercase hover:bg-gray-200 transition-colors">Editar</button>
-                <button onClick={() => handleDelete(p.id)} className="bg-red-50 text-red-500 py-3 rounded-xl font-black text-xs uppercase hover:bg-red-500 hover:text-white transition-colors">Excluir</button>
+            {/* Botões de Ação Sempre Visíveis para Evitar Problemas de Hover Mobile */}
+            <div className="grid grid-cols-2 gap-3 mt-auto">
+                <button onClick={(e) => handleEditClick(e, p)} className="bg-gray-100 text-gray-600 py-3 rounded-xl font-black text-xs uppercase hover:bg-gray-200 transition-colors">Editar</button>
+                <button onClick={(e) => handleDelete(e, p.id)} className="bg-red-50 text-red-500 py-3 rounded-xl font-black text-xs uppercase hover:bg-red-500 hover:text-white transition-colors">Excluir</button>
             </div>
           </div>
         ))}

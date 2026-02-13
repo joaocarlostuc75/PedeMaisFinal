@@ -5,9 +5,6 @@ import { useStore } from '../store';
 import { CompartilharProduto } from '../components/CompartilharProduto';
 import { formatCurrency } from '../utils';
 
-// Lista base de categorias para filtro, pode ser dinâmica no futuro
-const CATEGORIAS_PADRAO = ['Todos', 'Destaques', 'Geral', 'Lanches', 'Bebidas', 'Sobremesas', 'Pizzas', 'Combos'];
-
 export const PublicShop = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -15,7 +12,7 @@ export const PublicShop = () => {
   const loja = lojas.find(l => l.slug === slug);
   
   const [busca, setBusca] = useState('');
-  const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
+  const [activeCategory, setActiveCategory] = useState(''); // Apenas visual para a tab ativa
   
   // Carrinho agora armazena também o agendamento
   const [carrinho, setCarrinho] = useState<{id: string, qtd: number, agendamento: string}[]>([]);
@@ -47,38 +44,33 @@ export const PublicShop = () => {
   // Filtra produtos desta loja específica
   const produtosDaLoja = produtos.filter(p => p.lojaId === loja.id);
 
-  // Extrai categorias dinâmicas baseadas nos produtos existentes + padrão
+  // Extrai categorias dinâmicas baseadas nos produtos existentes
   const categoriasDisponiveis = useMemo(() => {
-      const cats = new Set(['Todos', 'Destaques']);
+      const cats = new Set<string>();
+      // Adiciona categorias que têm produtos
       produtosDaLoja.forEach(p => cats.add(p.categoria));
-      // Garante ordem, mantendo Todos e Destaques primeiro
-      return Array.from(cats).sort((a, b) => {
-          if (a === 'Todos') return -1;
-          if (b === 'Todos') return 1;
-          if (a === 'Destaques') return -1;
-          if (b === 'Destaques') return 1;
-          return a.localeCompare(b);
-      });
+      
+      // Ordena: Destaques (se houver items com destaque) primeiro, depois alfabético
+      const catsArr = Array.from(cats).sort();
+      
+      // Verifica se tem destaques para criar uma pseudo-categoria se necessário, 
+      // mas neste layout de scroll, geralmente agrupamos por categoria real.
+      // Vamos manter a ordem alfabética simples ou customizada.
+      return catsArr;
   }, [produtosDaLoja]);
+
+  // Define a primeira categoria como ativa inicialmente
+  useEffect(() => {
+      if (categoriasDisponiveis.length > 0 && !activeCategory) {
+          setActiveCategory(categoriasDisponiveis[0]);
+      }
+  }, [categoriasDisponiveis]);
 
   const totalItens = carrinho.reduce((acc, curr) => acc + curr.qtd, 0);
   const totalValor = carrinho.reduce((acc, curr) => {
     const prod = produtosDaLoja.find(p => p.id === curr.id);
     return acc + (prod?.preco || 0) * curr.qtd;
   }, 0);
-
-  const produtosFiltrados = useMemo(() => {
-    return produtosDaLoja.filter(p => {
-      const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || 
-                       p.descricao.toLowerCase().includes(busca.toLowerCase());
-      
-      let bateCategoria = true;
-      if (categoriaAtiva === 'Destaques') bateCategoria = !!p.destaque;
-      else if (categoriaAtiva !== 'Todos') bateCategoria = p.categoria === categoriaAtiva;
-
-      return bateBusca && bateCategoria;
-    });
-  }, [busca, categoriaAtiva, produtosDaLoja]);
 
   const addAoCarrinho = (id: string) => {
     setCarrinho(prev => {
@@ -132,6 +124,16 @@ export const PublicShop = () => {
 
   const irParaCheckout = () => {
     navigate(`/checkout/${loja.slug}`);
+  };
+
+  const scrollToCategory = (cat: string) => {
+      setActiveCategory(cat);
+      const element = document.getElementById(`cat-${cat}`);
+      if (element) {
+          // Ajuste de offset para o header sticky (aprox 180px)
+          const y = element.getBoundingClientRect().top + window.pageYOffset - 180;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+      }
   };
 
   return (
@@ -202,32 +204,14 @@ export const PublicShop = () => {
              </div>
           </div>
 
-          {/* Categorias - Mobile Dropdown */}
-          <div className="md:hidden mb-2">
-            <div className="relative">
-              <select
-                value={categoriaAtiva}
-                onChange={(e) => setCategoriaAtiva(e.target.value)}
-                className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-black uppercase tracking-wide py-3 pl-4 pr-10 rounded-xl appearance-none outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
-              >
-                {categoriasDisponiveis.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Categorias - Desktop Tabs */}
-          <div className="hidden md:flex overflow-x-auto no-scrollbar gap-2 pb-2">
+          {/* Categorias - Navegação Horizontal */}
+          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2">
             {categoriasDisponiveis.map(cat => (
               <button
                 key={cat}
-                onClick={() => setCategoriaAtiva(cat)}
+                onClick={() => scrollToCategory(cat)}
                 className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-xs font-black transition-all border transform active:scale-95 ${
-                  categoriaAtiva === cat 
+                  activeCategory === cat 
                     ? 'bg-gray-900 text-white border-gray-900 shadow-lg' 
                     : 'bg-white text-gray-500 border-gray-100 hover:border-emerald-500 hover:text-emerald-600'
                 }`}
@@ -240,133 +224,152 @@ export const PublicShop = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 pt-8">
-        <section className="mb-12">
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">
-               {categoriaAtiva === 'Todos' ? 'Cardápio Completo' : categoriaAtiva}
-            </h2>
-            <span className="text-xs font-bold text-gray-400">{produtosFiltrados.length} itens</span>
-          </div>
+        {categoriasDisponiveis.map(categoria => {
+            // Filtra produtos da categoria E da busca
+            const produtosDaCategoria = produtosDaLoja.filter(p => 
+                p.categoria === categoria && 
+                (p.nome.toLowerCase().includes(busca.toLowerCase()) || p.descricao.toLowerCase().includes(busca.toLowerCase()))
+            );
 
-          {produtosFiltrados.length === 0 ? (
+            if (produtosDaCategoria.length === 0) return null;
+
+            return (
+                <section key={categoria} id={`cat-${categoria}`} className="mb-12 scroll-mt-48">
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-6 flex items-center gap-3">
+                       {categoria}
+                       <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">{produtosDaCategoria.length}</span>
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {produtosDaCategoria.map(p => {
+                            const isExpanded = expandedProducts.has(p.id);
+                            const showSuccess = addedFeedback.has(p.id);
+
+                            return (
+                                <div key={p.id} className={`bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${!p.disponivel ? 'opacity-70 grayscale' : ''}`}>
+                                    {/* Imagem do Produto */}
+                                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+                                        {p.imagem ? (
+                                            <img 
+                                                src={p.imagem} 
+                                                alt={p.nome} 
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📷</div>
+                                        )}
+                                        
+                                        {/* Badges */}
+                                        <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
+                                            {p.maisVendido && <span className="bg-[#e67e22] text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide shadow-md">Mais vendido</span>}
+                                            {p.destaque && <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide shadow-md">Destaque</span>}
+                                            {p.tags?.map(tag => (
+                                                <span key={tag} className="bg-white/90 backdrop-blur-sm text-gray-800 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide shadow-sm border border-gray-100">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        {!p.disponivel && (
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+                                                <span className="bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-xl transform -rotate-6">Esgotado</span>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <CompartilharProduto nome={p.nome} url={window.location.href} />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Conteúdo */}
+                                    <div className="p-5 flex flex-col flex-1">
+                                        <div className="mb-1 flex justify-between items-start gap-2">
+                                            <h3 className="text-base font-black text-gray-900 leading-tight">{p.nome}</h3>
+                                            {p.oldPrice && (
+                                                <span className="text-[10px] text-gray-400 line-through font-bold mt-1">{formatCurrency(p.oldPrice)}</span>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="mb-4 flex-1">
+                                            {/* Lógica de exibição da descrição */}
+                                            <p className={`text-[11px] text-gray-500 font-medium transition-all duration-300 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                                                {p.descricao}
+                                            </p>
+                                            
+                                            {/* Se a descrição for longa (> 100), mostra o botão 'Ver completo' que abre o modal */}
+                                            {p.descricao.length > 100 ? (
+                                                <button 
+                                                    onClick={(e) => { e.preventDefault(); setSelectedProductDesc(p); }}
+                                                    className="mt-1 text-[10px] font-black uppercase text-gray-300 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                                                >
+                                                    Ver completo 
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                                </button>
+                                            ) : p.descricao.length > 60 && (
+                                                /* Se a descrição for média (entre 60 e 100), mantém a expansão inline */
+                                                <button 
+                                                    onClick={(e) => { e.preventDefault(); toggleDetails(p.id); }}
+                                                    className="mt-1 text-[10px] font-black uppercase text-gray-300 hover:text-emerald-600 transition-colors"
+                                                >
+                                                    {isExpanded ? 'Ler menos' : 'Ler mais'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
+                                            <span className="text-lg font-black text-emerald-700 tracking-tight">{formatCurrency(p.preco)}</span>
+                                            
+                                            <button 
+                                                onClick={() => p.disponivel && handleAddToCart(p.id)}
+                                                disabled={!p.disponivel}
+                                                className={`${
+                                                !p.disponivel
+                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    : showSuccess
+                                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105'
+                                                    : 'bg-gray-900 hover:bg-emerald-600 text-white shadow-lg shadow-gray-900/10 active:scale-95'
+                                                } text-[10px] font-black px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300`}
+                                            >
+                                                {!p.disponivel ? (
+                                                'Indisponível'
+                                                ) : showSuccess ? (
+                                                <>
+                                                    <svg className="w-3.5 h-3.5 animate-bounce" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                                                    <span>Adicionado</span>
+                                                </>
+                                                ) : (
+                                                <>
+                                                    <span>Adicionar</span>
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+                                                </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+            );
+        })}
+
+        {produtosDaLoja.length === 0 && (
              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
                 <p className="text-6xl mb-4">🍽️</p>
-                <h3 className="text-xl font-bold text-gray-800">Nenhum produto encontrado</h3>
-                <p className="text-gray-400 text-sm mt-2">Tente buscar por outro termo ou mude a categoria.</p>
-                <button onClick={() => {setBusca(''); setCategoriaAtiva('Todos')}} className="mt-6 text-emerald-600 font-black uppercase text-xs hover:underline">Limpar filtros</button>
+                <h3 className="text-xl font-bold text-gray-800">Nenhum produto cadastrado</h3>
+                <p className="text-gray-400 text-sm mt-2">Esta loja ainda não possui itens.</p>
              </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {produtosFiltrados.map(p => {
-                const isExpanded = expandedProducts.has(p.id);
-                const showSuccess = addedFeedback.has(p.id);
-
-                return (
-                    <div key={p.id} className={`bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${!p.disponivel ? 'opacity-70 grayscale' : ''}`}>
-                    {/* Imagem do Produto */}
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
-                        {p.imagem ? (
-                            <img 
-                            src={p.imagem} 
-                            alt={p.nome} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📷</div>
-                        )}
-                        
-                        {/* Badges */}
-                        <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
-                            {p.maisVendido && <span className="bg-[#e67e22] text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide shadow-md">Mais vendido</span>}
-                            {p.tags?.map(tag => (
-                                <span key={tag} className="bg-white/90 backdrop-blur-sm text-gray-800 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide shadow-sm border border-gray-100">
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-
-                        {!p.disponivel && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
-                            <span className="bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-xl transform -rotate-6">Esgotado</span>
-                        </div>
-                        )}
-                        
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <CompartilharProduto nome={p.nome} url={window.location.href} />
-                        </div>
-                    </div>
-                    
-                    {/* Conteúdo */}
-                    <div className="p-5 flex flex-col flex-1">
-                        <div className="mb-1 flex justify-between items-start gap-2">
-                            <h3 className="text-base font-black text-gray-900 leading-tight">{p.nome}</h3>
-                            {p.oldPrice && (
-                                <span className="text-[10px] text-gray-400 line-through font-bold mt-1">{formatCurrency(p.oldPrice)}</span>
-                            )}
-                        </div>
-                        
-                        <div className="mb-4 flex-1">
-                            {/* Lógica de exibição da descrição */}
-                            <p className={`text-[11px] text-gray-500 font-medium transition-all duration-300 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                                {p.descricao}
-                            </p>
-                            
-                            {/* Se a descrição for longa (> 100), mostra o botão 'Ver completo' que abre o modal */}
-                            {p.descricao.length > 100 ? (
-                                <button 
-                                    onClick={(e) => { e.preventDefault(); setSelectedProductDesc(p); }}
-                                    className="mt-1 text-[10px] font-black uppercase text-gray-300 hover:text-emerald-600 transition-colors flex items-center gap-1"
-                                >
-                                    Ver completo 
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                                </button>
-                            ) : p.descricao.length > 60 && (
-                                /* Se a descrição for média (entre 60 e 100), mantém a expansão inline */
-                                <button 
-                                    onClick={(e) => { e.preventDefault(); toggleDetails(p.id); }}
-                                    className="mt-1 text-[10px] font-black uppercase text-gray-300 hover:text-emerald-600 transition-colors"
-                                >
-                                    {isExpanded ? 'Ler menos' : 'Ler mais'}
-                                </button>
-                            )}
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
-                        <span className="text-lg font-black text-emerald-700 tracking-tight">{formatCurrency(p.preco)}</span>
-                        
-                        <button 
-                            onClick={() => p.disponivel && handleAddToCart(p.id)}
-                            disabled={!p.disponivel}
-                            className={`${
-                            !p.disponivel
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : showSuccess
-                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105'
-                                : 'bg-gray-900 hover:bg-emerald-600 text-white shadow-lg shadow-gray-900/10 active:scale-95'
-                            } text-[10px] font-black px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300`}
-                        >
-                            {!p.disponivel ? (
-                            'Indisponível'
-                            ) : showSuccess ? (
-                            <>
-                                <svg className="w-3.5 h-3.5 animate-bounce" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                <span>Adicionado</span>
-                            </>
-                            ) : (
-                            <>
-                                <span>Adicionar</span>
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
-                            </>
-                            )}
-                        </button>
-                        </div>
-                    </div>
-                    </div>
-                );
-                })}
-            </div>
-          )}
-        </section>
+        )}
+        
+        {produtosDaLoja.length > 0 && busca && document.querySelectorAll('section').length === 0 && (
+             <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                <p className="text-6xl mb-4">🔍</p>
+                <h3 className="text-xl font-bold text-gray-800">Nenhum produto encontrado</h3>
+                <p className="text-gray-400 text-sm mt-2">Tente buscar por outro termo.</p>
+                <button onClick={() => setBusca('')} className="mt-6 text-emerald-600 font-black uppercase text-xs hover:underline">Limpar busca</button>
+             </div>
+        )}
       </main>
 
       {/* Cart Modal Overlay */}
@@ -516,32 +519,43 @@ export const PublicShop = () => {
         </div>
       )}
 
-      {/* CTA Sticky Botão Ver Carrinho */}
-      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-6 z-30 transition-transform duration-500 ${isCartOpen ? 'translate-y-32' : 'translate-y-0'}`}>
-        <button 
-          onClick={() => setIsCartOpen(true)}
-          className="w-full bg-[#1a5a3a] text-white py-5 rounded-2xl flex items-center justify-center gap-4 shadow-2xl hover:bg-[#14472d] transition-all transform hover:-translate-y-1 active:scale-95 group border-2 border-[#2d7a3a]"
-        >
-          {totalItens > 0 ? (
-            <div className="flex items-center justify-between w-full px-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-white text-[#1a5a3a] min-w-[28px] h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-sm">
-                    {totalItens}
-                </div>
-                <div className="flex flex-col items-start leading-none">
-                    <span className="font-bold text-[10px] opacity-80 uppercase tracking-widest">Ver Sacola</span>
-                    <span className="font-black text-lg">{formatCurrency(totalValor)}</span>
-                </div>
-              </div>
-              <span className="text-xs font-black uppercase tracking-widest group-hover:underline">Fechar Pedido →</span>
-            </div>
-          ) : (
-            <>
-              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.053-1.047-.057-.262-.069-.517-.149-1.512-.567-1.179-.494-1.925-1.635-1.984-1.712-.058-.077-.471-.625-.471-1.202 0-.577.301-.86.41-.977.108-.117.234-.146.312-.146.079 0 .158.001.228.004.075.003.176-.028.275.212.1.243.344.838.374.899.03.061.05.132.01.213-.04.081-.061.132-.121.203-.061.071-.128.158-.183.213-.061.061-.125.128-.054.25.071.121.315.52.676.841.465.412.857.541.978.601.121.061.192.051.264-.03.071-.081.305-.355.387-.477.082-.121.163-.101.275-.061.111.04.706.334.827.395.121.061.203.091.233.142.031.051.031.294-.112.699z"/></svg>
-              <span className="font-bold text-sm uppercase">Fazer pedido pelo WhatsApp</span>
-            </>
-          )}
-        </button>
+      {/* CTA Sticky Botão Ver Carrinho NOVO */}
+      <div className={`fixed bottom-0 left-0 w-full p-4 md:p-6 z-40 pointer-events-none transition-transform duration-500 ease-in-out ${isCartOpen ? 'translate-y-[120%]' : 'translate-y-0'}`}>
+        <div className="max-w-4xl mx-auto flex justify-center pointer-events-auto">
+            {totalItens > 0 ? (
+                <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="w-full max-w-md bg-emerald-900 text-white p-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-emerald-700/50 flex items-center justify-between hover:scale-[1.02] active:scale-95 transition-all group overflow-hidden relative"
+                >
+                    {/* Background Shine Effect */}
+                    <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:animate-[shine_1.5s_infinite]" />
+                    
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="bg-emerald-500 text-white w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shadow-inner border-2 border-emerald-400">
+                            {totalItens}
+                        </div>
+                        <div className="flex flex-col items-start">
+                            <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-emerald-400 mb-0.5">Total estimado</span>
+                            <span className="text-xl font-black leading-none tracking-tight">{formatCurrency(totalValor)}</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 pr-2 relative z-10">
+                        <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block text-emerald-100 group-hover:text-white transition-colors">Ver Carrinho</span>
+                        <div className="w-10 h-10 bg-white text-emerald-900 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                        </div>
+                    </div>
+                </button>
+            ) : (
+                 <button
+                    onClick={() => window.open(`https://wa.me/${loja.whatsapp}`, '_blank')}
+                    className="w-full max-w-xs bg-white/90 backdrop-blur-md text-emerald-800 border border-emerald-100 p-4 rounded-3xl shadow-lg flex items-center justify-center gap-3 hover:bg-white transition-all transform hover:-translate-y-1"
+                >
+                    <svg className="w-5 h-5 fill-[#25D366]" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.053-1.047-.057-.262-.069-.517-.149-1.512-.567-1.179-.494-1.925-1.635-1.984-1.712-.058-.077-.471-.625-.471-1.202 0-.577.301-.86.41-.977.108-.117.234-.146.312-.146.079 0 .158.001.228.004.075.003.176-.028.275.212.1.243.344.838.374.899.03.061.05.132.01.213-.04.081-.061.132-.121.203-.061.071-.128.158-.183.213-.061.061-.125.128-.054.25.071.121.315.52.676.841.465.412.857.541.978.601.121.061.192.051.264-.03.071-.081.305-.355.387-.477.082-.121.163-.101.275-.061.111.04.706.334.827.395.121.061.203.091.233.142.031.051.031.294-.112.699z"/></svg>
+                    <span className="font-bold text-xs uppercase tracking-widest">Falar com a loja</span>
+                </button>
+            )}
+        </div>
       </div>
     </div>
   );

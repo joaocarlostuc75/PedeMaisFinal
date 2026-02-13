@@ -1,18 +1,57 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
+import { convertFileToBase64 } from '../utils';
 
 export const SuperAdminConfig = () => {
-  const { systemSettings, updateSystemSettings, addNotification } = useStore();
+  const { systemSettings, updateSystemSettings, user, updateCurrentUser, addNotification } = useStore();
   const [form, setForm] = useState(systemSettings);
+  const [userForm, setUserForm] = useState({
+      nome: user?.nome || '',
+      email: user?.email || '',
+      avatar: user?.avatar || ''
+  });
+  
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setForm(systemSettings);
   }, [systemSettings]);
+  
+  useEffect(() => {
+      if(user) {
+          setUserForm({
+              nome: user.nome,
+              email: user.email,
+              avatar: user.avatar || ''
+          })
+      }
+  }, [user]);
 
   const handleSave = () => {
     updateSystemSettings(form);
     addNotification('success', 'Configurações do sistema atualizadas!');
+  };
+
+  const handleSaveProfile = () => {
+      updateCurrentUser(userForm);
+      addNotification('success', 'Perfil atualizado com sucesso!');
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        addNotification('error', 'A imagem deve ter no máximo 2MB.');
+        return;
+      }
+      try {
+        const base64 = await convertFileToBase64(file);
+        setUserForm(prev => ({...prev, avatar: base64}));
+      } catch (err) {
+        addNotification('error', 'Erro ao processar imagem.');
+      }
+    }
   };
 
   return (
@@ -24,10 +63,63 @@ export const SuperAdminConfig = () => {
 
       <div className="grid gap-8">
         
+        {/* Perfil do Administrador */}
+        <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+           <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+              <span className="text-emerald-600">👤</span> Perfil do Administrador
+           </h3>
+           <div className="flex flex-col md:flex-row gap-8 items-start">
+               <div className="flex flex-col items-center gap-4">
+                   <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                   <div 
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="w-32 h-32 rounded-full border-4 border-emerald-500 overflow-hidden cursor-pointer hover:opacity-80 transition-all relative group bg-gray-100"
+                   >
+                       {userForm.avatar ? (
+                           <img src={userForm.avatar} className="w-full h-full object-cover" />
+                       ) : (
+                           <img src={`https://i.pravatar.cc/150?u=${user?.id}`} className="w-full h-full object-cover" />
+                       )}
+                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                           <span className="text-xs font-black text-white uppercase">Alterar</span>
+                       </div>
+                   </div>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest cursor-pointer hover:text-emerald-600" onClick={() => avatarInputRef.current?.click()}>Alterar Foto</p>
+               </div>
+               
+               <div className="flex-1 w-full space-y-4">
+                   <div>
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Nome de Exibição</label>
+                        <input 
+                            type="text" 
+                            value={userForm.nome}
+                            onChange={e => setUserForm({...userForm, nome: e.target.value})}
+                            className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                        />
+                   </div>
+                   <div>
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">E-mail de Acesso</label>
+                        <input 
+                            type="email" 
+                            value={userForm.email}
+                            onChange={e => setUserForm({...userForm, email: e.target.value})}
+                            className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                        />
+                   </div>
+                   <button 
+                       onClick={handleSaveProfile}
+                       className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-emerald-500 transition-all self-end"
+                   >
+                       Salvar Perfil
+                   </button>
+               </div>
+           </div>
+        </section>
+
         {/* Identidade do Sistema */}
         <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
            <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
-              <span className="text-emerald-600">🌍</span> Identidade & Contato
+              <span className="text-blue-500">🌍</span> Identidade & Contato
            </h3>
            <div className="grid md:grid-cols-2 gap-6">
               <div>

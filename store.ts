@@ -45,6 +45,8 @@ interface AppState {
   
   // Actions
   setUser: (user: User | null) => void;
+  updateCurrentUser: (data: Partial<User>) => void;
+  
   updatePlanoLoja: (lojaId: string, planoId: string) => void;
   updateLoja: (lojaId: string, data: Partial<Loja>) => void;
   addLoja: (loja: Loja) => void;
@@ -139,6 +141,10 @@ export const useStore = create<AppState>()(
         { id: 'm2', tipo: 'PIX', detalhe: 'Chave PIX', extra: 'pede.mais@cnpj.com.br' },
       ],
       setUser: (user) => set({ user }),
+      updateCurrentUser: (data) => set((state) => ({
+        user: state.user ? { ...state.user, ...data } : null
+      })),
+      
       updatePlanoLoja: (lojaId, planoId) => set((state) => ({
         lojas: state.lojas.map(l => l.id === lojaId ? { ...l, planoId } : l)
       })),

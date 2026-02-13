@@ -6,7 +6,7 @@ import { useStore } from '../store';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
-  const { setUser, resetDemoStore } = useStore();
+  const { setUser, resetDemoStore, planos } = useStore();
   const [ticket, setTicket] = useState(75);
   const [pedidos, setPedidos] = useState(500);
   const [email, setEmail] = useState('');
@@ -39,6 +39,7 @@ export const LandingPage = () => {
         <h1 className="text-2xl md:text-3xl font-black text-emerald-700 tracking-tighter">PEDE MAIS</h1>
         <div className="flex items-center gap-4 md:gap-8 font-black uppercase text-[10px] tracking-widest">
           <a href="#calculadora" className="hidden md:block text-gray-400 hover:text-emerald-600 transition-colors">Calculadora</a>
+          <a href="#planos" className="hidden md:block text-gray-400 hover:text-emerald-600 transition-colors">Planos</a>
           <a href="#cases" className="hidden md:block text-gray-400 hover:text-emerald-600 transition-colors">Cases</a>
           <Link to="/login" className="bg-emerald-600 text-white px-5 py-2.5 md:px-8 md:py-3 rounded-2xl shadow-lg shadow-emerald-100 hover:scale-105 transition-all">ENTRAR</Link>
         </div>
@@ -122,7 +123,54 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      <section id="cases" className="py-20 md:py-40 overflow-hidden">
+      {/* Seção de Planos Dinâmica */}
+      <section id="planos" className="py-20 md:py-40 bg-white">
+         <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-20">
+               <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter mb-4">Escolha seu plano ideal</h2>
+               <p className="text-gray-400 text-lg">Sem taxas por pedido. Você paga apenas a mensalidade.</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+               {planos.map(plan => (
+                  <div key={plan.id} className={`relative bg-white p-10 rounded-[3rem] border-4 flex flex-col transition-all hover:scale-105 ${plan.destaque ? 'border-emerald-500 shadow-2xl z-10' : 'border-gray-100 hover:border-gray-200'}`}>
+                     {plan.destaque && (
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">Mais Popular</div>
+                     )}
+                     <div className="mb-8">
+                        <h3 className="text-2xl font-black text-gray-900 mb-2">{plan.nome}</h3>
+                        <p className="text-5xl font-black text-gray-900 tracking-tighter">
+                           {formatCurrency(plan.preco)}<span className="text-sm font-medium text-gray-400 ml-1">/mês</span>
+                        </p>
+                     </div>
+                     <ul className="space-y-4 mb-10 flex-1">
+                        <li className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                           <span className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xs">✓</span>
+                           {plan.limitePedidos >= 99999 ? 'Pedidos Ilimitados' : `Até ${plan.limitePedidos} pedidos/mês`}
+                        </li>
+                        <li className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                           <span className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xs">✓</span>
+                           {plan.limiteEntregadores >= 999 ? 'Frota Ilimitada' : `Até ${plan.limiteEntregadores} entregadores`}
+                        </li>
+                        {plan.recursos.map((rec, i) => (
+                           <li key={i} className="flex items-center gap-3 text-sm font-medium text-gray-500">
+                              <span className="text-emerald-500">✓</span> {rec}
+                           </li>
+                        ))}
+                     </ul>
+                     <button 
+                        onClick={() => navigate('/onboarding')}
+                        className={`w-full py-5 rounded-2xl font-black text-sm tracking-widest uppercase transition-all ${plan.destaque ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+                     >
+                        Escolher {plan.nome}
+                     </button>
+                  </div>
+               ))}
+            </div>
+         </div>
+      </section>
+
+      <section id="cases" className="py-20 md:py-40 overflow-hidden bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 mb-12 md:mb-20 text-center">
           <h2 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">Quem usa, <span className="text-emerald-600">vende mais.</span></h2>
         </div>

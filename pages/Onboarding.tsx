@@ -2,14 +2,15 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import { formatCurrency } from '../utils';
 
 type Step = 1 | 2 | 3;
 
 export const Onboarding = () => {
   const navigate = useNavigate();
-  const { setUser, addLoja } = useStore();
+  const { setUser, addLoja, planos } = useStore();
   const [step, setStep] = useState<Step>(1);
-  const [selectedPlan, setSelectedPlan] = useState('2'); // Default Pro
+  const [selectedPlan, setSelectedPlan] = useState(planos[0]?.id || '1'); 
   
   // Referências para os inputs de arquivo invisíveis
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -254,23 +255,25 @@ export const Onboarding = () => {
              </div>
 
              <div className="grid md:grid-cols-3 gap-8 mb-16">
-                {[
-                   { id: '1', name: 'Básico', price: '99,90', features: ['500 Pedidos', '5 Entregadores'] },
-                   { id: '2', name: 'Pro', price: '199,90', features: ['1000 Pedidos', '10 Entregadores', 'IA de Rotas'], popular: true },
-                   { id: '3', name: 'Enterprise', price: '499,90', features: ['Pedidos Ilimitados', 'Gerente Dedicado'] }
-                ].map((plan) => (
+                {planos.map((plan) => (
                    <div 
                       key={plan.id}
                       onClick={() => setSelectedPlan(plan.id)}
                       className={`relative bg-white p-8 rounded-[2.5rem] border-4 cursor-pointer transition-all ${selectedPlan === plan.id ? 'border-emerald-500 shadow-2xl scale-105 z-10' : 'border-transparent hover:border-gray-100 opacity-80 hover:opacity-100'}`}
                    >
-                      {plan.popular && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Mais Popular</div>}
-                      <h3 className="text-xl font-black text-gray-900 mb-2">{plan.name}</h3>
-                      <p className="text-4xl font-black text-gray-900 mb-6">R$ {plan.price}<span className="text-sm text-gray-400">/mês</span></p>
+                      {plan.destaque && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Mais Popular</div>}
+                      <h3 className="text-xl font-black text-gray-900 mb-2">{plan.nome}</h3>
+                      <p className="text-4xl font-black text-gray-900 mb-6">{formatCurrency(plan.preco)}<span className="text-sm text-gray-400">/mês</span></p>
                       <ul className="space-y-3 mb-8">
-                         {plan.features.map(f => (
-                            <li key={f} className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                               <span className="text-emerald-500">✓</span> {f}
+                         <li className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                            <span className="text-emerald-500">✓</span> {plan.limitePedidos >= 99999 ? 'Pedidos Ilimitados' : `Até ${plan.limitePedidos} pedidos`}
+                         </li>
+                         <li className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                            <span className="text-emerald-500">✓</span> {plan.limiteEntregadores >= 999 ? 'Entregadores Ilimitados' : `Até ${plan.limiteEntregadores} entregadores`}
+                         </li>
+                         {plan.recursos.map((rec, i) => (
+                            <li key={i} className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                               <span className="text-emerald-500">✓</span> {rec}
                             </li>
                          ))}
                       </ul>

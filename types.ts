@@ -7,6 +7,7 @@ export interface User {
   email: string;
   role: Role;
   lojaId?: string;
+  avatar?: string; // Novo campo para foto/logo do perfil
 }
 
 export interface Badge {

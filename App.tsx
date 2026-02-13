@@ -25,12 +25,14 @@ import { SuperAdminUsuarios } from './pages/SuperAdminUsuarios';
 import { SuperAdminConfig } from './pages/SuperAdminConfig';
 import { Onboarding } from './pages/Onboarding';
 import { LoginPage } from './pages/LoginPage';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfUse } from './pages/TermsOfUse';
 import { Sidebar } from './components/Sidebar';
 
 const HeaderMobile = () => {
   const { toggleSidebar } = useStore();
   const location = useLocation();
-  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding';
+  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding' || location.pathname === '/politica-privacidade' || location.pathname === '/termos-uso';
   if (isPublic) return null;
 
   return (
@@ -45,7 +47,7 @@ const HeaderMobile = () => {
 
 const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
-  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding';
+  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding' || location.pathname === '/politica-privacidade' || location.pathname === '/termos-uso';
 
   if (isPublic) return <>{children}</>;
 
@@ -73,6 +75,10 @@ const App = () => {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/loja/:slug" element={<PublicShop />} />
           <Route path="/checkout/:slug" element={<Checkout />} />
+          
+          {/* Legal Pages */}
+          <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
+          <Route path="/termos-uso" element={<TermsOfUse />} />
           
           {/* Entregador Routes */}
           <Route path="/entregador/dashboard" element={<EntregadorDashboard />} />

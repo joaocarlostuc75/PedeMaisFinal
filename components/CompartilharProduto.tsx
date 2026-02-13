@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface Props {
   nome: string;
@@ -90,7 +91,14 @@ export const CompartilharProduto: React.FC<Props> = ({ nome, url }) => {
               </button>
             </div>
             
-            <p className="mt-8 text-center text-[10px] text-gray-400 font-black uppercase tracking-widest">Pede Mais Compartilhamento</p>
+            <div className="mt-8 flex flex-col items-center gap-2">
+               <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Pede Mais Compartilhamento</p>
+               <div className="flex gap-4 text-[9px] text-gray-400 font-bold uppercase tracking-wider">
+                  <Link to="/politica-privacidade" className="hover:text-emerald-600 transition-colors" target="_blank">Privacidade</Link>
+                  <span>•</span>
+                  <Link to="/termos-uso" className="hover:text-emerald-600 transition-colors" target="_blank">Termos de Uso</Link>
+               </div>
+            </div>
           </div>
         </div>
       )}
