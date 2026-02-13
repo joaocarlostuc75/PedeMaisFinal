@@ -1,19 +1,55 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { CompartilharProduto } from '../components/CompartilharProduto';
 import { formatCurrency } from '../utils';
 
-const CATEGORIAS = ['Todos', 'Pães Artesanais', 'Confeitaria', 'Salgados', 'Bebidas', 'Kits'];
+const CATEGORIAS = ['Todos', 'Destaques', 'Combos', 'Burgers Artesanais', 'Pizzas Premium', 'Acompanhamentos', 'Bebidas', 'Sobremesas'];
 
-const MOCK_PRODUTOS = [
-  { id: '1', nome: 'Pão Italiano Rústico', categoria: 'Pães Artesanais', descricao: 'Fermentação natural de 48h, casca crocante e miolo macio.', preco: 18.90, imagem: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?q=80&w=400&auto=format&fit=crop', destaque: true },
-  { id: '2', nome: 'Croissant de Manteiga', categoria: 'Pães Artesanais', descricao: 'Clássico francês feito com manteiga importada.', preco: 9.50, imagem: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=400&auto=format&fit=crop', destaque: true, maisVendido: true },
-  { id: '3', nome: 'Sonho de Creme', categoria: 'Confeitaria', descricao: 'Massa fofinha polvilhada com açúcar e recheio generoso.', preco: 5.00, imagem: 'https://images.unsplash.com/photo-1559598467-f8b76c8155d0?q=80&w=400&auto=format&fit=crop', destaque: true },
-  { id: '4', nome: 'Café Expresso', categoria: 'Bebidas', descricao: 'Grãos selecionados 100% arábica.', preco: 4.50, imagem: 'https://images.unsplash.com/photo-1510707577719-ae7c14805e3a?q=80&w=400&auto=format&fit=crop', destaque: true },
-  { id: '5', nome: 'Torta de Morango', categoria: 'Confeitaria', descricao: 'Fatia individual com creme patissière.', preco: 14.00, imagem: 'https://images.unsplash.com/photo-1464305795204-6f5bbfc7fb81?q=80&w=400&auto=format&fit=crop', destaque: true },
-  { id: '6', nome: 'Pão de Queijo (6un)', categoria: 'Salgados', descricao: 'Tradicional receita mineira com queijo canastra.', preco: 10.00, imagem: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?q=80&w=400&auto=format&fit=crop', destaque: true },
+interface Produto {
+  id: string;
+  nome: string;
+  categoria: string;
+  descricao: string;
+  preco: number;
+  imagem: string;
+  destaque?: boolean;
+  maisVendido?: boolean;
+  disponivel: boolean;
+  tags?: string[];
+  oldPrice?: number;
+}
+
+const MOCK_PRODUTOS: Produto[] = [
+  // Destaques & Combos
+  { id: 'c1', nome: 'Combo Casal Perfeito', categoria: 'Combos', descricao: '2 Burgers Clássicos + 1 Porção de Fritas Grande + 1 Refrigerante 1.5L. Ideal para compartilhar momentos especiais com quem você gosta.', preco: 89.90, oldPrice: 110.00, imagem: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=600&auto=format&fit=crop', destaque: true, disponivel: true, tags: ['Oferta', 'Para 2'] },
+  { id: 'c2', nome: 'Box da Galera', categoria: 'Combos', descricao: '4 Smash Burgers, 400g de Fritas com Cheddar e Bacon, 4 Bebidas. A melhor pedida para assistir ao jogo ou reunir os amigos em casa.', preco: 149.90, imagem: 'https://images.unsplash.com/photo-1625937759426-34f7b6b6cb8e?q=80&w=600&auto=format&fit=crop', destaque: true, disponivel: true, tags: ['Família'] },
+
+  // Burgers
+  { id: 'b1', nome: 'Double Bacon Master', categoria: 'Burgers Artesanais', descricao: 'Pão brioche selado na manteiga, dois blends de 160g de carne angus, muito cheddar inglês cremoso, farofa de bacon crocante e maionese defumada da casa.', preco: 42.90, imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop', destaque: true, maisVendido: true, disponivel: true, tags: ['Matador de Fome'] },
+  { id: 'b2', nome: 'Classic Salad', categoria: 'Burgers Artesanais', descricao: 'O tradicional que nunca erra. Blend 160g, queijo prato, alface americana crocante, tomate fresco e cebola roxa.', preco: 32.90, imagem: 'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=600&auto=format&fit=crop', disponivel: true },
+  { id: 'b3', nome: 'Veggie Future', categoria: 'Burgers Artesanais', descricao: 'Burger à base de plantas com textura e sabor de carne, queijo vegano, rúcula, tomate seco e molho pesto no pão australiano.', preco: 38.90, imagem: 'https://images.unsplash.com/photo-1525059696034-4967a8e1dca2?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['🌱 Vegano'] },
+  { id: 'b4', nome: 'Chicken Crispy', categoria: 'Burgers Artesanais', descricao: 'Sobrecoxa de frango marinada por 12h e empanada na farinha panko, coleslaw (salada de repolho cremosa) e picles artesanal.', preco: 29.90, imagem: 'https://images.unsplash.com/photo-1615557960916-5f4791effe9d?q=80&w=600&auto=format&fit=crop', disponivel: true },
+
+  // Pizzas
+  { id: 'p1', nome: 'Margherita Especial', categoria: 'Pizzas Premium', descricao: 'Molho de tomate pelati italiano, mozzarella di bufala fresca, folhas de manjericão gigante e finalizada com azeite trufado.', preco: 65.00, imagem: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['Vegetariano'] },
+  { id: 'p2', nome: 'Calabresa Acebolada', categoria: 'Pizzas Premium', descricao: 'A queridinha dos brasileiros. Calabresa artesanal defumada fatiada fininha, muita cebola roxa e azeitonas pretas azapa.', preco: 58.00, imagem: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?q=80&w=600&auto=format&fit=crop', maisVendido: true, disponivel: true },
+  { id: 'p3', nome: 'Quatro Queijos', categoria: 'Pizzas Premium', descricao: 'Uma explosão de sabor com Mozzarella, Gorgonzola suave, Parmesão capa preta maturado e Catupiry original.', preco: 62.00, imagem: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=600&auto=format&fit=crop', disponivel: true },
+
+  // Acompanhamentos
+  { id: 'a1', nome: 'Batata Frita Rústica', categoria: 'Acompanhamentos', descricao: 'Corte caseiro com casca, temperada com alecrim fresco e alho confitado.', preco: 18.00, imagem: 'https://images.unsplash.com/photo-1630384060421-a4323ceca0ad?q=80&w=600&auto=format&fit=crop', disponivel: true },
+  { id: 'a2', nome: 'Onion Rings', categoria: 'Acompanhamentos', descricao: 'Anéis de cebola empanados e super crocantes. Acompanha molho barbecue caseiro.', preco: 22.00, imagem: 'https://images.unsplash.com/photo-1639024471283-03518883512d?q=80&w=600&auto=format&fit=crop', disponivel: true },
+  { id: 'a3', nome: 'Nuggets (10 un)', categoria: 'Acompanhamentos', descricao: 'Crocantes por fora, macios por dentro. Acompanha molho mostarda e mel.', preco: 19.90, imagem: 'https://images.unsplash.com/photo-1562967914-608f82629710?q=80&w=600&auto=format&fit=crop', disponivel: false },
+
+  // Bebidas
+  { id: 'd1', nome: 'Coca-Cola 350ml', categoria: 'Bebidas', descricao: 'Lata gelada.', preco: 6.00, imagem: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=600&auto=format&fit=crop', disponivel: true },
+  { id: 'd2', nome: 'Suco Natural de Laranja', categoria: 'Bebidas', descricao: '500ml, espremido na hora. Sem açúcar e sem conservantes.', preco: 12.00, imagem: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['Saudável'] },
+  { id: 'd3', nome: 'Cerveja Artesanal IPA', categoria: 'Bebidas', descricao: '500ml. Notas cítricas de maracujá e amargor equilibrado. IBU 45.', preco: 24.00, imagem: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['+18'] },
+
+  // Sobremesas
+  { id: 's1', nome: 'Brownie Supremo', categoria: 'Sobremesas', descricao: 'Feito com chocolate belga 70%, nozes e calda de chocolate quente. Acompanha bola de sorvete de creme.', preco: 22.00, imagem: 'https://images.unsplash.com/photo-1564355808539-22fda35bed7e?q=80&w=600&auto=format&fit=crop', disponivel: true, destaque: true },
+  { id: 's2', nome: 'Pudim de Leite', categoria: 'Sobremesas', descricao: 'Aquele clássico sem furinhos, super cremoso e com bastante calda de caramelo.', preco: 14.00, imagem: 'https://images.unsplash.com/photo-1517594593442-5e43c5240217?q=80&w=600&auto=format&fit=crop', disponivel: true },
 ];
 
 export const PublicShop = () => {
@@ -24,7 +60,23 @@ export const PublicShop = () => {
   
   const [busca, setBusca] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
-  const [carrinho, setCarrinho] = useState<{id: string, qtd: number}[]>([]);
+  
+  // Carrinho agora armazena também o agendamento
+  const [carrinho, setCarrinho] = useState<{id: string, qtd: number, agendamento: string}[]>([]);
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+  const [addedFeedback, setAddedFeedback] = useState<Set<string>>(new Set());
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  
+  // Estado para o modal de descrição longa
+  const [selectedProductDesc, setSelectedProductDesc] = useState<Produto | null>(null);
+
+  // Efeito de scroll para o header
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const totalItens = carrinho.reduce((acc, curr) => acc + curr.qtd, 0);
   const totalValor = carrinho.reduce((acc, curr) => {
@@ -36,7 +88,11 @@ export const PublicShop = () => {
     return MOCK_PRODUTOS.filter(p => {
       const bateBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || 
                        p.descricao.toLowerCase().includes(busca.toLowerCase());
-      const bateCategoria = categoriaAtiva === 'Todos' || p.categoria === categoriaAtiva;
+      
+      let bateCategoria = true;
+      if (categoriaAtiva === 'Destaques') bateCategoria = !!p.destaque;
+      else if (categoriaAtiva !== 'Todos') bateCategoria = p.categoria === categoriaAtiva;
+
       return bateBusca && bateCategoria;
     });
   }, [busca, categoriaAtiva]);
@@ -45,8 +101,50 @@ export const PublicShop = () => {
     setCarrinho(prev => {
       const exists = prev.find(i => i.id === id);
       if (exists) return prev.map(i => i.id === id ? { ...i, qtd: i.qtd + 1 } : i);
-      return [...prev, { id, qtd: 1 }];
+      return [...prev, { id, qtd: 1, agendamento: 'imediata' }]; // Default: Entrega Imediata
     });
+  };
+
+  const removeDoCarrinho = (id: string) => {
+    setCarrinho(prev => prev.filter(i => i.id !== id));
+  };
+
+  const updateQuantidade = (id: string, delta: number) => {
+    setCarrinho(prev => prev.map(i => {
+      if (i.id === id) {
+        const newQtd = Math.max(0, i.qtd + delta);
+        return { ...i, qtd: newQtd };
+      }
+      return i;
+    }).filter(i => i.qtd > 0));
+  };
+
+  const updateAgendamento = (id: string, agendamento: string) => {
+    setCarrinho(prev => prev.map(i => i.id === id ? { ...i, agendamento } : i));
+  };
+
+  const handleAddToCart = (id: string) => {
+    addAoCarrinho(id);
+    setAddedFeedback(prev => {
+      const newSet = new Set(prev);
+      newSet.add(id);
+      return newSet;
+    });
+
+    setTimeout(() => {
+      setAddedFeedback(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    }, 2000);
+  };
+
+  const toggleDetails = (id: string) => {
+    const newSet = new Set(expandedProducts);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setExpandedProducts(newSet);
   };
 
   const irParaCheckout = () => {
@@ -54,129 +152,379 @@ export const PublicShop = () => {
   };
 
   return (
-    <div className="bg-[#f8f9fa] min-h-screen pb-32 font-sans">
-      {/* Header Fixo/Topo */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto p-4 md:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-emerald-50 rounded-full border-2 border-white shadow-sm overflow-hidden flex items-center justify-center relative">
-                <img src={`https://picsum.photos/100/100?random=${loja.id}`} alt="Logo" className="w-full h-auto object-cover" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></div>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 leading-tight">{loja.nome}</h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="flex items-center gap-1 text-xs font-bold text-gray-800">
-                    <svg className="w-3 h-3 text-emerald-500 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    4.8
-                  </span>
-                  <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase">Aberto agora</span>
+    <div className="bg-[#f8f9fa] min-h-screen pb-32 font-sans relative">
+      
+      {/* Hero / Banner da Loja */}
+      <div className="relative h-64 md:h-80 w-full overflow-hidden">
+        <img 
+            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop" 
+            alt="Capa da Loja" 
+            className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 max-w-7xl mx-auto flex items-end gap-6">
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-3xl p-1 shadow-2xl border-4 border-white transform translate-y-8">
+                <img src={`https://picsum.photos/200/200?random=${loja.id}`} alt="Logo" className="w-full h-full object-cover rounded-2xl" />
+            </div>
+            <div className="mb-4 text-white flex-1">
+                <h1 className="text-3xl md:text-5xl font-black tracking-tighter shadow-black drop-shadow-lg">{loja.nome}</h1>
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-sm font-medium">
+                    <span className="bg-emerald-500 text-white px-2 py-0.5 rounded-md font-black uppercase text-[10px] tracking-widest">Aberto</span>
+                    <span>•</span>
+                    <span>⭐ 4.9 (1.2k avaliações)</span>
+                    <span>•</span>
+                    <span>Burgers & Pizzas</span>
+                    <span>•</span>
+                    <span>30-45 min</span>
                 </div>
-              </div>
             </div>
-            <div className="flex gap-2">
-              <button className="p-2.5 text-gray-400 hover:text-gray-600 transition-colors" title="Compartilhar">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-              </button>
-              <button className="p-2.5 text-gray-400 hover:text-gray-600 transition-colors" title="Informações">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Barra de Busca */}
-          <div className="relative group">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input 
-              type="text" 
-              placeholder="O que você procura hoje?" 
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
-            />
-          </div>
         </div>
+      </div>
 
-        {/* Categorias Horizontal */}
-        <div className="max-w-4xl mx-auto px-4 pb-4 overflow-x-auto no-scrollbar flex gap-2">
-          {CATEGORIAS.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoriaAtiva(cat)}
-              className={`whitespace-nowrap px-6 py-2 rounded-full text-xs font-bold transition-all border ${
-                categoriaAtiva === cat 
-                  ? 'bg-[#1a5a3a] text-white border-[#1a5a3a]' 
-                  : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      {/* Header Sticky de Busca e Categorias */}
+      <header className={`sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all ${scrolled ? 'shadow-md pt-2' : 'pt-12'}`}>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 pb-4">
+          
+          {/* Barra de Busca e Info Rápida */}
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-4">
+             <div className="relative group w-full md:max-w-md">
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input 
+                  type="text" 
+                  placeholder="Buscar no cardápio..." 
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                />
+             </div>
+             
+             {/* Info de Entrega */}
+             <div className="flex gap-4 text-xs font-bold text-gray-500 hidden md:flex">
+                <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                    <span>🛵</span>
+                    <span>Entrega: {formatCurrency(loja.taxaEntrega || 5.90)}</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                    <span>💳</span>
+                    <span>Pedido Mínimo: R$ 20,00</span>
+                </div>
+             </div>
+          </div>
+
+          {/* Categorias Horizontal */}
+          <div className="overflow-x-auto no-scrollbar flex gap-2 pb-2">
+            {CATEGORIAS.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategoriaAtiva(cat)}
+                className={`whitespace-nowrap px-6 py-2.5 rounded-xl text-xs font-black transition-all border transform active:scale-95 ${
+                  categoriaAtiva === cat 
+                    ? 'bg-gray-900 text-white border-gray-900 shadow-lg' 
+                    : 'bg-white text-gray-500 border-gray-100 hover:border-emerald-500 hover:text-emerald-600'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 pt-8">
-        {/* Seção Destaques */}
+      <main className="max-w-7xl mx-auto px-4 pt-8">
         <section className="mb-12">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Destaques</h2>
-            <button className="text-emerald-600 text-[10px] font-bold uppercase tracking-widest hover:underline">Ver tudo</button>
+          <div className="flex justify-between items-end mb-6">
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+               {categoriaAtiva === 'Todos' ? 'Cardápio Completo' : categoriaAtiva}
+            </h2>
+            <span className="text-xs font-bold text-gray-400">{produtosFiltrados.length} itens</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {produtosFiltrados.map(p => (
-              <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
-                <div className="relative aspect-[4/3] w-full overflow-hidden">
-                  <img src={p.imagem} alt={p.nome} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 min-h-full" />
-                  
-                  {p.maisVendido && (
-                    <span className="absolute top-3 left-3 bg-[#e67e22] text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter">Mais vendido</span>
-                  )}
-                  
-                  <div className="absolute top-2 right-2">
-                    <CompartilharProduto nome={p.nome} url={window.location.href} />
-                  </div>
-                </div>
-                
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight">{p.nome}</h3>
-                  <p className="text-[11px] text-gray-400 font-medium line-clamp-2 mb-4 flex-1">{p.descricao}</p>
-                  
-                  <div className="flex items-center justify-between mt-auto">
-                    <span className="text-sm font-bold text-[#1a5a3a]">{formatCurrency(p.preco)}</span>
-                    <button 
-                      onClick={() => addAoCarrinho(p.id)}
-                      className="bg-[#1a5a3a] hover:bg-[#14472d] text-white text-[10px] font-black px-4 py-2 rounded-lg flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
-                    >
-                      <span className="text-base leading-none mb-0.5">+</span>
-                      Pedir
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {produtosFiltrados.length === 0 ? (
+             <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                <p className="text-6xl mb-4">🍽️</p>
+                <h3 className="text-xl font-bold text-gray-800">Nenhum produto encontrado</h3>
+                <p className="text-gray-400 text-sm mt-2">Tente buscar por outro termo ou mude a categoria.</p>
+                <button onClick={() => {setBusca(''); setCategoriaAtiva('Todos')}} className="mt-6 text-emerald-600 font-black uppercase text-xs hover:underline">Limpar filtros</button>
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {produtosFiltrados.map(p => {
+                const isExpanded = expandedProducts.has(p.id);
+                const showSuccess = addedFeedback.has(p.id);
+
+                return (
+                    <div key={p.id} className={`bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${!p.disponivel ? 'opacity-70 grayscale' : ''}`}>
+                    {/* Imagem do Produto */}
+                    <div className="relative aspect-[4/3] w-full overflow-hidden">
+                        <img 
+                        src={p.imagem} 
+                        alt={p.nome} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                        />
+                        
+                        {/* Badges */}
+                        <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
+                            {p.maisVendido && <span className="bg-[#e67e22] text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide shadow-md">Mais vendido</span>}
+                            {p.tags?.map(tag => (
+                                <span key={tag} className="bg-white/90 backdrop-blur-sm text-gray-800 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-wide shadow-sm border border-gray-100">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+
+                        {!p.disponivel && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+                            <span className="bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-xl transform -rotate-6">Esgotado</span>
+                        </div>
+                        )}
+                        
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <CompartilharProduto nome={p.nome} url={window.location.href} />
+                        </div>
+                    </div>
+                    
+                    {/* Conteúdo */}
+                    <div className="p-5 flex flex-col flex-1">
+                        <div className="mb-1 flex justify-between items-start gap-2">
+                            <h3 className="text-base font-black text-gray-900 leading-tight">{p.nome}</h3>
+                            {p.oldPrice && (
+                                <span className="text-[10px] text-gray-400 line-through font-bold mt-1">{formatCurrency(p.oldPrice)}</span>
+                            )}
+                        </div>
+                        
+                        <div className="mb-4 flex-1">
+                            {/* Lógica de exibição da descrição */}
+                            <p className={`text-[11px] text-gray-500 font-medium transition-all duration-300 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                                {p.descricao}
+                            </p>
+                            
+                            {/* Se a descrição for longa (> 100), mostra o botão 'Ver completo' que abre o modal */}
+                            {p.descricao.length > 100 ? (
+                                <button 
+                                    onClick={(e) => { e.preventDefault(); setSelectedProductDesc(p); }}
+                                    className="mt-1 text-[10px] font-black uppercase text-gray-300 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                                >
+                                    Ver completo 
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                </button>
+                            ) : p.descricao.length > 60 && (
+                                /* Se a descrição for média (entre 60 e 100), mantém a expansão inline */
+                                <button 
+                                    onClick={(e) => { e.preventDefault(); toggleDetails(p.id); }}
+                                    className="mt-1 text-[10px] font-black uppercase text-gray-300 hover:text-emerald-600 transition-colors"
+                                >
+                                    {isExpanded ? 'Ler menos' : 'Ler mais'}
+                                </button>
+                            )}
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
+                        <span className="text-lg font-black text-emerald-700 tracking-tight">{formatCurrency(p.preco)}</span>
+                        
+                        <button 
+                            onClick={() => p.disponivel && handleAddToCart(p.id)}
+                            disabled={!p.disponivel}
+                            className={`${
+                            !p.disponivel
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : showSuccess
+                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105'
+                                : 'bg-gray-900 hover:bg-emerald-600 text-white shadow-lg shadow-gray-900/10 active:scale-95'
+                            } text-[10px] font-black px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-300`}
+                        >
+                            {!p.disponivel ? (
+                            'Indisponível'
+                            ) : showSuccess ? (
+                            <>
+                                <svg className="w-3.5 h-3.5 animate-bounce" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                                <span>Adicionado</span>
+                            </>
+                            ) : (
+                            <>
+                                <span>Adicionar</span>
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M12 5v14m7-7H5"/></svg>
+                            </>
+                            )}
+                        </button>
+                        </div>
+                    </div>
+                    </div>
+                );
+                })}
+            </div>
+          )}
         </section>
       </main>
 
-      {/* CTA Sticky Botão WhatsApp / Checkout */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-6 z-40">
+      {/* Cart Modal Overlay */}
+      {isCartOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end md:items-center justify-center animate-fade-in" onClick={() => setIsCartOpen(false)}>
+          <div 
+            className="bg-white w-full max-w-lg md:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden" 
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#fafbfc]">
+               <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                 <span>🛍️</span> Sua Sacola
+                 <span className="text-white bg-emerald-500 px-2 py-0.5 rounded-md text-xs">{totalItens}</span>
+               </h2>
+               <button onClick={() => setIsCartOpen(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 font-black hover:bg-gray-200 transition-all">✕</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+               {carrinho.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center text-4xl mb-6 grayscale opacity-50">🛒</div>
+                    <p className="font-bold text-gray-800 text-lg">Sua sacola está vazia.</p>
+                    <p className="text-sm text-gray-400 max-w-xs mx-auto mt-2">Navegue pelo nosso cardápio recheado de delícias e faça seu pedido.</p>
+                    <button onClick={() => setIsCartOpen(false)} className="mt-8 text-white bg-emerald-600 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20">Começar a pedir</button>
+                 </div>
+               ) : (
+                 carrinho.map(item => {
+                   const produto = MOCK_PRODUTOS.find(p => p.id === item.id);
+                   if (!produto) return null;
+                   
+                   return (
+                     <div key={item.id} className="flex gap-4 border-b border-gray-50 pb-6 last:border-0 last:pb-0">
+                        <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
+                           <img src={produto.imagem} alt={produto.nome} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1">
+                           <div className="flex justify-between items-start mb-1">
+                              <h4 className="font-bold text-gray-900 leading-tight pr-4">{produto.nome}</h4>
+                              <p className="font-black text-emerald-700 text-sm whitespace-nowrap">{formatCurrency(produto.preco * item.qtd)}</p>
+                           </div>
+                           
+                           {/* Controle de Quantidade */}
+                           <div className="flex items-center justify-between mt-3">
+                                <div className="flex items-center bg-white rounded-lg p-0.5 border border-gray-200 shadow-sm">
+                                    <button onClick={() => updateQuantidade(item.id, -1)} className="w-7 h-7 flex items-center justify-center font-bold text-gray-400 hover:text-emerald-600 transition-colors hover:bg-gray-50 rounded-md">-</button>
+                                    <span className="w-8 text-center text-xs font-black text-gray-800">{item.qtd}</span>
+                                    <button onClick={() => updateQuantidade(item.id, 1)} className="w-7 h-7 flex items-center justify-center font-bold text-gray-400 hover:text-emerald-600 transition-colors hover:bg-gray-50 rounded-md">+</button>
+                                </div>
+                                <button onClick={() => removeDoCarrinho(item.id)} className="text-[10px] text-red-400 font-bold hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Remover</button>
+                           </div>
+
+                           {/* Seletor de Agendamento */}
+                           <div className="mt-3 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100">
+                              <label className="block text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                 Quando entregar este item?
+                              </label>
+                              <select 
+                                value={item.agendamento}
+                                onChange={(e) => updateAgendamento(item.id, e.target.value)}
+                                className="w-full bg-white border border-blue-100 text-xs font-bold text-gray-700 rounded-lg py-2 px-2 outline-none focus:ring-2 focus:ring-blue-200 appearance-none cursor-pointer hover:border-blue-300 transition-colors"
+                              >
+                                 <option value="imediata">⚡ Entrega Imediata (30-45min)</option>
+                                 <option value="hoje_tarde">📅 Hoje - Tarde (14h - 18h)</option>
+                                 <option value="hoje_noite">🌙 Hoje - Noite (19h - 22h)</option>
+                                 <option value="amanha_manha">☀️ Amanhã - Manhã</option>
+                                 <option value="amanha_almoco">🍽️ Amanhã - Almoço</option>
+                              </select>
+                           </div>
+                        </div>
+                     </div>
+                   );
+                 })
+               )}
+            </div>
+
+            <div className="p-8 border-t border-gray-100 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.05)] relative z-10">
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Subtotal</span>
+                  <span className="text-lg font-bold text-gray-800">{formatCurrency(totalValor)}</span>
+               </div>
+               <div className="flex justify-between items-end mb-6">
+                  <span className="text-gray-900 text-sm font-black uppercase tracking-widest">Total Estimado</span>
+                  <span className="text-3xl font-black text-emerald-600 tracking-tighter">{formatCurrency(totalValor)}</span>
+               </div>
+               <button 
+                  onClick={irParaCheckout}
+                  disabled={carrinho.length === 0}
+                  className={`w-full py-5 rounded-2xl font-black text-sm tracking-widest uppercase transition-all shadow-xl flex items-center justify-center gap-3 ${
+                    carrinho.length === 0 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-gray-900 text-white hover:bg-emerald-600 hover:-translate-y-1 active:scale-95 shadow-emerald-900/10'
+                  }`}
+               >
+                  <span>Ir para Pagamento</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Descrição Longa */}
+      {selectedProductDesc && (
+        <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setSelectedProductDesc(null)}
+        >
+            <div 
+                className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl relative overflow-hidden" 
+                onClick={e => e.stopPropagation()}
+            >
+                <button 
+                    onClick={() => setSelectedProductDesc(null)} 
+                    className="absolute top-6 right-6 w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-all font-black"
+                >
+                    ✕
+                </button>
+
+                <div className="mb-6">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">{selectedProductDesc.categoria}</p>
+                    <h3 className="text-2xl font-black text-gray-900 leading-tight">{selectedProductDesc.nome}</h3>
+                </div>
+
+                <div className="max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
+                    <p className="text-gray-600 font-medium leading-relaxed text-sm">
+                        {selectedProductDesc.descricao}
+                    </p>
+                </div>
+                
+                <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-2xl font-black text-emerald-700 tracking-tighter">{formatCurrency(selectedProductDesc.preco)}</span>
+                    <button 
+                         onClick={() => {
+                             if(selectedProductDesc.disponivel) {
+                                 handleAddToCart(selectedProductDesc.id);
+                                 setSelectedProductDesc(null);
+                             }
+                         }}
+                         disabled={!selectedProductDesc.disponivel}
+                         className="bg-gray-900 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-gray-900/10"
+                    >
+                        Adicionar à Sacola
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* CTA Sticky Botão Ver Carrinho */}
+      <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-6 z-30 transition-transform duration-500 ${isCartOpen ? 'translate-y-32' : 'translate-y-0'}`}>
         <button 
-          onClick={irParaCheckout}
-          className="w-full bg-[#1a5a3a] text-white py-5 rounded-2xl flex items-center justify-center gap-4 shadow-2xl hover:bg-[#14472d] transition-all transform hover:-translate-y-1 active:scale-95 group"
+          onClick={() => setIsCartOpen(true)}
+          className="w-full bg-[#1a5a3a] text-white py-5 rounded-2xl flex items-center justify-center gap-4 shadow-2xl hover:bg-[#14472d] transition-all transform hover:-translate-y-1 active:scale-95 group border-2 border-[#2d7a3a]"
         >
           {totalItens > 0 ? (
-            <div className="flex items-center gap-3">
-              <div className="bg-white text-[#1a5a3a] min-w-[24px] h-6 rounded-full px-1.5 flex items-center justify-center text-[10px] font-black">
-                {totalItens}
+            <div className="flex items-center justify-between w-full px-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-white text-[#1a5a3a] min-w-[28px] h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-sm">
+                    {totalItens}
+                </div>
+                <div className="flex flex-col items-start leading-none">
+                    <span className="font-bold text-[10px] opacity-80 uppercase tracking-widest">Ver Sacola</span>
+                    <span className="font-black text-lg">{formatCurrency(totalValor)}</span>
+                </div>
               </div>
-              <span className="font-bold text-sm uppercase">Ver Carrinho ({formatCurrency(totalValor)})</span>
+              <span className="text-xs font-black uppercase tracking-widest group-hover:underline">Fechar Pedido →</span>
             </div>
           ) : (
             <>
-              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.053-1.047-.057-.262-.069-.517-.149-1.512-.567-1.179-.494-1.925-1.635-1.984-1.712-.058-.077-.471-.625-.471-1.202 0-.577.301-.86.41-.977.108-.117.234-.146.312-.146.079 0 .158.001.228.004.075.003.176-.028.275.212.1.243.344.838.374.899.03.061.05.132.01.213-.04.081-.061.132-.121.203-.061.071-.128.158-.183.213-.061.061-.125.128-.054.25.071.121.315.52.676.841.465.412.857.541.978.601.121.061.192.051.264-.03.071-.081.305-.355.387-.477.082-.121.163-.101.275-.061.111.04.706.334.827.395.121.061.203.091.233.142.031.051.031.294-.112.699z"/></svg>
+              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.053-1.047-.057-.262-.069-.517-.149-1.512-.567-1.179-.494-1.925-1.635-1.984-1.712-.058-.077-.471-.625-.471-1.202 0-.577.301-.86.41-.977.108-.117.234-.146.312-.146.079 0 .158.001.228.004.075.003.176-.028.275.212.1.243.344.838.374.899.03.061.05.132.01.213-.04.081-.061.132-.121.203-.061.071-.128.158-.183.213-.061.061-.125.128-.054.25.071.121.315.52.676.841.465.412.857.541.978.601.121.061.192.051.264-.03.071-.081.305-.355.387-.477.082-.121.163-.101.275-.061.111.04.706.334.827.395.121.061.203.091.233.142.031.051.031.294-.112.699z"/></svg>
               <span className="font-bold text-sm uppercase">Fazer pedido pelo WhatsApp</span>
             </>
           )}

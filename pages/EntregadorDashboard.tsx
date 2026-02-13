@@ -10,11 +10,14 @@ const GANHOS_MOCK = [
 ];
 
 export const EntregadorDashboard = () => {
-  const { entregas, saques, aceitarEntrega, solicitarSaque, entregadores } = useStore();
+  const { entregas, saques, solicitarSaque, entregadores, atualizarStatusPedido, addNotification } = useStore();
   const entregador = entregadores[0]; // João Motoca demo
   
   const [activeTab, setActiveTab] = useState<'entregas' | 'ganhos' | 'saques' | 'conquistas'>('entregas');
   const [valorSaque, setValorSaque] = useState(0);
+
+  // Filtra apenas entregas atribuídas a este entregador que estão em curso
+  const minhasEntregasAtivas = entregas.filter(e => e.entregadorId === entregador.id && e.status === 'em_transito');
 
   const handleSaque = () => {
     if (valorSaque < 50) return alert('Valor mínimo para saque é R$ 50,00');
@@ -28,6 +31,21 @@ export const EntregadorDashboard = () => {
       data: new Date().toISOString()
     });
     alert('Saque solicitado com sucesso!');
+  };
+
+  const concluirEntrega = (id: string) => {
+    if(window.confirm('Confirmar entrega realizada com sucesso?')) {
+      atualizarStatusPedido(id, 'finalizada');
+      addNotification('success', 'Entrega concluída! Valor creditado.');
+    }
+  };
+
+  const reportarProblema = (id: string) => {
+    const motivo = window.prompt('Qual o motivo do cancelamento? (Cliente não encontrado, Recusado, Endereço errado...)');
+    if(motivo) {
+      atualizarStatusPedido(id, 'cancelada');
+      addNotification('info', `Entrega cancelada: ${motivo}`);
+    }
   };
 
   const getRankEmoji = (index: number) => {
@@ -92,7 +110,7 @@ export const EntregadorDashboard = () => {
             onClick={() => setActiveTab(tab)}
             className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
           >
-            {tab === 'conquistas' ? '🏆 Conquistas' : tab}
+            {tab === 'conquistas' ? '🏆 Conquistas' : tab === 'entregas' ? '🚀 Missões Atuais' : tab}
           </button>
         ))}
       </div>
@@ -102,25 +120,53 @@ export const EntregadorDashboard = () => {
           <section className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
             <h3 className="text-xl font-black mb-6 flex items-center gap-2">
                <span className="w-2 h-6 bg-emerald-500 rounded-full" />
-               PEDIDOS DISPONÍVEIS
+               SUAS ENTREGAS ATUAIS
             </h3>
             <div className="space-y-4">
-              {entregas.filter(e => e.status === 'pendente').map(e => (
-                <div key={e.id} className="bg-gray-50 p-6 rounded-3xl border-2 border-transparent hover:border-emerald-500 hover:bg-white transition-all flex justify-between items-center group">
-                  <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Taxa Líquida</p>
-                    <p className="text-2xl font-black text-gray-800 tracking-tighter">{formatCurrency(e.valor)}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                       <span className="bg-emerald-100 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded uppercase">+15 XP</span>
-                       <span className="text-[10px] text-gray-400 font-bold italic">Distância: 2.4km</span>
+              {minhasEntregasAtivas.map(e => (
+                <div key={e.id} className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100 flex flex-col gap-4 animate-fade-in">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Em andamento</p>
+                      <p className="text-xl font-black text-gray-800 tracking-tighter">{e.clienteNome}</p>
+                      <p className="text-xs text-gray-500 font-bold mt-1">📍 {e.endereco}</p>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-2xl font-black text-gray-900">{formatCurrency(e.valor)}</p>
+                       <p className="text-[9px] text-gray-400 font-bold uppercase">Valor da Taxa</p>
                     </div>
                   </div>
-                  <button onClick={() => aceitarEntrega(e.id, entregador.id)} className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-xs group-hover:scale-105 shadow-lg shadow-emerald-100 transition-all">ACEITAR</button>
+                  
+                  <div className="bg-white p-4 rounded-xl text-sm text-gray-600 border border-gray-100">
+                     <p className="font-bold text-xs uppercase text-gray-400 mb-2">Itens do Pedido</p>
+                     <ul className="list-disc pl-4 space-y-1">
+                        {e.itens.map((item, idx) => (
+                           <li key={idx} className="text-xs font-bold">{item.qtd}x {item.nome}</li>
+                        ))}
+                     </ul>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                     <button 
+                        onClick={() => reportarProblema(e.id)}
+                        className="py-3 rounded-xl border-2 border-red-100 text-red-400 font-black text-xs hover:bg-red-50 hover:text-red-600 transition-all uppercase"
+                     >
+                        Problema
+                     </button>
+                     <button 
+                        onClick={() => concluirEntrega(e.id)}
+                        className="py-3 rounded-xl bg-emerald-600 text-white font-black text-xs hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-200 uppercase"
+                     >
+                        ✔ Entregue
+                     </button>
+                  </div>
                 </div>
               ))}
-              {entregas.filter(e => e.status === 'pendente').length === 0 && (
-                <div className="text-center py-12">
-                   <p className="text-gray-400 font-bold uppercase text-xs">Nenhum pedido no momento. Fique atento!</p>
+              {minhasEntregasAtivas.length === 0 && (
+                <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                   <p className="text-4xl mb-4">💤</p>
+                   <p className="text-gray-400 font-bold uppercase text-xs">Nenhuma entrega atribuída no momento.</p>
+                   <p className="text-gray-300 text-[10px] mt-2 max-w-[200px] mx-auto">Aguarde a loja despachar um novo pedido para você.</p>
                 </div>
               )}
             </div>
@@ -131,10 +177,10 @@ export const EntregadorDashboard = () => {
                <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             </div>
             <h3 className="text-xl font-black mb-8 flex items-center gap-3 relative z-10">
-               <span className="text-emerald-400">🏆</span> RANKING SEMANAL
+               <span className="text-emerald-400">🏆</span> RANKING DA EQUIPE
             </h3>
             <div className="space-y-4 relative z-10">
-              {entregadores.sort((a,b) => b.entregasHoje - a.entregasHoje).slice(0, 5).map((e, idx) => (
+              {entregadores.filter(ent => ent.lojaId === entregador.lojaId).sort((a,b) => b.entregasHoje - a.entregasHoje).slice(0, 5).map((e, idx) => (
                 <div key={e.id} className={`flex justify-between items-center p-5 rounded-[1.5rem] transition-all ${e.id === entregador.id ? 'bg-emerald-600 shadow-xl ring-4 ring-white/10 scale-105' : 'bg-white/5 hover:bg-white/10'}`}>
                   <div className="flex items-center gap-4">
                     <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm ${idx < 3 ? 'bg-emerald-400 text-gray-900' : 'text-gray-500'}`}>

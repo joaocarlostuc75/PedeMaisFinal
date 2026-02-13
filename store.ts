@@ -21,7 +21,7 @@ interface AppState {
   addEntregador: (entregador: any) => void;
   cancelarAssinatura: (lojaId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
-  aceitarEntrega: (entregaId: string, entregadorId: string) => void;
+  atribuirEntregador: (entregaId: string, entregadorId: string) => void; // Nova ação
   atualizarStatusPedido: (entregaId: string, novoStatus: Entrega['status']) => void;
   solicitarSaque: (saque: Saque) => void;
   
@@ -68,19 +68,25 @@ export const useStore = create<AppState>((set) => ({
   entregas: [
     { 
       id: 'ent1', valor: 45.90, status: 'pendente', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Mariana Silva', endereco: 'Rua das Flores, 123',
-      itens: [{ qtd: 1, nome: 'X-Bacon Duplo' }, { qtd: 1, nome: 'Coca-Cola 2L' }]
+      itens: [
+        { qtd: 1, nome: 'X-Bacon Duplo', detalhe: 'Sem cebola, maionese extra', preco: 35.90 }, 
+        { qtd: 1, nome: 'Coca-Cola 2L', detalhe: 'Bem gelada', preco: 10.00 }
+      ]
     },
     { 
       id: 'ent2', valor: 82.50, status: 'preparando', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Carlos Oliveira', endereco: 'Av. Paulista, 1000',
-      itens: [{ qtd: 2, nome: 'Pizza Calabresa' }, { qtd: 1, nome: 'Guaraná' }]
+      itens: [
+        { qtd: 2, nome: 'Pizza Calabresa', detalhe: 'Borda recheada de catupiry', preco: 35.00 }, 
+        { qtd: 1, nome: 'Guaraná Antártica 2L', preco: 12.50 }
+      ]
     },
     { 
       id: 'ent3', valor: 30.00, status: 'pronto', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Fernanda Costa', endereco: 'Rua Augusta, 500',
-      itens: [{ qtd: 1, nome: 'Combo Sushi' }]
+      itens: [{ qtd: 1, nome: 'Combo Sushi', detalhe: '12 peças variadas (Salmão/Atum)', preco: 30.00 }]
     },
     { 
       id: 'ent4', valor: 18.90, status: 'finalizada', data: '2023-10-20T14:30:00Z', lojaId: 'l1', entregadorId: 'e1', clienteNome: 'Roberto Dias', endereco: 'Retirada',
-      itens: [{ qtd: 1, nome: 'Açaí 500ml' }]
+      itens: [{ qtd: 1, nome: 'Açaí 500ml', detalhe: 'Com granola, leite ninho e morango', preco: 18.90 }]
     },
   ],
   saques: [],
@@ -117,7 +123,7 @@ export const useStore = create<AppState>((set) => ({
   batchUpdatePlano: (lojaIds, planoId) => set((state) => ({
     lojas: state.lojas.map(l => lojaIds.includes(l.id) ? { ...l, planoId } : l)
   })),
-  aceitarEntrega: (entregaId, entregadorId) => set((state) => ({
+  atribuirEntregador: (entregaId, entregadorId) => set((state) => ({
     entregas: state.entregas.map(e => e.id === entregaId ? { ...e, status: 'em_transito', entregadorId } : e)
   })),
   atualizarStatusPedido: (entregaId, novoStatus) => set((state) => ({

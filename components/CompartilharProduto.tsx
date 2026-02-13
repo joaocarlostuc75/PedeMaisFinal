@@ -15,6 +15,19 @@ export const CompartilharProduto: React.FC<Props> = ({ nome, url }) => {
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
+  const shareFacebook = () => {
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    window.open(facebookUrl, '_blank');
+  };
+
+  const shareInstagram = () => {
+    copyLink("Link copiado! Cole no seu Story ou Direct.");
+    // Pequeno delay para o usuário ler o alerta antes de abrir o Instagram
+    setTimeout(() => {
+      window.open('https://www.instagram.com/', '_blank');
+    }, 1500);
+  };
+
   const copyLink = (msg?: string) => {
     navigator.clipboard.writeText(url);
     setCopied(true);
@@ -54,10 +67,19 @@ export const CompartilharProduto: React.FC<Props> = ({ nome, url }) => {
               </button>
               
               <button 
-                onClick={() => copyLink("Link copiado! Agora é só colar nos Stories.")}
+                onClick={shareInstagram}
                 className="w-full flex items-center justify-center gap-4 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] hover:scale-105 active:scale-95 text-white font-black py-5 rounded-2xl shadow-lg transition-all"
               >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                 INSTAGRAM
+              </button>
+
+              <button 
+                onClick={shareFacebook}
+                className="w-full flex items-center justify-center gap-4 bg-[#1877F2] hover:scale-105 active:scale-95 text-white font-black py-5 rounded-2xl shadow-lg transition-all"
+              >
+                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
+                FACEBOOK
               </button>
 
               <button 
