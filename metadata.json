@@ -1,0 +1,7 @@
+{
+  "name": "Pede Mais MVP",
+  "description": "Plataforma SaaS white-label para delivery com gestão de entregadores, assinaturas e lojas públicas interativas.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
