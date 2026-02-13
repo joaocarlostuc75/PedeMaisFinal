@@ -53,8 +53,12 @@ export const Sidebar = () => {
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={closeSidebar} />
       )}
 
-      <aside className={`fixed left-0 top-0 h-screen w-64 bg-[#112644] text-white flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-8 flex items-center justify-between">
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-[#112644] text-white flex flex-col transition-transform duration-300
+        lg:translate-x-0 lg:static lg:h-screen lg:sticky lg:top-0 lg:shrink-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#112644] text-xl font-black">P</div>
             <h1 className="text-xl font-black tracking-tighter">Pede Mais</h1>
@@ -64,7 +68,7 @@ export const Sidebar = () => {
 
         {/* Demo Badge */}
         {isDemo && (
-            <div className="px-6 pb-4">
+            <div className="px-6 pb-4 shrink-0">
                 <div className="bg-amber-500/20 border border-amber-500/50 p-3 rounded-xl text-center">
                     <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Ambiente de Teste</p>
                     <p className="text-[9px] text-white/60 leading-tight">Dados não serão salvos permanentemente.</p>
@@ -72,7 +76,7 @@ export const Sidebar = () => {
             </div>
         )}
 
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar pt-2">
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar pt-2">
           <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-6 mb-4">Geral</p>
           {activeItems.map((item) => (
             <Link
@@ -96,7 +100,7 @@ export const Sidebar = () => {
           ))}
         </nav>
 
-        <div className="p-6 border-t border-white/5 space-y-6">
+        <div className="p-6 border-t border-white/5 space-y-6 shrink-0">
           <div className="flex items-center gap-4 px-4 py-2">
              <div className="w-10 h-10 bg-gray-600 rounded-full overflow-hidden border-2 border-white/10 shrink-0">
                 {user?.avatar ? (

@@ -27,26 +27,37 @@ export const LojistaDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto w-full pb-10">
-      {/* Banner Modo Demo */}
+      
+      {/* Banner Modo Demo - Redesenhado para não sobrepor */}
       {isDemo && (
-        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 mb-8 md:mb-12 shadow-2xl relative overflow-hidden text-white flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 animate-bounce-in">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[100px] opacity-20 pointer-events-none" />
-            <div className="relative z-10 w-full">
-                <div className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/50 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2">
-                    <span>🚧</span> Modo Simulação
+        <div className="bg-gray-900 rounded-[2rem] p-8 mb-10 shadow-2xl relative overflow-hidden group">
+            {/* Efeitos de Fundo */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-600 rounded-full blur-[120px] opacity-20 pointer-events-none group-hover:opacity-30 transition-opacity" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                <div className="space-y-4 max-w-2xl">
+                    <div className="inline-flex items-center gap-2 bg-amber-500 text-gray-900 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/20">
+                        <span>🚧</span> Ambiente de Simulação
+                    </div>
+                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter leading-tight">
+                        Você está no comando do <span className="text-emerald-400">Pede Mais.</span>
+                    </h2>
+                    <p className="text-gray-400 font-medium text-sm md:text-base leading-relaxed">
+                        Este é um ambiente seguro para testes. Explore funcionalidades, gerencie pedidos fictícios e veja como sua operação pode escalar. 
+                        <span className="text-white font-bold block mt-1">Dados criados aqui não serão salvos.</span>
+                    </p>
                 </div>
-                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-tight">Experimente o poder do Pede Mais</h2>
-                <p className="text-white/60 font-medium text-sm mt-2 max-w-xl break-words">
-                    Você está acessando uma loja fictícia. Sinta-se à vontade para editar configurações, despachar pedidos e explorar. 
-                    <strong className="text-white block mt-1"> Nenhuma alteração será salva permanentemente.</strong>
-                </p>
+                
+                <div className="w-full md:w-auto flex flex-col gap-3 shrink-0">
+                    <button 
+                        onClick={() => navigate('/onboarding')}
+                        className="bg-emerald-500 hover:bg-emerald-400 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 text-center flex items-center justify-center gap-3"
+                    >
+                        <span>🚀</span> CRIAR MINHA LOJA REAL
+                    </button>
+                    <p className="text-[10px] text-gray-500 text-center font-bold uppercase tracking-widest">Teste grátis por 7 dias</p>
+                </div>
             </div>
-            <button 
-                onClick={() => navigate('/onboarding')}
-                className="relative z-10 w-full xl:w-auto bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-4 rounded-xl font-black shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 active:scale-95 whitespace-nowrap text-sm md:text-base text-center shrink-0"
-            >
-                CRIAR MINHA LOJA REAL
-            </button>
         </div>
       )}
 
@@ -57,7 +68,7 @@ export const LojistaDashboard = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
         {stats.map((s, i) => (
-          <div key={i} className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+          <div key={i} className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className={`w-12 h-12 ${s.color} rounded-2xl flex items-center justify-center text-2xl mb-4`}>
               {s.icon}
             </div>
@@ -70,7 +81,10 @@ export const LojistaDashboard = () => {
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm">
-            <h3 className="text-lg md:text-xl font-black mb-6">Pedidos Recentes</h3>
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg md:text-xl font-black text-gray-900">Pedidos Recentes</h3>
+                <Link to="/admin/pedidos" className="text-emerald-600 text-xs font-black uppercase tracking-widest hover:underline">Ver todos</Link>
+            </div>
             <div className="space-y-4">
               {pedidosHoje.slice(0, 3).length > 0 ? pedidosHoje.slice(0, 3).map((pedido, idx) => (
                 <div key={pedido.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100 gap-3">
@@ -87,7 +101,7 @@ export const LojistaDashboard = () => {
                   </div>
                 </div>
               )) : (
-                 <div className="text-center py-10">
+                 <div className="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
                     <p className="text-gray-300 text-4xl mb-3">📭</p>
                     <p className="text-gray-400 text-sm font-bold">Nenhum pedido hoje ainda.</p>
                     <p className="text-gray-300 text-xs mt-1">Compartilhe seu link para começar a vender!</p>
@@ -98,31 +112,32 @@ export const LojistaDashboard = () => {
         </div>
 
         <div className="space-y-8">
-          <div className="bg-emerald-900 text-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-xl">
-            <h3 className="text-lg md:text-xl font-black mb-4">Seu Link na Bio</h3>
-            <p className="text-emerald-100/60 text-sm mb-6">Compartilhe o link da sua loja nas redes sociais para converter mais vendas.</p>
-            <div className="bg-white/10 p-4 rounded-2xl mb-6 font-mono text-xs md:text-sm break-all">
+          <div className="bg-[#112644] text-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[60px] opacity-20" />
+            <h3 className="text-lg md:text-xl font-black mb-4 relative z-10">Seu Link na Bio</h3>
+            <p className="text-blue-200 text-sm mb-6 relative z-10">Compartilhe o link da sua loja nas redes sociais para converter mais vendas.</p>
+            <div className="bg-white/10 p-4 rounded-2xl mb-6 font-mono text-xs md:text-sm break-all border border-white/10 relative z-10">
               pedemais.app/loja/{minhaLoja.slug}
             </div>
             <Link 
               to={`/loja/${minhaLoja.slug}`} 
               target="_blank"
-              className="block w-full bg-emerald-500 hover:bg-emerald-400 text-center py-4 rounded-xl font-black transition-colors text-sm uppercase tracking-widest"
+              className="block w-full bg-blue-600 hover:bg-blue-500 text-center py-4 rounded-xl font-black transition-colors text-sm uppercase tracking-widest relative z-10 shadow-lg"
             >
               VISUALIZAR LOJA
             </Link>
           </div>
 
           <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-black mb-4">Atalhos</h3>
+            <h3 className="text-lg font-black mb-4">Atalhos Rápidos</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Link to="/admin/entregadores" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-emerald-50 transition-colors">
-                <span className="block text-2xl mb-1">🛵</span>
-                <span className="text-xs font-bold text-gray-600 uppercase">Frota</span>
+              <Link to="/admin/entregadores" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-emerald-50 hover:text-emerald-700 transition-colors group">
+                <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">🛵</span>
+                <span className="text-xs font-bold text-gray-600 uppercase group-hover:text-emerald-700">Frota</span>
               </Link>
-              <Link to="/admin/configuracoes" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-emerald-50 transition-colors">
-                <span className="block text-2xl mb-1">⚙️</span>
-                <span className="text-xs font-bold text-gray-600 uppercase">Config</span>
+              <Link to="/admin/configuracoes" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-blue-50 hover:text-blue-700 transition-colors group">
+                <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">⚙️</span>
+                <span className="text-xs font-bold text-gray-600 uppercase group-hover:text-blue-700">Config</span>
               </Link>
             </div>
           </div>

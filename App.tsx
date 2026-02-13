@@ -54,8 +54,8 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen bg-[#f8fafc]">
       <Sidebar />
-      {/* Wrapper principal: padding-left no desktop para acomodar sidebar fixa */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:pl-64"> 
+      {/* Wrapper principal: Sem padding manual. Flexbox cuida do espaço. */}
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300"> 
         <HeaderMobile />
         {/* Main Content: padding-top no mobile para acomodar header fixo */}
         <main className="flex-1 p-4 md:p-8 pt-20 lg:pt-8 overflow-x-hidden overflow-y-auto h-auto min-h-screen">
