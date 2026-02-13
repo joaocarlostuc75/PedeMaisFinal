@@ -11,6 +11,10 @@ export const Checkout = () => {
   const loja = lojas.find(l => l.slug === slug) || lojas[0];
 
   const [tipo, setTipo] = useState<'entrega' | 'retirada'>('entrega');
+  const [pagamento, setPagamento] = useState('PIX');
+  const [nome, setNome] = useState('');
+  const [endereco, setEndereco] = useState('');
+  
   const [items, setItems] = useState([
     { id: '1', nome: 'X-Bacon Artesanal', desc: 'Pão brioche, 180g carne, cheddar, bacon crocante.', preco: 32.90, qtd: 1, img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200' },
     { id: '2', nome: 'Coca-Cola 2L', desc: 'Gelada', preco: 12.00, qtd: 1, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200' },
@@ -18,7 +22,7 @@ export const Checkout = () => {
   ]);
 
   const subtotal = items.reduce((acc, curr) => acc + (curr.preco * curr.qtd), 0);
-  const taxa = tipo === 'entrega' ? 5.50 : 0;
+  const taxa = tipo === 'entrega' ? (loja.taxaEntrega || 5.50) : 0;
   const total = subtotal + taxa;
 
   const updateQtd = (id: string, delta: number) => {
@@ -27,6 +31,30 @@ export const Checkout = () => {
 
   const removeItem = (id: string) => {
     setItems(items.filter(i => i.id !== id));
+  };
+
+  const finalizarPedido = () => {
+    if (!nome) return alert('Por favor, informe seu nome.');
+    if (tipo === 'entrega' && !endereco) return alert('Por favor, informe o endereço.');
+
+    let msg = `*NOVO PEDIDO - ${loja.nome}*\n`;
+    msg += `--------------------------------\n`;
+    msg += `👤 *Cliente:* ${nome}\n`;
+    msg += `🚚 *Tipo:* ${tipo.toUpperCase()}\n`;
+    if (tipo === 'entrega') msg += `📍 *Endereço:* ${endereco}\n`;
+    msg += `💰 *Pagamento:* ${pagamento}\n`;
+    msg += `--------------------------------\n`;
+    msg += `*ITENS DO PEDIDO:*\n`;
+    items.forEach(i => {
+      msg += `${i.qtd}x ${i.nome} (${formatCurrency(i.preco)})\n`;
+    });
+    msg += `--------------------------------\n`;
+    msg += `Subtotal: ${formatCurrency(subtotal)}\n`;
+    msg += `Taxa de Entrega: ${formatCurrency(taxa)}\n`;
+    msg += `*TOTAL: ${formatCurrency(total)}*\n`;
+    
+    const encoded = encodeURIComponent(msg);
+    window.open(`https://wa.me/${loja.whatsapp}?text=${encoded}`, '_blank');
   };
 
   return (
@@ -38,7 +66,7 @@ export const Checkout = () => {
         </button>
         <div className="flex items-center gap-3">
            <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-white text-xl">🥗</div>
-           <span className="font-black text-gray-800 tracking-tighter">FreshMarket</span>
+           <span className="font-black text-gray-800 tracking-tighter">{loja.nome}</span>
         </div>
         <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -99,7 +127,7 @@ export const Checkout = () => {
                <div className="space-y-6">
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Seu Nome</label>
-                     <input type="text" placeholder="Ex: João Silva" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
+                     <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: João Silva" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
                   </div>
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">WhatsApp / Telefone</label>
@@ -109,21 +137,8 @@ export const Checkout = () => {
                   {tipo === 'entrega' && (
                     <>
                       <div className="space-y-2">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">CEP</label>
-                         <div className="relative">
-                            <input type="text" placeholder="00000-000" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
-                            <button className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></button>
-                         </div>
-                      </div>
-                      <div className="grid grid-cols-4 gap-4">
-                         <div className="col-span-3 space-y-2">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Rua</label>
-                            <input type="text" placeholder="Rua das Flores" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
-                         </div>
-                         <div className="col-span-1 space-y-2">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Número</label>
-                            <input type="text" placeholder="123" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-4 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all text-center" />
-                         </div>
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Endereço Completo</label>
+                         <input type="text" value={endereco} onChange={e => setEndereco(e.target.value)} placeholder="Rua das Flores, 123 - Centro" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
                       </div>
                       <div className="space-y-2">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Complemento / Ref.</label>
@@ -134,10 +149,10 @@ export const Checkout = () => {
 
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Forma de Pagamento</label>
-                     <select className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none appearance-none transition-all">
-                        <option>Cartão de Crédito (Na entrega)</option>
-                        <option>PIX (Na entrega)</option>
-                        <option>Dinheiro</option>
+                     <select value={pagamento} onChange={e => setPagamento(e.target.value)} className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none appearance-none transition-all">
+                        <option value="Cartão de Crédito">Cartão de Crédito (Na entrega)</option>
+                        <option value="PIX">PIX (Na entrega)</option>
+                        <option value="Dinheiro">Dinheiro</option>
                      </select>
                   </div>
                </div>
@@ -163,7 +178,7 @@ export const Checkout = () => {
                </div>
 
                <button 
-                  onClick={() => alert('Redirecionando para WhatsApp...')}
+                  onClick={finalizarPedido}
                   className="w-full bg-[#2d7a3a] text-white py-6 rounded-3xl font-black text-lg tracking-tight flex items-center justify-center gap-4 shadow-2xl shadow-emerald-900/10 hover:bg-[#256631] transition-all transform hover:-translate-y-1 active:scale-95 group"
                >
                   <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.053-1.047-.057-.262-.069-.517-.149-1.512-.567-1.179-.494-1.925-1.635-1.984-1.712-.058-.077-.471-.625-.471-1.202 0-.577.301-.86.41-.977.108-.117.234-.146.312-.146.079 0 .158.001.228.004.075.003.176-.028.275.212.1.243.344.838.374.899.03.061.05.132.01.213-.04.081-.061.132-.121.203-.061.071-.128.158-.183.213-.061.061-.125.128-.054.25.071.121.315.52.676.841.465.412.857.541.978.601.121.061.192.051.264-.03.071-.081.305-.355.387-.477.082-.121.163-.101.275-.061.111.04.706.334.827.395.121.061.203.091.233.142.031.051.031.294-.112.699z"/></svg>
@@ -174,14 +189,6 @@ export const Checkout = () => {
           </div>
         </div>
       </main>
-
-      <footer className="mt-20 py-10 border-t border-gray-100 px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-3 grayscale opacity-40">
-           <span className="text-xl">🥗</span>
-           <span className="font-black text-gray-800 tracking-tighter">FreshMarket</span>
-        </div>
-        <p className="text-[10px] text-gray-400 font-medium">© 2023 FreshMarket. Todos os direitos reservados.</p>
-      </footer>
     </div>
   );
 };

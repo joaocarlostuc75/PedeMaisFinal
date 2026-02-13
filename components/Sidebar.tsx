@@ -4,31 +4,33 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 
 export const Sidebar = () => {
-  const { user, setUser } = useStore();
+  const { user, setUser, isSidebarOpen, closeSidebar } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     setUser(null);
+    closeSidebar();
     navigate('/');
   };
 
   const menuItems = {
     super_admin: [
+      { label: 'Dashboard', path: '/super-admin/dashboard', icon: '📊' },
       { label: 'Lojas', path: '/super-admin/lojas', icon: '🏬' },
-      { label: 'SaaS Insight', path: '/super-admin/relatorios', icon: '📊' },
+      { label: 'Usuários', path: '/super-admin/usuarios', icon: '👥' },
+      { label: 'Entregadores', path: '/super-admin/entregadores', icon: '🛵' },
+      { label: 'Métricas', path: '/super-admin/relatorios', icon: '📈' },
       { label: 'Planos', path: '/super-admin/planos', icon: '💳' },
-      { label: 'Frota Global', path: '/super-admin/entregadores', icon: '🌎' },
     ],
     lojista: [
       { label: 'Dashboard', path: '/admin/dashboard', icon: '🏠' },
       { label: 'Pedidos', path: '/admin/pedidos', icon: '🛍️', badge: 3 },
-      { label: 'Produtos', path: '/admin/produtos', icon: '📦' },
+      { label: 'Entregadores', path: '/admin/entregadores', icon: '🛵' },
+      { label: 'Assinatura', path: '/admin/assinatura', icon: '💳' },
       { label: 'Configurações', path: '/admin/configuracoes', icon: '⚙️' },
       { label: 'Horários', path: '/admin/horarios', icon: '🕒' },
       { label: 'Áreas de Entrega', path: '/admin/areas-entrega', icon: '🗺️' },
-      { label: 'Entregadores', path: '/admin/entregadores', icon: '🛵' },
-      { label: 'Relatórios', path: '/admin/relatorio', icon: '📊' },
     ],
     entregador: [
       { label: 'Entregas', path: '/entregador/dashboard', icon: '🛵' },
@@ -39,44 +41,63 @@ export const Sidebar = () => {
   const activeItems = user ? menuItems[user.role] : [];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-100 hidden lg:flex flex-col z-50">
-      <div className="p-8 flex items-center gap-3">
-        <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-xl font-black">M</div>
-        <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tighter">Minha Loja</h1>
+    <>
+      {/* Overlay Mobile */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={closeSidebar} />
+      )}
+
+      <aside className={`fixed left-0 top-0 h-screen w-64 bg-[#112644] text-white flex flex-col z-50 transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#112644] text-xl font-black">P</div>
+            <h1 className="text-xl font-black tracking-tighter">Pede Mais</h1>
+          </div>
+          <button onClick={closeSidebar} className="lg:hidden text-white/50 hover:text-white">✕</button>
         </div>
-      </div>
 
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar">
-        {activeItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex items-center justify-between px-6 py-4 rounded-2xl font-bold transition-all ${
-              location.pathname === item.path
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'
-            }`}
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar pt-6">
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-6 mb-4">Geral</p>
+          {activeItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={closeSidebar}
+              className={`flex items-center justify-between px-6 py-3.5 rounded-2xl font-bold transition-all ${
+                location.pathname === item.path
+                  ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">{item.icon}</span>
+                <span className="text-sm">{item.label}</span>
+              </div>
+              {item.badge && (
+                 <span className="bg-emerald-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">{item.badge}</span>
+              )}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-6 border-t border-white/5 space-y-6">
+          <div className="flex items-center gap-4 px-4 py-2">
+             <div className="w-10 h-10 bg-gray-600 rounded-full overflow-hidden border-2 border-white/10">
+                <img src={`https://i.pravatar.cc/100?u=${user?.id}`} alt="" />
+             </div>
+             <div>
+                <p className="text-xs font-black truncate max-w-[120px]">{user?.nome}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase">{user?.role.replace('_', ' ')}</p>
+             </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm text-gray-400 hover:bg-red-500 hover:text-white transition-all group"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">{item.icon}</span>
-              <span className="text-sm">{item.label}</span>
-            </div>
-            {item.badge && (
-               <span className="bg-emerald-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">{item.badge}</span>
-            )}
-          </Link>
-        ))}
-      </nav>
-
-      <div className="p-6 border-t border-gray-50">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
-        >
-          <span>🚪</span> Sair
-        </button>
-      </div>
-    </aside>
+            <span className="group-hover:translate-x-1 transition-transform">🚪</span> Sair
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };

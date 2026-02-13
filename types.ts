@@ -20,7 +20,7 @@ export interface Entregador {
   id: string;
   nome: string;
   telefone: string;
-  status: 'disponível' | 'ocupado';
+  status: 'disponível' | 'ocupado' | 'em_pausa' | 'suspenso';
   saldo: number;
   entregasHoje: number;
   entregasTotal: number;
@@ -28,24 +28,22 @@ export interface Entregador {
   xp: number;
   badges: Badge[];
   lojaId: string;
+  tipoVeiculo: 'Moto' | 'Caminhão (Pesado)' | 'Caminhão (Leve)' | 'Van' | 'Sedan';
+  dataAdesao: string;
 }
 
-export interface Saque {
+export interface Fatura {
   id: string;
-  entregadorId: string;
+  mesReferencia: string;
   valor: number;
-  status: 'processando' | 'pago' | 'cancelado';
-  data: string;
+  status: 'Pago' | 'Pendente' | 'Atrasado';
 }
 
-export interface Entrega {
+export interface MeioPagamento {
   id: string;
-  pedidoId: string;
-  entregadorId: string;
-  valor: number;
-  status: 'pendente' | 'aceita' | 'finalizada';
-  data: string;
-  hora: number; // 0-23
+  tipo: 'Cartão' | 'PIX';
+  detalhe: string;
+  extra?: string;
 }
 
 export interface Plano {
@@ -53,8 +51,9 @@ export interface Plano {
   nome: string;
   preco: number;
   limitePedidos: number;
-  limiteLojas: number;
+  limiteEntregadores: number;
   recursos: string[];
+  cor?: string;
 }
 
 export interface Loja {
@@ -65,6 +64,18 @@ export interface Loja {
   statusAssinatura: 'ativo' | 'cancelado' | 'teste';
   proximoVencimento: string;
   whatsapp: string;
+  email?: string;
+  telefone?: string;
+  banner?: string;
+  logo?: string;
+  endereco?: string;
+  corPrimaria?: string;
+  categoria?: string;
+  descricao?: string;
+  taxaEntrega?: number;
+  tempoMin?: number;
+  tempoMax?: number;
+  aceitaRetirada?: boolean;
   stats?: {
     carrinhos: number;
     finalizados: number;
@@ -72,10 +83,37 @@ export interface Loja {
   };
 }
 
-export interface Produto {
-  id: string;
+export interface ItemPedido {
+  qtd: number;
   nome: string;
-  descricao: string;
-  preco: number;
-  imagem: string;
+  detalhe?: string;
+  preco?: number;
+}
+
+export interface Entrega {
+  id: string;
+  clienteNome?: string;
+  itens: ItemPedido[];
+  valor: number;
+  status: 'pendente' | 'preparando' | 'pronto' | 'em_transito' | 'finalizada' | 'cancelada';
+  data: string;
+  entregadorId?: string;
+  lojaId: string;
+  endereco?: string;
+  metodoPagamento?: string;
+  tipoEntrega?: 'entrega' | 'retirada';
+}
+
+export interface Saque {
+  id: string;
+  entregadorId: string;
+  valor: number;
+  status: 'processando' | 'pago' | 'recusado';
+  data: string;
+}
+
+export interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  message: string;
 }

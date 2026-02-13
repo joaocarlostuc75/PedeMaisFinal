@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { User, Entregador, Entrega, Loja, Plano, Saque } from './types';
+import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification } from './types';
 
 interface AppState {
   user: User | null;
@@ -9,69 +9,132 @@ interface AppState {
   entregadores: Entregador[];
   entregas: Entrega[];
   saques: Saque[];
+  faturas: Fatura[];
+  meiosPagamento: MeioPagamento[];
+  notifications: Notification[];
+  isSidebarOpen: boolean;
+  
+  // Actions
   setUser: (user: User | null) => void;
-  addEntregador: (entregador: Entregador) => void;
   updatePlanoLoja: (lojaId: string, planoId: string) => void;
+  updateLoja: (lojaId: string, data: Partial<Loja>) => void;
+  addEntregador: (entregador: any) => void;
   cancelarAssinatura: (lojaId: string) => void;
-  ativarPeriodoTeste: (lojaId: string) => void;
-  aceitarEntrega: (entregaId: string, entregadorId: string) => void;
-  finalizarEntrega: (entregaId: string) => void;
-  solicitarSaque: (saque: Saque) => void;
-  confirmarPagamentoSaque: (saqueId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
+  aceitarEntrega: (entregaId: string, entregadorId: string) => void;
+  atualizarStatusPedido: (entregaId: string, novoStatus: Entrega['status']) => void;
+  solicitarSaque: (saque: Saque) => void;
+  
+  // UI Actions
+  addNotification: (type: 'success' | 'error' | 'info', message: string) => void;
+  removeNotification: (id: string) => void;
+  toggleSidebar: () => void;
+  closeSidebar: () => void;
 }
 
 export const useStore = create<AppState>((set) => ({
-  user: null,
+  user: { id: 'u1', nome: 'Alex Morgan', email: 'admin@pedemais.app', role: 'super_admin' },
+  isSidebarOpen: false,
+  notifications: [],
   planos: [
-    { id: '1', nome: 'Básico', preco: 97, limitePedidos: 100, limiteLojas: 1, recursos: ['WhatsApp Pay', 'Cardápio Digital'] },
-    { id: '2', nome: 'Profissional', preco: 197, limitePedidos: 500, limiteLojas: 3, recursos: ['WhatsApp Pay', 'Cardápio Digital', 'Gestão de Entregadores'] },
-    { id: '3', nome: 'Premium', preco: 297, limitePedidos: 9999, limiteLojas: 10, recursos: ['Todos os recursos', 'Suporte 24h', 'App White Label'] },
+    { id: '1', nome: 'Básico', preco: 99.90, limitePedidos: 500, limiteEntregadores: 5, recursos: ['WhatsApp Pay', 'Cardápio Digital', 'Suporte por e-mail'] },
+    { id: '2', nome: 'Pro Amazônia', preco: 199.90, limitePedidos: 1000, limiteEntregadores: 10, recursos: ['Suporte prioritário 24/7', 'Dashboard avançado', 'IA de Roteirização'], cor: 'bg-emerald-600' },
+    { id: '3', nome: 'Enterprise', preco: 499.90, limitePedidos: 99999, limiteEntregadores: 999, recursos: ['Gerente de conta dedicado', 'Integração API customizada', 'White Label total'] },
   ],
   lojas: [
-    { id: 'l1', nome: 'Padaria Pão Quente', slug: 'padaria-pao-quente', planoId: '2', statusAssinatura: 'ativo', proximoVencimento: '2025-01-20', whatsapp: '5511999999999', stats: { carrinhos: 1200, finalizados: 850, mrr: 197 } },
-    { id: 'l2', nome: 'Burger da Vila', slug: 'burger-da-vila', planoId: '1', statusAssinatura: 'teste', proximoVencimento: '2024-12-15', whatsapp: '5511888888888', stats: { carrinhos: 450, finalizados: 310, mrr: 0 } },
-    { id: 'l3', nome: 'Sushi Master', slug: 'sushi-master', planoId: '3', statusAssinatura: 'ativo', proximoVencimento: '2025-02-10', whatsapp: '5511777777777', stats: { carrinhos: 2100, finalizados: 1950, mrr: 297 } },
+    { 
+      id: 'l1', 
+      nome: 'Restaurante Sabor', 
+      slug: 'restaurante-sabor', 
+      planoId: '2', 
+      statusAssinatura: 'ativo', 
+      proximoVencimento: '2025-11-15', 
+      whatsapp: '5511999999999',
+      categoria: 'Restaurante',
+      endereco: 'Av. Paulista, 1000 - Bela Vista, SP',
+      taxaEntrega: 5.90,
+      tempoMin: 30,
+      tempoMax: 45,
+      stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
+    },
   ],
   entregadores: [
-    { id: 'e1', nome: 'João Motoca', telefone: '11 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [{id: 'b1', nome: 'Velocidade Máxima', icone: '⚡', descricao: 'Entregas em menos de 20 min'}, {id: 'b2', nome: 'Diamante', icone: '💎', descricao: 'Mais de 100 entregas concluídas'}], lojaId: 'l1' },
-    { id: 'e2', nome: 'Maria Bike', telefone: '11 98765-4321', status: 'ocupado', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1' },
-    { id: 'e3', nome: 'Carlos Veloz', telefone: '11 95555-4444', status: 'disponível', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1' },
-    { id: 'e4', nome: 'Ana Flash', telefone: '11 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1' },
-    { id: 'e5', nome: 'Pedro Turbo', telefone: '11 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1' },
+    { id: 'e1', nome: 'Ricardo Santos', telefone: '11 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', dataAdesao: '2023-10-24' },
+    { id: 'e2', nome: 'Julia Mendes', telefone: '11 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', dataAdesao: '2023-09-12' },
+    { id: 'e3', nome: 'Marcos Almeida', telefone: '11 95555-4444', status: 'suspenso', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1', tipoVeiculo: 'Van', dataAdesao: '2023-01-05' },
+    { id: 'e4', nome: 'Carlos Vega', telefone: '11 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Leve)', dataAdesao: '2023-11-15' },
+    { id: 'e5', nome: 'Sarah Wilson', telefone: '11 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1', tipoVeiculo: 'Sedan', dataAdesao: '2024-02-28' },
   ],
   entregas: [
-    { id: 'ent1', pedidoId: 'ped_001', entregadorId: '', valor: 12.00, status: 'pendente', data: '2024-11-20', hora: 19 },
-    { id: 'ent2', pedidoId: 'ped_002', entregadorId: 'e1', valor: 15.50, status: 'finalizada', data: '2024-11-19', hora: 12 },
-    { id: 'ent3', pedidoId: 'ped_003', entregadorId: '', valor: 10.00, status: 'pendente', data: '2024-11-20', hora: 21 },
-    { id: 'ent4', pedidoId: 'ped_004', entregadorId: 'e1', valor: 14.00, status: 'finalizada', data: '2024-11-20', hora: 20 },
+    { 
+      id: 'ent1', valor: 45.90, status: 'pendente', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Mariana Silva', endereco: 'Rua das Flores, 123',
+      itens: [{ qtd: 1, nome: 'X-Bacon Duplo' }, { qtd: 1, nome: 'Coca-Cola 2L' }]
+    },
+    { 
+      id: 'ent2', valor: 82.50, status: 'preparando', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Carlos Oliveira', endereco: 'Av. Paulista, 1000',
+      itens: [{ qtd: 2, nome: 'Pizza Calabresa' }, { qtd: 1, nome: 'Guaraná' }]
+    },
+    { 
+      id: 'ent3', valor: 30.00, status: 'pronto', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Fernanda Costa', endereco: 'Rua Augusta, 500',
+      itens: [{ qtd: 1, nome: 'Combo Sushi' }]
+    },
+    { 
+      id: 'ent4', valor: 18.90, status: 'finalizada', data: '2023-10-20T14:30:00Z', lojaId: 'l1', entregadorId: 'e1', clienteNome: 'Roberto Dias', endereco: 'Retirada',
+      itens: [{ qtd: 1, nome: 'Açaí 500ml' }]
+    },
   ],
-  saques: [
-    { id: 'sq1', entregadorId: 'e1', valor: 250.00, status: 'pago', data: '2024-11-15' },
-    { id: 'sq2', entregadorId: 'e1', valor: 120.00, status: 'processando', data: '2024-11-20' },
+  saques: [],
+  faturas: [
+    { id: 'f1', mesReferencia: 'Outubro 2023', valor: 199.90, status: 'Pago' },
+    { id: 'f2', mesReferencia: 'Setembro 2023', valor: 199.90, status: 'Pago' },
+    { id: 'f3', mesReferencia: 'Agosto 2023', valor: 199.90, status: 'Pago' },
+  ],
+  meiosPagamento: [
+    { id: 'm1', tipo: 'Cartão', detalhe: 'Mastercard **** 4242', extra: 'Expira em 12/26' },
+    { id: 'm2', tipo: 'PIX', detalhe: 'Chave PIX', extra: 'pede.mais@cnpj.com.br' },
   ],
   setUser: (user) => set({ user }),
-  addEntregador: (ent) => set((state) => ({ entregadores: [...state.entregadores, ent] })),
   updatePlanoLoja: (lojaId, planoId) => set((state) => ({
-    lojas: state.lojas.map(l => l.id === lojaId ? { ...l, planoId, statusAssinatura: 'ativo' } : l)
+    lojas: state.lojas.map(l => l.id === lojaId ? { ...l, planoId } : l)
+  })),
+  updateLoja: (lojaId, data) => set((state) => ({
+    lojas: state.lojas.map(l => l.id === lojaId ? { ...l, ...data } : l)
+  })),
+  addEntregador: (entregador) => set((state) => ({
+    entregadores: [...state.entregadores, { 
+      ...entregador, 
+      entregasTotal: 0, 
+      nivel: 'Bronze', 
+      xp: 0, 
+      badges: [], 
+      tipoVeiculo: 'Moto', 
+      dataAdesao: new Date().toISOString() 
+    } as Entregador]
   })),
   cancelarAssinatura: (lojaId) => set((state) => ({
     lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'cancelado' } : l)
   })),
-  ativarPeriodoTeste: (lojaId) => set((state) => ({
-    lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'teste' } : l)
+  batchUpdatePlano: (lojaIds, planoId) => set((state) => ({
+    lojas: state.lojas.map(l => lojaIds.includes(l.id) ? { ...l, planoId } : l)
   })),
-  aceitarEntrega: (id, eid) => set((state) => ({
-    entregas: state.entregas.map(e => e.id === id ? { ...e, status: 'aceita', entregadorId: eid } : e)
+  aceitarEntrega: (entregaId, entregadorId) => set((state) => ({
+    entregas: state.entregas.map(e => e.id === entregaId ? { ...e, status: 'em_transito', entregadorId } : e)
   })),
-  finalizarEntrega: (id) => set((state) => ({
-    entregas: state.entregas.map(e => e.id === id ? { ...e, status: 'finalizada' } : e)
+  atualizarStatusPedido: (entregaId, novoStatus) => set((state) => ({
+    entregas: state.entregas.map(e => e.id === entregaId ? { ...e, status: novoStatus } : e)
   })),
-  solicitarSaque: (saque) => set((state) => ({ saques: [saque, ...state.saques] })),
-  confirmarPagamentoSaque: (id) => set((state) => ({
-    saques: state.saques.map(s => s.id === id ? { ...s, status: 'pago' } : s)
+  solicitarSaque: (saque) => set((state) => ({
+    saques: [saque, ...state.saques],
+    entregadores: state.entregadores.map(e => e.id === saque.entregadorId ? { ...e, saldo: e.saldo - saque.valor } : e)
   })),
-  batchUpdatePlano: (ids, pid) => set((state) => ({
-    lojas: state.lojas.map(l => ids.includes(l.id) ? { ...l, planoId: pid } : l)
+  
+  // UI Actions
+  addNotification: (type, message) => set((state) => ({
+    notifications: [...state.notifications, { id: Math.random().toString(36), type, message }]
   })),
+  removeNotification: (id) => set((state) => ({
+    notifications: state.notifications.filter(n => n.id !== id)
+  })),
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  closeSidebar: () => set({ isSidebarOpen: false }),
 }));
