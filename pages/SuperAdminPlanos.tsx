@@ -16,7 +16,8 @@ export const SuperAdminPlanos = () => {
     limiteEntregadores: 5,
     recursos: [],
     cor: 'bg-gray-100',
-    destaque: false
+    destaque: false,
+    privado: false
   };
 
   const handleOpenModal = (plano?: Plano) => {
@@ -50,7 +51,7 @@ export const SuperAdminPlanos = () => {
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // IMPORTANTE: Previne clicar no card ao clicar em excluir
+    e.stopPropagation();
     if (window.confirm('Tem certeza que deseja excluir este plano? Lojas assinantes podem ser afetadas.')) {
       deletePlano(id);
       addNotification('info', 'Plano removido.');
@@ -81,7 +82,7 @@ export const SuperAdminPlanos = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
         <div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Planos & Preços</h1>
-            <p className="text-gray-500 font-bold mt-1">Defina a estratégia de monetização do SaaS.</p>
+            <p className="text-gray-500 font-bold mt-1">Defina a estratégia de monetização e planos secretos VIP.</p>
         </div>
         <button 
             onClick={() => handleOpenModal()}
@@ -94,7 +95,12 @@ export const SuperAdminPlanos = () => {
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
         {planos.map(p => (
           <div key={p.id} className={`bg-white p-10 rounded-[3rem] shadow-sm border-2 flex flex-col justify-between transition-all hover:shadow-xl relative overflow-hidden group ${p.destaque ? 'border-emerald-500 ring-4 ring-emerald-50' : 'border-gray-100'}`}>
-            {p.destaque && (
+            {p.privado && (
+                <div className="absolute top-4 right-4 bg-gray-900 text-white p-2 rounded-full shadow-lg" title="Plano Secreto (Privado)">
+                    🔒
+                </div>
+            )}
+            {p.destaque && !p.privado && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-b-xl text-[10px] font-black uppercase tracking-widest">
                     Destaque
                 </div>
@@ -102,7 +108,9 @@ export const SuperAdminPlanos = () => {
             
             <div>
               <div className="flex justify-between items-start">
-                  <h3 className="text-3xl font-black mb-2 text-gray-800">{p.nome}</h3>
+                  <h3 className="text-3xl font-black mb-2 text-gray-800 flex items-center gap-2">
+                      {p.nome}
+                  </h3>
                   <div className={`w-6 h-6 rounded-full ${p.cor} shadow-sm`} />
               </div>
               <p className="text-5xl font-black text-emerald-600 mb-8 tracking-tighter">
@@ -118,29 +126,17 @@ export const SuperAdminPlanos = () => {
                   <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-md flex items-center justify-center text-xs">🛵</span> 
                   {p.limiteEntregadores >= 999 ? 'Entregadores ilimitados' : `Até ${p.limiteEntregadores} entregadores`}
                 </li>
-                {p.recursos.map((r, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-500 font-medium text-xs">
-                    <span className="text-emerald-500">✓</span> {r}
-                  </li>
-                ))}
               </ul>
             </div>
             
-            {/* Botões de Ação Sempre Visíveis para Evitar Problemas de Hover Mobile */}
             <div className="grid grid-cols-2 gap-3 mt-auto">
                 <button onClick={(e) => handleEditClick(e, p)} className="bg-gray-100 text-gray-600 py-3 rounded-xl font-black text-xs uppercase hover:bg-gray-200 transition-colors">Editar</button>
                 <button onClick={(e) => handleDelete(e, p.id)} className="bg-red-50 text-red-500 py-3 rounded-xl font-black text-xs uppercase hover:bg-red-500 hover:text-white transition-colors">Excluir</button>
             </div>
           </div>
         ))}
-        
-        <button onClick={() => handleOpenModal()} className="border-4 border-dashed border-gray-200 rounded-[3rem] flex flex-col items-center justify-center min-h-[400px] text-gray-300 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/50 transition-all group">
-            <span className="text-6xl mb-4 group-hover:scale-110 transition-transform">+</span>
-            <span className="font-black text-xl uppercase tracking-widest">Criar Plano</span>
-        </button>
       </div>
 
-      {/* Modal de Edição/Criação */}
       {isModalOpen && editingPlano && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -163,7 +159,6 @@ export const SuperAdminPlanos = () => {
                             <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Preço (R$)</label>
                             <input 
                                 type="number" 
-                                step="0.01"
                                 value={editingPlano.preco} 
                                 onChange={e => setEditingPlano({...editingPlano, preco: Number(e.target.value)})}
                                 className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -180,48 +175,30 @@ export const SuperAdminPlanos = () => {
                             </select>
                         </div>
                     </div>
+
+                    <div 
+                      className="flex items-center justify-between bg-gray-900 text-white p-4 rounded-xl cursor-pointer" 
+                      onClick={() => setEditingPlano({...editingPlano, privado: !editingPlano.privado})}
+                    >
+                        <div>
+                            <p className="font-black text-sm uppercase">Plano Privado (Secreto)?</p>
+                            <p className="text-[10px] text-gray-400">Não aparecerá na Landing Page.</p>
+                        </div>
+                        <div className={`w-10 h-6 rounded-full relative transition-colors ${editingPlano.privado ? 'bg-emerald-500' : 'bg-gray-600'}`}>
+                            <div className={`w-4 h-4 bg-white rounded-full shadow-md absolute top-1 transition-all ${editingPlano.privado ? 'left-5' : 'left-1'}`} />
+                        </div>
+                    </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Max Pedidos</label>
-                            <input 
-                                type="number" 
-                                value={editingPlano.limitePedidos} 
-                                onChange={e => setEditingPlano({...editingPlano, limitePedidos: Number(e.target.value)})}
-                                className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Max Entregadores</label>
-                            <input 
-                                type="number" 
-                                value={editingPlano.limiteEntregadores} 
-                                onChange={e => setEditingPlano({...editingPlano, limiteEntregadores: Number(e.target.value)})}
-                                className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Recursos (separados por vírgula)</label>
-                        <textarea 
-                            value={editingPlano.recursos?.join(', ')} 
-                            onChange={e => updateRecursos(e.target.value)}
-                            className="w-full bg-gray-50 border-none rounded-xl p-4 font-medium text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none h-24 resize-none"
-                            placeholder="Suporte VIP, Domínio Próprio, API..."
-                        />
-                    </div>
-
                     <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl cursor-pointer" onClick={() => setEditingPlano({...editingPlano, destaque: !editingPlano.destaque})}>
                         <div className={`w-10 h-6 rounded-full relative transition-colors ${editingPlano.destaque ? 'bg-emerald-500' : 'bg-gray-300'}`}>
                             <div className={`w-4 h-4 bg-white rounded-full shadow-md absolute top-1 transition-all ${editingPlano.destaque ? 'left-5' : 'left-1'}`} />
                         </div>
-                        <span className="font-bold text-sm text-gray-700">Marcar como Plano Destaque?</span>
+                        <span className="font-bold text-sm text-gray-700">Plano Destaque?</span>
                     </div>
                 </div>
                 <div className="p-8 border-t border-gray-100 flex gap-4">
-                    <button onClick={handleCloseModal} className="flex-1 py-4 font-black text-gray-400 uppercase tracking-widest text-xs hover:text-gray-600 transition-colors">Cancelar</button>
-                    <button onClick={handleSave} className="flex-[2] bg-emerald-600 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:bg-emerald-500 transition-colors">Salvar</button>
+                    <button onClick={handleCloseModal} className="flex-1 py-4 font-black text-gray-400 uppercase tracking-widest text-xs">Cancelar</button>
+                    <button onClick={handleSave} className="flex-[2] bg-emerald-600 text-white rounded-xl font-black uppercase text-xs shadow-lg hover:bg-emerald-500">Salvar Plano</button>
                 </div>
             </div>
         </div>

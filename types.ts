@@ -56,6 +56,7 @@ export interface Plano {
   recursos: string[];
   cor?: string;
   destaque?: boolean;
+  privado?: boolean; // Novo campo para planos secretos/VIP
 }
 
 export interface AreaEntrega {
