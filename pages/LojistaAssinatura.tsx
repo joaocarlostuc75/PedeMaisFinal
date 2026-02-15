@@ -2,11 +2,78 @@
 import React from 'react';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
+import { Fatura } from '../types';
 
 export const LojistaAssinatura = () => {
   const { faturas, meiosPagamento, planos, lojas } = useStore();
   const loja = lojas[0];
   const meuPlano = planos.find(p => p.id === loja.planoId);
+
+  const imprimirReciboAssinatura = (fatura: Fatura) => {
+    const janela = window.open('', '', 'width=800,height=600');
+    if (janela) {
+        janela.document.write(`
+            <html>
+            <head>
+                <title>Recibo #${fatura.id}</title>
+                <style>
+                    body { font-family: 'Arial', sans-serif; padding: 40px; color: #333; }
+                    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #059669; padding-bottom: 20px; margin-bottom: 40px; }
+                    .title { font-size: 24px; font-weight: bold; color: #059669; }
+                    .info { margin-bottom: 30px; }
+                    .info p { margin: 5px 0; }
+                    .table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+                    .table th { background: #f0fdf4; text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+                    .table td { padding: 12px; border-bottom: 1px solid #eee; }
+                    .total { text-align: right; font-size: 20px; font-weight: bold; }
+                    .footer { text-align: center; margin-top: 60px; font-size: 12px; color: #999; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <div class="title">Pede Mais</div>
+                        <div style="font-size: 12px; margin-top: 5px;">Plataforma de Delivery SaaS</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong>RECIBO DE PAGAMENTO</strong><br/>
+                        #${fatura.id.toUpperCase()}
+                    </div>
+                </div>
+
+                <div class="info">
+                    <strong>Pagador:</strong> ${loja.nome}<br/>
+                    <strong>Referência:</strong> ${fatura.mesReferencia}<br/>
+                    <strong>Status:</strong> ${fatura.status.toUpperCase()}
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr><th>Descrição</th><th>Valor</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Assinatura Mensal - Plano ${meuPlano?.nome || 'Standard'}</td>
+                            <td>${formatCurrency(fatura.valor)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="total">
+                    Total Pago: ${formatCurrency(fatura.valor)}
+                </div>
+
+                <div class="footer">
+                    Este documento comprova o pagamento da mensalidade de uso da plataforma Pede Mais.<br/>
+                    Obrigado pela parceria.
+                </div>
+                <script>window.print();</script>
+            </body>
+            </html>
+        `);
+        janela.document.close();
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-fade-in font-sans pb-20">
@@ -154,7 +221,10 @@ export const LojistaAssinatura = () => {
                    <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{f.status}</span>
                 </td>
                 <td className="p-8 text-right">
-                   <button className="text-[10px] font-black text-gray-700 uppercase tracking-widest flex items-center gap-2 ml-auto hover:text-emerald-600 transition-colors">
+                   <button 
+                      onClick={() => imprimirReciboAssinatura(f)}
+                      className="text-[10px] font-black text-gray-700 uppercase tracking-widest flex items-center gap-2 ml-auto hover:text-emerald-600 transition-colors"
+                   >
                       📥 Recibo
                    </button>
                 </td>

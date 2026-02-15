@@ -5,7 +5,7 @@ import { formatCurrency } from '../utils';
 import { Entrega } from '../types';
 
 export const LojistaPedidos = () => {
-  const { entregas, entregadores, atualizarStatusPedido, atribuirEntregador, addNotification, user } = useStore();
+  const { entregas, entregadores, lojas, atualizarStatusPedido, atribuirEntregador, addNotification, user } = useStore();
   const [now, setNow] = useState(new Date());
   
   // Identifica a loja atual do usuário
@@ -31,6 +31,83 @@ export const LojistaPedidos = () => {
       atribuirEntregador(selectingCourierForOrder, entregadorId);
       addNotification('success', 'Entregador atribuído com sucesso!');
       setSelectingCourierForOrder(null);
+    }
+  };
+
+  const imprimirComanda = (pedido: Entrega) => {
+    const loja = lojas.find(l => l.id === pedido.lojaId);
+    const janela = window.open('', '', 'width=350,height=600');
+    
+    if (janela) {
+        janela.document.write(`
+            <html>
+            <head>
+                <title>Pedido #${pedido.id.slice(-4)}</title>
+                <style>
+                    body { font-family: 'Courier New', monospace; font-size: 12px; width: 300px; margin: 0 auto; padding: 10px; color: #000; }
+                    .header { text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+                    .header h2 { margin: 0; font-size: 16px; text-transform: uppercase; }
+                    .info { margin-bottom: 10px; font-size: 11px; }
+                    .items { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                    .items th { text-align: left; border-bottom: 1px solid #000; }
+                    .items td { padding: 4px 0; vertical-align: top; }
+                    .qty { font-weight: bold; width: 30px; }
+                    .price { text-align: right; }
+                    .totals { margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px; }
+                    .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+                    .total { font-size: 14px; font-weight: bold; margin-top: 5px; }
+                    .footer { margin-top: 20px; text-align: center; font-size: 10px; }
+                    @media print { .no-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>${loja?.nome || 'Pede Mais'}</h2>
+                    <p>Pedido: <strong>#${pedido.id.slice(-4)}</strong></p>
+                    <p>${new Date(pedido.data).toLocaleString('pt-BR')}</p>
+                </div>
+                
+                <div class="info">
+                    <strong>CLIENTE:</strong><br/>
+                    ${pedido.clienteNome}<br/>
+                    ${pedido.tipoEntrega === 'retirada' ? '⚠️ RETIRADA NO BALCÃO' : `📍 ${pedido.endereco}`}
+                </div>
+
+                <table class="items">
+                    <thead>
+                        <tr><th class="qty">Qtd</th><th>Item</th><th class="price">R$</th></tr>
+                    </thead>
+                    <tbody>
+                        ${pedido.itens.map(item => `
+                            <tr>
+                                <td class="qty">${item.qtd}</td>
+                                <td>
+                                    ${item.nome}
+                                    ${item.detalhe ? `<br/><i style="font-size:10px">(${item.detalhe})</i>` : ''}
+                                </td>
+                                <td class="price">${((item.preco || 0) * item.qtd).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="totals">
+                    <div class="row"><span>Subtotal:</span> <span>${formatCurrency(pedido.itens.reduce((acc, i) => acc + ((i.preco || 0) * i.qtd), 0))}</span></div>
+                    <div class="row"><span>Taxa Entrega:</span> <span>${formatCurrency(pedido.tipoEntrega === 'retirada' ? 0 : (loja?.taxaEntrega || 0))}</span></div>
+                    <div class="row total"><span>TOTAL:</span> <span>${formatCurrency(pedido.valor)}</span></div>
+                    <br/>
+                    <div class="row"><span>Pagamento:</span> <strong>${pedido.metodoPagamento || 'A Combinar'}</strong></div>
+                </div>
+
+                <div class="footer">
+                    <p>Obrigado pela preferência!</p>
+                    <p>www.pedemais.app</p>
+                </div>
+                <script>window.print();</script>
+            </body>
+            </html>
+        `);
+        janela.document.close();
     }
   };
 
@@ -153,7 +230,12 @@ export const LojistaPedidos = () => {
                                     <div className="p-4 border-b border-dashed border-gray-100">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">#{order.id.slice(-4)} • {order.tipoEntrega === 'retirada' ? 'Retirada' : 'Entrega'}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">#{order.id.slice(-4)} • {order.tipoEntrega === 'retirada' ? 'Retirada' : 'Entrega'}</span>
+                                                    <button onClick={() => imprimirComanda(order)} className="text-gray-400 hover:text-gray-900 transition-colors" title="Imprimir Comanda">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                                    </button>
+                                                </div>
                                                 <h4 className="font-bold text-gray-800 text-base leading-tight mt-0.5">{order.clienteNome}</h4>
                                             </div>
                                             <div className={`text-[10px] font-black uppercase px-2 py-1 rounded-md tracking-wider whitespace-nowrap ${isLate ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-500'}`}>
