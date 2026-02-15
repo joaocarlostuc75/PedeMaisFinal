@@ -150,7 +150,8 @@ export interface ItemPedido {
 
 export interface Entrega {
   id: string;
-  clienteNome?: string;
+  clienteNome: string;
+  clienteTelefone?: string; // Adicionado para CRM
   itens: ItemPedido[];
   valor: number;
   status: 'pendente' | 'preparando' | 'pronto' | 'em_transito' | 'finalizada' | 'cancelada';

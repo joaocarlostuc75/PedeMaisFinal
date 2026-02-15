@@ -14,6 +14,7 @@ export const Checkout = () => {
   const [tipo, setTipo] = useState<'entrega' | 'retirada'>('entrega');
   const [pagamento, setPagamento] = useState('PIX');
   const [nome, setNome] = useState('');
+  const [telefone, setTelefone] = useState('');
   const [endereco, setEndereco] = useState('');
   
   // Filtra itens do carrinho apenas da loja atual
@@ -42,6 +43,7 @@ export const Checkout = () => {
   const finalizarPedido = () => {
     if (items.length === 0) return alert('Seu carrinho está vazio.');
     if (!nome) return alert('Por favor, informe seu nome.');
+    if (!telefone) return alert('Por favor, informe seu telefone/whatsapp.');
     if (tipo === 'entrega' && !endereco) return alert('Por favor, informe o endereço.');
 
     // 1. Criar o objeto do Pedido
@@ -50,6 +52,7 @@ export const Checkout = () => {
         id: `ped-${novoPedidoId}`,
         lojaId: loja.id,
         clienteNome: nome,
+        clienteTelefone: telefone, // Salva o telefone para CRM
         endereco: tipo === 'entrega' ? endereco : 'Retirada na Loja',
         tipoEntrega: tipo,
         metodoPagamento: pagamento,
@@ -74,6 +77,7 @@ export const Checkout = () => {
     let msg = `*NOVO PEDIDO #${novoPedidoId.toUpperCase()}*\n`;
     msg += `--------------------------------\n`;
     msg += `👤 *Cliente:* ${nome}\n`;
+    msg += `📱 *Tel:* ${telefone}\n`;
     msg += `🚚 *Tipo:* ${tipo.toUpperCase()}\n`;
     if (tipo === 'entrega') msg += `📍 *Endereço:* ${endereco}\n`;
     msg += `💰 *Pagamento:* ${pagamento}\n`;
@@ -186,7 +190,13 @@ export const Checkout = () => {
                   </div>
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">WhatsApp / Telefone</label>
-                     <input type="text" placeholder="(00) 00000-0000" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
+                     <input 
+                        type="text" 
+                        value={telefone} 
+                        onChange={e => setTelefone(e.target.value)} 
+                        placeholder="(00) 00000-0000" 
+                        className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" 
+                     />
                   </div>
 
                   {tipo === 'entrega' && (

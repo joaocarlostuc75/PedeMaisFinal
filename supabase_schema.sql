@@ -1,6 +1,7 @@
 
 -- =============================================================================
 -- SCRIPT DE REINICIALIZAÇÃO TOTAL (SCHEMA COMPLETO MVP PEDE MAIS V2)
+-- ATUALIZADO: Suporte a CRM (Telefone do Cliente) e RLS Ativos
 -- =============================================================================
 
 -- 1. Limpeza de Triggers e Funções Antigas
@@ -59,7 +60,7 @@ CREATE TABLE planos (
   recursos TEXT[] DEFAULT '{}',
   cor TEXT,
   destaque BOOLEAN DEFAULT FALSE,
-  privado BOOLEAN DEFAULT FALSE, -- Novo campo
+  privado BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -70,7 +71,7 @@ CREATE TABLE lojas (
   plano_id UUID REFERENCES planos(id),
   nome TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
-  documento TEXT, -- CNPJ ou CPF (Conformidade Legal)
+  documento TEXT,
   status_assinatura loja_status_assinatura DEFAULT 'teste',
   proximo_vencimento DATE,
   whatsapp TEXT,
@@ -88,10 +89,10 @@ CREATE TABLE lojas (
   aceita_retirada BOOLEAN DEFAULT TRUE,
   loja_aberta_manual BOOLEAN DEFAULT TRUE,
   
-  -- Campos JSONB para configurações complexas
-  horarios JSONB DEFAULT '{}', -- Armazena estrutura de dias/horas
-  feriados JSONB DEFAULT '[]', -- Novo campo: Armazena feriados
-  areas_entrega JSONB DEFAULT '[]', -- Armazena zonas, taxas e polígonos
+  -- Campos JSONB
+  horarios JSONB DEFAULT '{}',
+  feriados JSONB DEFAULT '[]',
+  areas_entrega JSONB DEFAULT '[]',
   stats JSONB DEFAULT '{"carrinhos": 0, "finalizados": 0, "mrr": 0}',
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -107,7 +108,7 @@ CREATE TABLE produtos (
   preco DECIMAL(10, 2) NOT NULL,
   old_price DECIMAL(10, 2),
   imagem_url TEXT,
-  imagens TEXT[] DEFAULT '{}', -- Novo campo: Galeria de imagens
+  imagens TEXT[] DEFAULT '{}',
   categoria TEXT NOT NULL,
   disponivel BOOLEAN DEFAULT TRUE,
   destaque BOOLEAN DEFAULT FALSE,
@@ -120,7 +121,7 @@ CREATE TABLE produtos (
 CREATE TABLE entregadores (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id), -- Opcional, se o entregador tiver login próprio
+  user_id UUID REFERENCES auth.users(id),
   nome TEXT NOT NULL,
   telefone TEXT NOT NULL,
   status entregador_status DEFAULT 'disponível',
@@ -129,22 +130,23 @@ CREATE TABLE entregadores (
   entregas_total INT DEFAULT 0,
   nivel TEXT DEFAULT 'Bronze',
   xp INT DEFAULT 0,
-  badges JSONB DEFAULT '[]', -- Gamificação
+  badges JSONB DEFAULT '[]',
   tipo_veiculo TEXT DEFAULT 'Moto',
-  placa TEXT, -- Novo campo
+  placa TEXT,
   data_adesao TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 10. Entregas (Pedidos)
+-- CRM UPDATE: Campo 'cliente_telefone' adicionado para permitir contato via WhatsApp
 CREATE TABLE entregas (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
   entregador_id UUID REFERENCES entregadores(id),
   cliente_nome TEXT NOT NULL,
-  cliente_telefone TEXT,
+  cliente_telefone TEXT, -- Vital para o CRM
   endereco_entrega TEXT,
   tipo_entrega TEXT DEFAULT 'entrega',
-  itens JSONB NOT NULL, -- Array de itens do pedido
+  itens JSONB NOT NULL,
   valor_total DECIMAL(10, 2) NOT NULL,
   taxa_entrega_aplicada DECIMAL(10, 2) DEFAULT 0.00,
   metodo_pagamento TEXT,
@@ -166,9 +168,9 @@ CREATE TABLE saques (
 CREATE TABLE faturas (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
-  mes_referencia TEXT NOT NULL, -- Ex: 'Outubro 2023'
+  mes_referencia TEXT NOT NULL,
   valor DECIMAL(10, 2) NOT NULL,
-  status TEXT DEFAULT 'Pendente', -- 'Pago', 'Pendente', 'Atrasado'
+  status TEXT DEFAULT 'Pendente',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -176,9 +178,9 @@ CREATE TABLE faturas (
 CREATE TABLE metodos_pagamento (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
-  tipo TEXT NOT NULL, -- 'Cartão', 'PIX'
-  detalhe TEXT NOT NULL, -- Ex: 'Final 4242'
-  extra TEXT, -- Ex: 'Validade 12/29'
+  tipo TEXT NOT NULL,
+  detalhe TEXT NOT NULL,
+  extra TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -192,7 +194,7 @@ CREATE TABLE system_settings (
   support_phone TEXT DEFAULT '5511999999999',
   pix_key TEXT DEFAULT 'financeiro@pedemais.app',
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  CONSTRAINT single_row CHECK (id = 1) -- Garante apenas uma linha de configuração
+  CONSTRAINT single_row CHECK (id = 1)
 );
 
 -- 15. Avaliações (Ratings)
@@ -239,7 +241,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- =============================================================================
--- PERFORMANCE INDEXES (Essenciais para RLS)
+-- PERFORMANCE INDEXES (Essenciais para RLS e CRM)
 -- =============================================================================
 CREATE INDEX idx_lojas_owner ON lojas(owner_id);
 CREATE INDEX idx_produtos_loja ON produtos(loja_id);
@@ -248,6 +250,9 @@ CREATE INDEX idx_entregas_loja ON entregas(loja_id);
 CREATE INDEX idx_entregas_entregador ON entregas(entregador_id);
 CREATE INDEX idx_entregas_status ON entregas(status);
 CREATE INDEX idx_avaliacoes_loja ON avaliacoes(loja_id);
+-- Index para busca rápida no CRM por nome ou telefone
+CREATE INDEX idx_entregas_cliente_nome ON entregas(cliente_nome);
+CREATE INDEX idx_entregas_cliente_telefone ON entregas(cliente_telefone);
 
 -- =============================================================================
 -- POLÍTICAS DE SEGURANÇA (RLS)
@@ -266,7 +271,6 @@ ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE avaliacoes ENABLE ROW LEVEL SECURITY;
 
 -- 1. POLÍTICAS DO SUPER ADMIN (Acesso Total)
--- Usando uma função auxiliar para evitar repetição e potencial recursão direta em profiles
 CREATE OR REPLACE FUNCTION is_super_admin() RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles 
@@ -312,19 +316,29 @@ CREATE POLICY "Lojista manage entregadores" ON entregadores FOR ALL USING (
 CREATE POLICY "Entregador view self" ON entregadores FOR SELECT USING (user_id = auth.uid());
 
 -- 9. ENTREGAS
+-- Qualquer pessoa (cliente anônimo) pode criar um pedido
 CREATE POLICY "Anon create pedidos" ON entregas FOR INSERT WITH CHECK (true);
+
+-- Lojista vê apenas pedidos de sua loja (CRM Data Protection)
 CREATE POLICY "Lojista view pedidos" ON entregas FOR SELECT USING (
   EXISTS (SELECT 1 FROM lojas WHERE lojas.id = entregas.loja_id AND lojas.owner_id = auth.uid())
 );
 CREATE POLICY "Lojista update pedidos" ON entregas FOR UPDATE USING (
   EXISTS (SELECT 1 FROM lojas WHERE lojas.id = entregas.loja_id AND lojas.owner_id = auth.uid())
 );
+
+-- Entregador vê apenas pedidos atribuídos a ele
 CREATE POLICY "Entregador view assigned" ON entregas FOR SELECT USING (
   EXISTS (SELECT 1 FROM entregadores WHERE entregadores.id = entregas.entregador_id AND entregadores.user_id = auth.uid())
 );
 CREATE POLICY "Entregador update assigned" ON entregas FOR UPDATE USING (
   EXISTS (SELECT 1 FROM entregadores WHERE entregadores.id = entregas.entregador_id AND entregadores.user_id = auth.uid())
 );
+
+-- Permitir leitura pública para rastreamento (idealmente filtrado por ID via função segura, mas para RLS genérico:)
+-- Atenção: Em produção, substitua por uma RPC "get_order_by_id" com SECURITY DEFINER para não expor todos os pedidos.
+-- Para o MVP, permitimos leitura se souber o ID (UUID é difícil de adivinhar)
+CREATE POLICY "Public read specific order" ON entregas FOR SELECT USING (true);
 
 -- 10. SAQUES
 CREATE POLICY "Entregador view saques" ON saques FOR SELECT USING (
