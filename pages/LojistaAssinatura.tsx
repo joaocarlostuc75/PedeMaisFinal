@@ -1,59 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
-import { Fatura, MeioPagamento } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 export const LojistaAssinatura = () => {
   const navigate = useNavigate();
-  const { faturas, meiosPagamento, planos, lojas, addMeioPagamento, updateMeioPagamento, deleteMeioPagamento, updatePlanoLoja, addNotification, user } = useStore();
+  const { planos, lojas, updatePlanoLoja, addNotification, user } = useStore();
   
   // Identifica a loja atual
   const currentLojaId = user?.lojaId || 'l1';
   const loja = lojas.find(l => l.id === currentLojaId) || lojas[0];
   const meuPlano = planos.find(p => p.id === loja.planoId);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<Partial<MeioPagamento> | null>(null);
-
-  const handleOpenModal = (payment?: MeioPagamento) => {
-    if (payment) {
-        setEditingPayment(payment);
-    } else {
-        setEditingPayment({ tipo: 'Cartão', detalhe: '', extra: '' });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleSavePayment = () => {
-      if (!editingPayment?.detalhe) {
-          addNotification('error', 'O detalhe do pagamento é obrigatório.');
-          return;
-      }
-
-      if (editingPayment.id) {
-          updateMeioPagamento(editingPayment.id, editingPayment);
-          addNotification('success', 'Meio de pagamento atualizado.');
-      } else {
-          addMeioPagamento({
-              id: Math.random().toString(36).substr(2, 9),
-              tipo: editingPayment.tipo || 'Cartão',
-              detalhe: editingPayment.detalhe,
-              extra: editingPayment.extra || ''
-          } as MeioPagamento);
-          addNotification('success', 'Novo meio de pagamento adicionado.');
-      }
-      setIsModalOpen(false);
-      setEditingPayment(null);
-  };
-
-  const handleDeletePayment = (id: string) => {
-      if (window.confirm('Tem certeza que deseja remover este método de pagamento?')) {
-          deleteMeioPagamento(id);
-          addNotification('info', 'Método de pagamento removido.');
-      }
-  };
 
   const handleChangePlan = (planoId: string, nomePlano: string) => {
       if (window.confirm(`Deseja alterar seu plano para ${nomePlano}? O novo valor será cobrado na próxima fatura.`)) {
@@ -66,81 +24,12 @@ export const LojistaAssinatura = () => {
       navigate('/admin/suporte', { state: { openNew: true } });
   };
 
-  const imprimirReciboAssinatura = (fatura: Fatura) => {
-    // Para consistência no ambiente de teste, usamos o valor do plano atual
-    const valorExibido = meuPlano?.preco || fatura.valor;
-
-    const janela = window.open('', '', 'width=800,height=600');
-    if (janela) {
-        janela.document.write(`
-            <html>
-            <head>
-                <title>Recibo #${fatura.id}</title>
-                <style>
-                    body { font-family: 'Arial', sans-serif; padding: 40px; color: #333; }
-                    .header { display: flex; justify-content: space-between; border-bottom: 2px solid #059669; padding-bottom: 20px; margin-bottom: 40px; }
-                    .title { font-size: 24px; font-weight: bold; color: #059669; }
-                    .info { margin-bottom: 30px; }
-                    .info p { margin: 5px 0; }
-                    .table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-                    .table th { background: #f0fdf4; text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
-                    .table td { padding: 12px; border-bottom: 1px solid #eee; }
-                    .total { text-align: right; font-size: 20px; font-weight: bold; }
-                    .footer { text-align: center; margin-top: 60px; font-size: 12px; color: #999; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div>
-                        <div class="title">Pede Mais</div>
-                        <div style="font-size: 12px; margin-top: 5px;">Plataforma de Delivery SaaS</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <strong>RECIBO DE PAGAMENTO</strong><br/>
-                        #${fatura.id.toUpperCase()}
-                    </div>
-                </div>
-
-                <div class="info">
-                    <strong>Pagador:</strong> ${loja.nome}<br/>
-                    <strong>Referência:</strong> ${fatura.mesReferencia}<br/>
-                    <strong>Status:</strong> ${fatura.status.toUpperCase()}
-                </div>
-
-                <table class="table">
-                    <thead>
-                        <tr><th>Descrição</th><th>Valor</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Assinatura Mensal - Plano ${meuPlano?.nome || 'Standard'}</td>
-                            <td>${formatCurrency(valorExibido)}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="total">
-                    Total Pago: ${formatCurrency(valorExibido)}
-                </div>
-
-                <div class="footer">
-                    Este documento comprova o pagamento da mensalidade de uso da plataforma Pede Mais.<br/>
-                    Obrigado pela parceria.
-                </div>
-                <script>window.print();</script>
-            </body>
-            </html>
-        `);
-        janela.document.close();
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-fade-in font-sans pb-20">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">Minha Assinatura</h1>
-          <p className="text-gray-500 font-medium mt-1">Gerencie seu plano e visualize seu histórico de pagamentos.</p>
+          <p className="text-gray-500 font-medium mt-1">Gerencie seu plano e visualize os benefícios ativos.</p>
         </div>
         <div className="bg-emerald-50 border border-emerald-100 px-6 py-2 rounded-full flex items-center gap-2">
            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -148,79 +37,44 @@ export const LojistaAssinatura = () => {
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-12 gap-8">
-        {/* Detalhes do Plano */}
-        <section className="lg:col-span-8 bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between relative overflow-hidden">
-          <div className="space-y-8 flex-1">
-             <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Detalhes do Plano</h3>
-                <p className="text-emerald-500 text-xs font-black uppercase flex items-center gap-2">
-                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> Status: Ativo
-                </p>
-             </div>
+      {/* Detalhes do Plano */}
+      <section className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between relative overflow-hidden">
+        <div className="space-y-8 flex-1">
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 mb-1">Detalhes do Plano</h3>
+              <p className="text-emerald-500 text-xs font-black uppercase flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /> Status: Ativo
+              </p>
+            </div>
 
-             <div className="space-y-6 max-w-md">
-                <div className="space-y-2">
-                   <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <span>Pedidos no mês</span>
-                      <span className="text-gray-800">850 / {meuPlano?.limitePedidos}</span>
-                   </div>
-                   <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
-                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: '85%' }} />
-                   </div>
-                </div>
+            <div className="space-y-6 max-w-md">
+              <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <span>Pedidos no mês</span>
+                    <span className="text-gray-800">850 / {meuPlano?.limitePedidos}</span>
+                  </div>
+                  <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
+                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: '85%' }} />
+                  </div>
+              </div>
 
-                <div className="space-y-2">
-                   <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      <span>Entregadores ativos</span>
-                      <span className="text-gray-800">4 / {meuPlano?.limiteEntregadores}</span>
-                   </div>
-                   <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
-                      <div className="bg-[#1e293b] h-full rounded-full" style={{ width: '40%' }} />
-                   </div>
-                </div>
-             </div>
-          </div>
+              <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <span>Entregadores ativos</span>
+                    <span className="text-gray-800">4 / {meuPlano?.limiteEntregadores}</span>
+                  </div>
+                  <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
+                    <div className="bg-[#1e293b] h-full rounded-full" style={{ width: '40%' }} />
+                  </div>
+              </div>
+            </div>
+        </div>
 
-          <div className="mt-8 md:mt-0 text-right">
-             <h4 className="text-4xl font-black text-gray-900 tracking-tighter">{formatCurrency(meuPlano?.preco || 0)}<span className="text-sm font-medium text-gray-400">/mês</span></h4>
-             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Próxima cobrança: 15/11</p>
-          </div>
-        </section>
-
-        {/* Métodos de Pagamento */}
-        <section className="lg:col-span-4 bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">
-           <h3 className="text-lg font-bold text-gray-800 mb-8">Método de Pagamento</h3>
-           <div className="space-y-4">
-              {meiosPagamento.length > 0 ? meiosPagamento.map(m => (
-                <div key={m.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between group hover:bg-white hover:border-emerald-500 transition-all cursor-pointer">
-                   <div className="flex items-center gap-4">
-                      <span className="text-2xl">{m.tipo === 'Cartão' ? '💳' : '📱'}</span>
-                      <div>
-                         <p className="text-xs font-black text-gray-800">{m.detalhe}</p>
-                         <p className="text-[10px] font-medium text-gray-400">{m.extra}</p>
-                      </div>
-                   </div>
-                   <div className="flex gap-2">
-                        <button onClick={() => handleOpenModal(m)} className="text-[9px] font-black text-gray-400 hover:text-emerald-600 uppercase transition-all">Editar</button>
-                        <button onClick={() => handleDeletePayment(m.id)} className="text-[9px] font-black text-gray-400 hover:text-red-500 uppercase transition-all">Excluir</button>
-                   </div>
-                </div>
-              )) : (
-                <div className="p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-center">
-                    <span className="text-2xl block mb-2">💳</span>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Nenhum método cadastrado</p>
-                </div>
-              )}
-              <button 
-                onClick={() => handleOpenModal()}
-                className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 transition-all mt-4"
-              >
-                + Adicionar novo método
-              </button>
-           </div>
-        </section>
-      </div>
+        <div className="mt-8 md:mt-0 text-right">
+            <h4 className="text-4xl font-black text-gray-900 tracking-tighter">{formatCurrency(meuPlano?.preco || 0)}<span className="text-sm font-medium text-gray-400">/mês</span></h4>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Renovação Automática</p>
+        </div>
+      </section>
 
       {/* Planos Disponíveis */}
       <section className="space-y-10">
@@ -273,56 +127,6 @@ export const LojistaAssinatura = () => {
          </div>
       </section>
 
-      {/* Histórico de Cobrança */}
-      <section className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-          <h3 className="text-xl font-bold text-gray-800 tracking-tight">Histórico de Cobrança</h3>
-        </div>
-        
-        {faturas.length === 0 ? (
-            <div className="p-16 text-center">
-                <span className="text-4xl block mb-4 opacity-30">📄</span>
-                <h4 className="text-lg font-bold text-gray-700">Nenhum histórico encontrado</h4>
-                <p className="text-sm text-gray-400 mt-2">Suas faturas pagas e pendentes aparecerão aqui.</p>
-            </div>
-        ) : (
-            <>
-                <table className="w-full text-left">
-                <thead className="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-50">
-                    <tr>
-                    <th className="p-8">Mês de Referência</th>
-                    <th className="p-8">Valor</th>
-                    <th className="p-8">Status do Pagamento</th>
-                    <th className="p-8 text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                    {faturas.map(f => (
-                    <tr key={f.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-8 font-bold text-gray-700 text-sm">{f.mesReferencia}</td>
-                        <td className="p-8 font-bold text-gray-800">
-                            {formatCurrency(meuPlano?.preco || f.valor)}
-                        </td>
-                        <td className="p-8">
-                        <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{f.status}</span>
-                        </td>
-                        <td className="p-8 text-right">
-                        <button 
-                            onClick={() => imprimirReciboAssinatura(f)}
-                            className="text-[10px] font-black text-gray-700 uppercase tracking-widest flex items-center gap-2 ml-auto hover:text-emerald-600 transition-colors"
-                        >
-                            📥 Recibo
-                        </button>
-                        </td>
-                    </tr>
-                    ))}
-                </tbody>
-                </table>
-                <button className="w-full py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hover:bg-gray-50 transition-all">Ver todo o histórico</button>
-            </>
-        )}
-      </section>
-
       {/* Help Card */}
       <div className="bg-[#eff7f1] p-10 rounded-[3rem] border border-emerald-100 flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="flex items-center gap-8">
@@ -339,56 +143,6 @@ export const LojistaAssinatura = () => {
           FALAR COM SUPORTE
         </button>
       </div>
-
-      {/* Modal de Edição de Pagamento */}
-      {isModalOpen && editingPayment && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-black text-gray-900">{editingPayment.id ? 'Editar Pagamento' : 'Novo Método'}</h3>
-                    <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-400 hover:bg-gray-200">✕</button>
-                </div>
-                
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Tipo</label>
-                        <select 
-                            value={editingPayment.tipo}
-                            onChange={e => setEditingPayment({...editingPayment, tipo: e.target.value as any})}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-gray-800 outline-none"
-                        >
-                            <option value="Cartão">Cartão de Crédito</option>
-                            <option value="PIX">PIX</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Detalhe (Ex: Final 4242 ou Chave PIX)</label>
-                        <input 
-                            type="text"
-                            value={editingPayment.detalhe}
-                            onChange={e => setEditingPayment({...editingPayment, detalhe: e.target.value})}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-gray-800 outline-none"
-                            placeholder={editingPayment.tipo === 'Cartão' ? 'Mastercard Final 1234' : 'sua@chave.pix'}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Extra (Opcional - Ex: Validade)</label>
-                        <input 
-                            type="text"
-                            value={editingPayment.extra}
-                            onChange={e => setEditingPayment({...editingPayment, extra: e.target.value})}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-gray-800 outline-none"
-                            placeholder="Expira em 12/30"
-                        />
-                    </div>
-                    
-                    <button onClick={handleSavePayment} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-black uppercase text-xs shadow-lg hover:bg-emerald-500 transition-all mt-4">
-                        Salvar
-                    </button>
-                </div>
-            </div>
-        </div>
-      )}
     </div>
   );
 };

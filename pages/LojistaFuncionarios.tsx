@@ -21,9 +21,20 @@ const PERMISSIONS_LABELS: Record<Permissao, string> = {
   'configuracoes_loja': 'Configurações da Loja'
 };
 
+const PERMISSION_DESCRIPTIONS = [
+    { id: 'ver_dashboard', title: '📊 Visualizar Dashboard', desc: 'Permite acesso aos gráficos de vendas, métricas de desempenho (KPIs) e visão geral do status da loja.' },
+    { id: 'gerir_pedidos', title: '🛍️ Gerenciar Pedidos', desc: 'Permite aceitar novos pedidos, despachar para entrega, cancelar e alterar status dos pedidos em andamento.' },
+    { id: 'gerir_cardapio', title: '🍔 Editar Cardápio', desc: 'Permite criar, editar, excluir produtos, alterar preços, gerenciar categorias e disponibilidade de itens.' },
+    { id: 'gerir_entregadores', title: '🛵 Gerir Frota', desc: 'Permite cadastrar entregadores fixos, visualizar a frota e gerenciar taxas de entrega.' },
+    { id: 'ver_financeiro', title: '💰 Visualizar Financeiro', desc: 'Acesso apenas leitura ao histórico de faturamento, vendas diárias e extratos.' },
+    { id: 'gerir_financeiro', title: '🏧 Gerenciar Financeiro', desc: 'Permite solicitar saques, alterar conta bancária de recebimento e gerenciar a assinatura da loja.' },
+    { id: 'configuracoes_loja', title: '⚙️ Configurações da Loja', desc: 'Acesso total para alterar nome da loja, horários de funcionamento, logo, banner e dados de contato.' },
+];
+
 export const LojistaFuncionarios = () => {
   const { funcionarios, addFuncionario, updateFuncionario, deleteFuncionario, user, addNotification } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [editingFunc, setEditingFunc] = useState<Partial<Funcionario> | null>(null);
 
   const currentLojaId = user?.lojaId || 'l1';
@@ -100,9 +111,12 @@ export const LojistaFuncionarios = () => {
           <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Equipe & Acessos</h1>
           <p className="text-gray-500 font-medium mt-1">Gerencie quem tem acesso à sua loja e o que eles podem fazer.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+            <button onClick={() => setIsGuideOpen(true)} className="bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center gap-2">
+                <span>📖</span> Guia de Permissões
+            </button>
             <button onClick={copyInviteLink} className="bg-white border-2 border-emerald-100 text-emerald-600 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all">
-                🔗 Copiar Link de Convite
+                🔗 Link de Convite
             </button>
             <button 
                 onClick={() => handleOpenModal()}
@@ -181,6 +195,30 @@ export const LojistaFuncionarios = () => {
         )}
       </div>
 
+      {/* Modal Guia de Permissões */}
+      {isGuideOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsGuideOpen(false)}>
+            <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl p-10 max-h-[90vh] overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-2xl font-black text-gray-900 tracking-tighter">Guia de Atribuições</h3>
+                    <button onClick={() => setIsGuideOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold hover:bg-gray-200">✕</button>
+                </div>
+                
+                <div className="space-y-4">
+                    {PERMISSION_DESCRIPTIONS.map((perm) => (
+                        <div key={perm.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-colors">
+                            <h4 className="font-black text-gray-800 text-sm mb-1">{perm.title}</h4>
+                            <p className="text-xs text-gray-500 font-medium leading-relaxed">{perm.desc}</p>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-8 text-center">
+                    <button onClick={() => setIsGuideOpen(false)} className="bg-gray-900 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-800">Entendi</button>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Modal de Edição/Criação */}
       {isModalOpen && editingFunc && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
@@ -245,10 +283,13 @@ export const LojistaFuncionarios = () => {
 
                     {/* Permissões */}
                     <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                        <h4 className="font-black text-gray-800 text-sm mb-4 flex items-center gap-2">
-                            🔐 Permissões de Acesso
-                            <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] uppercase font-black">Personalizável</span>
-                        </h4>
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-black text-gray-800 text-sm flex items-center gap-2">
+                                🔐 Permissões de Acesso
+                                <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] uppercase font-black">Personalizável</span>
+                            </h4>
+                            <button onClick={() => setIsGuideOpen(true)} className="text-[10px] font-bold text-emerald-600 hover:underline">Ver o que cada item faz</button>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {(Object.keys(PERMISSIONS_LABELS) as Permissao[]).map(perm => (
                                 <label key={perm} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl cursor-pointer hover:border-emerald-500 transition-all select-none">

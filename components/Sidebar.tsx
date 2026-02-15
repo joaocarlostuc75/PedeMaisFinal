@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 
 export const Sidebar = () => {
-  const { user, setUser, isSidebarOpen, closeSidebar, lojas, entregas } = useStore();
+  const { user, setUser, isSidebarOpen, closeSidebar, lojas, entregas, resetDemoStore } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -13,9 +13,20 @@ export const Sidebar = () => {
   const isDemo = user?.id === 'demo-user';
 
   const handleLogout = () => {
-    setUser(null);
-    closeSidebar();
+    // 1. Se for demo, reseta a loja para o estado inicial
+    if (isDemo) {
+        resetDemoStore();
+    }
+
+    // 2. Navega para a home (Landing Page) PRIMEIRO
+    // Isso é crucial para evitar que o ProtectedRoute capture o user=null e jogue para /login
     navigate('/');
+
+    // 3. Limpa o usuário do estado após um breve delay para garantir a transição de rota
+    setTimeout(() => {
+        setUser(null);
+        closeSidebar();
+    }, 50);
   };
 
   // Calcula pedidos pendentes apenas para a loja do usuário atual
