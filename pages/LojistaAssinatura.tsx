@@ -192,7 +192,7 @@ export const LojistaAssinatura = () => {
         <section className="lg:col-span-4 bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">
            <h3 className="text-lg font-bold text-gray-800 mb-8">Método de Pagamento</h3>
            <div className="space-y-4">
-              {meiosPagamento.map(m => (
+              {meiosPagamento.length > 0 ? meiosPagamento.map(m => (
                 <div key={m.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between group hover:bg-white hover:border-emerald-500 transition-all cursor-pointer">
                    <div className="flex items-center gap-4">
                       <span className="text-2xl">{m.tipo === 'Cartão' ? '💳' : '📱'}</span>
@@ -206,7 +206,12 @@ export const LojistaAssinatura = () => {
                         <button onClick={() => handleDeletePayment(m.id)} className="text-[9px] font-black text-gray-400 hover:text-red-500 uppercase transition-all">Excluir</button>
                    </div>
                 </div>
-              ))}
+              )) : (
+                <div className="p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-center">
+                    <span className="text-2xl block mb-2">💳</span>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Nenhum método cadastrado</p>
+                </div>
+              )}
               <button 
                 onClick={() => handleOpenModal()}
                 className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 transition-all mt-4"
@@ -273,39 +278,49 @@ export const LojistaAssinatura = () => {
         <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
           <h3 className="text-xl font-bold text-gray-800 tracking-tight">Histórico de Cobrança</h3>
         </div>
-        <table className="w-full text-left">
-          <thead className="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-50">
-            <tr>
-              <th className="p-8">Mês de Referência</th>
-              <th className="p-8">Valor</th>
-              <th className="p-8">Status do Pagamento</th>
-              <th className="p-8 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {faturas.map(f => (
-              <tr key={f.id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-8 font-bold text-gray-700 text-sm">{f.mesReferencia}</td>
-                <td className="p-8 font-bold text-gray-800">
-                    {/* Exibe o valor do plano ATUAL para consistência na demo, já que as faturas mockadas são estáticas */}
-                    {formatCurrency(meuPlano?.preco || f.valor)}
-                </td>
-                <td className="p-8">
-                   <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{f.status}</span>
-                </td>
-                <td className="p-8 text-right">
-                   <button 
-                      onClick={() => imprimirReciboAssinatura(f)}
-                      className="text-[10px] font-black text-gray-700 uppercase tracking-widest flex items-center gap-2 ml-auto hover:text-emerald-600 transition-colors"
-                   >
-                      📥 Recibo
-                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button className="w-full py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hover:bg-gray-50 transition-all">Ver todo o histórico</button>
+        
+        {faturas.length === 0 ? (
+            <div className="p-16 text-center">
+                <span className="text-4xl block mb-4 opacity-30">📄</span>
+                <h4 className="text-lg font-bold text-gray-700">Nenhum histórico encontrado</h4>
+                <p className="text-sm text-gray-400 mt-2">Suas faturas pagas e pendentes aparecerão aqui.</p>
+            </div>
+        ) : (
+            <>
+                <table className="w-full text-left">
+                <thead className="text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-50">
+                    <tr>
+                    <th className="p-8">Mês de Referência</th>
+                    <th className="p-8">Valor</th>
+                    <th className="p-8">Status do Pagamento</th>
+                    <th className="p-8 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                    {faturas.map(f => (
+                    <tr key={f.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="p-8 font-bold text-gray-700 text-sm">{f.mesReferencia}</td>
+                        <td className="p-8 font-bold text-gray-800">
+                            {formatCurrency(meuPlano?.preco || f.valor)}
+                        </td>
+                        <td className="p-8">
+                        <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{f.status}</span>
+                        </td>
+                        <td className="p-8 text-right">
+                        <button 
+                            onClick={() => imprimirReciboAssinatura(f)}
+                            className="text-[10px] font-black text-gray-700 uppercase tracking-widest flex items-center gap-2 ml-auto hover:text-emerald-600 transition-colors"
+                        >
+                            📥 Recibo
+                        </button>
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+                <button className="w-full py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] hover:bg-gray-50 transition-all">Ver todo o histórico</button>
+            </>
+        )}
       </section>
 
       {/* Help Card */}

@@ -253,15 +253,11 @@ export const useStore = create<AppState>()(
         },
       ],
       saques: [],
-      faturas: [
-        { id: 'f1', mesReferencia: 'Outubro 2023', valor: 199.90, status: 'Pago' },
-        { id: 'f2', mesReferencia: 'Setembro 2023', valor: 199.90, status: 'Pago' },
-        { id: 'f3', mesReferencia: 'Agosto 2023', valor: 199.90, status: 'Pago' },
-      ],
-      meiosPagamento: [
-        { id: 'm1', tipo: 'Cartão', detalhe: 'Mastercard **** 4242', extra: 'Expira em 12/26' },
-        { id: 'm2', tipo: 'PIX', detalhe: 'Chave PIX', extra: 'pede.mais@cnpj.com.br' },
-      ],
+      // Faturas vazias para ambiente real
+      faturas: [],
+      // Meios de pagamento vazios para ambiente real
+      meiosPagamento: [],
+      
       setUser: (user) => set({ user }),
       updateCurrentUser: (data) => set((state) => ({
         user: state.user ? { ...state.user, ...data } : null

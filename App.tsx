@@ -11,7 +11,7 @@ import { EntregadorDashboard } from './pages/EntregadorDashboard';
 import { LojistaDashboard } from './pages/LojistaDashboard';
 import { LojistaPedidos } from './pages/LojistaPedidos';
 import { LojistaClientes } from './pages/LojistaClientes';
-import { LojistaFuncionarios } from './pages/LojistaFuncionarios'; // Nova Importação
+import { LojistaFuncionarios } from './pages/LojistaFuncionarios'; 
 import { LojistaEntregadores } from './pages/LojistaEntregadores';
 import { LojistaRelatorio } from './pages/LojistaRelatorio';
 import { LojistaConfig } from './pages/LojistaConfig';
@@ -60,13 +60,13 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
   if (isPublic) return <>{children}</>;
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc]">
+    <div className="flex min-h-[100dvh] bg-[#f8fafc]">
       <Sidebar />
       {/* Wrapper principal */}
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300"> 
         <HeaderMobile />
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-8 pt-20 lg:pt-8 overflow-x-hidden overflow-y-auto h-auto min-h-screen">
+        <main className="flex-1 p-4 md:p-8 pt-24 lg:pt-8 overflow-x-hidden overflow-y-auto h-auto min-h-[100dvh]">
           {children}
         </main>
       </div>
@@ -104,7 +104,7 @@ const App = () => {
             <Route path="/admin/pedidos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaPedidos /></ProtectedRoute>} />
             <Route path="/admin/produtos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaProdutos /></ProtectedRoute>} />
             <Route path="/admin/clientes" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaClientes /></ProtectedRoute>} />
-            <Route path="/admin/funcionarios" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaFuncionarios /></ProtectedRoute>} /> {/* Nova Rota */}
+            <Route path="/admin/funcionarios" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaFuncionarios /></ProtectedRoute>} /> 
             <Route path="/admin/assinatura" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaAssinatura /></ProtectedRoute>} />
             <Route path="/admin/entregadores" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaEntregadores /></ProtectedRoute>} />
             <Route path="/admin/relatorio" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaRelatorio /></ProtectedRoute>} />
