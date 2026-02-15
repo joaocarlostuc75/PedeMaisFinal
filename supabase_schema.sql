@@ -3,16 +3,16 @@
 -- ESTRUTURA V2.1: SISTEMA DE FUNCIONÁRIOS E PERMISSÕES (RBAC)
 -- =============================================================================
 
--- 1. Limpeza (Opcional, cuidado em produção)
--- DROP TABLE IF EXISTS funcionarios CASCADE;
--- DROP TYPE IF EXISTS funcionario_cargo;
-
--- 2. Tipos e Enums
-CREATE TYPE funcionario_cargo AS ENUM ('Gerente', 'Atendente', 'Cozinha', 'Entregador Fixo');
+-- 2. Tipos e Enums (Idempotente)
+DO $$ BEGIN
+    CREATE TYPE funcionario_cargo AS ENUM ('Gerente', 'Atendente', 'Cozinha', 'Entregador Fixo');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- 3. Tabela de Funcionários
 -- Esta tabela atua como uma "tabela de ligação" com permissões granulares
-CREATE TABLE funcionarios (
+CREATE TABLE IF NOT EXISTS funcionarios (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   loja_id UUID REFERENCES lojas(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES auth.users(id), -- Vinculado quando o usuário cria conta
@@ -29,10 +29,10 @@ CREATE TABLE funcionarios (
   UNIQUE(loja_id, email)
 );
 
--- 4. Índices para Performance
-CREATE INDEX idx_funcionarios_loja ON funcionarios(loja_id);
-CREATE INDEX idx_funcionarios_user ON funcionarios(user_id);
-CREATE INDEX idx_funcionarios_email ON funcionarios(email);
+-- 4. Índices para Performance (IF NOT EXISTS)
+CREATE INDEX IF NOT EXISTS idx_funcionarios_loja ON funcionarios(loja_id);
+CREATE INDEX IF NOT EXISTS idx_funcionarios_user ON funcionarios(user_id);
+CREATE INDEX IF NOT EXISTS idx_funcionarios_email ON funcionarios(email);
 
 -- 5. Habilitar Segurança em Nível de Linha (RLS)
 ALTER TABLE funcionarios ENABLE ROW LEVEL SECURITY;
@@ -69,11 +69,13 @@ $$ LANGUAGE sql SECURITY DEFINER;
 -- =============================================================================
 
 -- Política 1: O Dono da Loja pode Ver, Criar, Editar e Deletar seus funcionários
+DROP POLICY IF EXISTS "Lojista manage employees" ON funcionarios;
 CREATE POLICY "Lojista manage employees" ON funcionarios
 FOR ALL
 USING (is_loja_owner(loja_id));
 
 -- Política 2: O Funcionário pode ver seus próprios dados (para checar permissões no front)
+DROP POLICY IF EXISTS "Employee view self" ON funcionarios;
 CREATE POLICY "Employee view self" ON funcionarios
 FOR SELECT
 USING (user_id = auth.uid());
@@ -86,6 +88,7 @@ USING (user_id = auth.uid());
 -- Regra: Dono VÊ/EDITA OU Funcionário com 'gerir_pedidos' VÊ/EDITA
 ALTER TABLE entregas ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Acesso Pedidos" ON entregas;
 CREATE POLICY "Acesso Pedidos" ON entregas
 FOR ALL
 USING (
@@ -96,6 +99,7 @@ USING (
 -- Regra: Dono VÊ/EDITA OU Funcionário com 'gerir_cardapio' VÊ/EDITA
 ALTER TABLE produtos ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Acesso Produtos" ON produtos;
 CREATE POLICY "Acesso Produtos" ON produtos
 FOR ALL
 USING (
@@ -106,6 +110,7 @@ USING (
 -- Regra: Apenas Dono OU Funcionário com 'ver_financeiro'
 ALTER TABLE faturas ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Acesso Financeiro" ON faturas;
 CREATE POLICY "Acesso Financeiro" ON faturas
 FOR SELECT
 USING (
@@ -115,6 +120,7 @@ USING (
 -- D. CONFIGURAÇÕES DA LOJA
 -- Regra: Apenas Dono OU Funcionário com 'configuracoes_loja'
 -- Nota: Isso se aplica para UPDATE na tabela lojas
+DROP POLICY IF EXISTS "Update Loja Settings" ON lojas;
 CREATE POLICY "Update Loja Settings" ON lojas
 FOR UPDATE
 USING (
