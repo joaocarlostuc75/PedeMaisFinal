@@ -1,6 +1,6 @@
 
 -- =============================================================================
--- SCRIPT DE REINICIALIZAÇÃO TOTAL (SCHEMA COMPLETO MVP PEDE MAIS)
+-- SCRIPT DE REINICIALIZAÇÃO TOTAL (SCHEMA COMPLETO MVP PEDE MAIS V2)
 -- =============================================================================
 
 -- 1. Limpeza de Triggers e Funções Antigas
@@ -59,6 +59,7 @@ CREATE TABLE planos (
   recursos TEXT[] DEFAULT '{}',
   cor TEXT,
   destaque BOOLEAN DEFAULT FALSE,
+  privado BOOLEAN DEFAULT FALSE, -- Novo campo
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -85,9 +86,11 @@ CREATE TABLE lojas (
   tempo_min INT DEFAULT 30,
   tempo_max INT DEFAULT 45,
   aceita_retirada BOOLEAN DEFAULT TRUE,
+  loja_aberta_manual BOOLEAN DEFAULT TRUE,
   
   -- Campos JSONB para configurações complexas
   horarios JSONB DEFAULT '{}', -- Armazena estrutura de dias/horas
+  feriados JSONB DEFAULT '[]', -- Novo campo: Armazena feriados
   areas_entrega JSONB DEFAULT '[]', -- Armazena zonas, taxas e polígonos
   stats JSONB DEFAULT '{"carrinhos": 0, "finalizados": 0, "mrr": 0}',
   
@@ -104,6 +107,7 @@ CREATE TABLE produtos (
   preco DECIMAL(10, 2) NOT NULL,
   old_price DECIMAL(10, 2),
   imagem_url TEXT,
+  imagens TEXT[] DEFAULT '{}', -- Novo campo: Galeria de imagens
   categoria TEXT NOT NULL,
   disponivel BOOLEAN DEFAULT TRUE,
   destaque BOOLEAN DEFAULT FALSE,
@@ -127,6 +131,7 @@ CREATE TABLE entregadores (
   xp INT DEFAULT 0,
   badges JSONB DEFAULT '[]', -- Gamificação
   tipo_veiculo TEXT DEFAULT 'Moto',
+  placa TEXT, -- Novo campo
   data_adesao TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -348,10 +353,10 @@ CREATE POLICY "Anon insert avaliacoes" ON avaliacoes FOR INSERT WITH CHECK (true
 INSERT INTO system_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
 
 -- Inserir Planos Padrão
-INSERT INTO planos (nome, preco, limite_pedidos, limite_entregadores, recursos, cor, destaque) VALUES
-('Básico', 99.90, 500, 5, '{WhatsApp Pay, Cardápio Digital, Suporte Email}', 'bg-gray-100', false),
-('Pro Amazônia', 199.90, 1000, 10, '{Suporte 24/7, Dashboard Avançado, Roteirização}', 'bg-emerald-600', true),
-('Enterprise', 499.90, 99999, 999, '{Gerente Dedicado, API, White Label}', 'bg-purple-600', false);
+INSERT INTO planos (nome, preco, limite_pedidos, limite_entregadores, recursos, cor, destaque, privado) VALUES
+('Básico', 99.90, 500, 5, '{WhatsApp Pay, Cardápio Digital, Suporte Email}', 'bg-gray-100', false, false),
+('Pro Amazônia', 199.90, 1000, 10, '{Suporte 24/7, Dashboard Avançado, Roteirização}', 'bg-emerald-600', true, false),
+('Enterprise', 499.90, 99999, 999, '{Gerente Dedicado, API, White Label}', 'bg-purple-600', false, false);
 
 -- Inserir Super Admin se já existir no Auth
 INSERT INTO profiles (id, email, nome, role)
