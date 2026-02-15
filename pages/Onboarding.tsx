@@ -41,8 +41,9 @@ export const Onboarding = () => {
             nome: form.nomeLoja || 'Nova Loja',
             slug: slug || `loja-${newLojaId}`,
             planoId: selectedPlan,
-            statusAssinatura: 'teste',
-            proximoVencimento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias grátis
+            // AQUI ESTÁ A MUDANÇA: Status pendente para bloquear acesso e dados vazios
+            statusAssinatura: 'pendente',
+            proximoVencimento: new Date().toISOString(), // Vencido/Pendente de ativação
             whatsapp: form.whatsapp,
             categoria: form.ramo,
             endereco: form.endereco,
@@ -53,6 +54,7 @@ export const Onboarding = () => {
             tempoMin: 30,
             tempoMax: 50,
             aceitaRetirada: true,
+            // Stats zerados e arrays vazios (o store inicia arrays vazios para novas lojas)
             stats: { carrinhos: 0, finalizados: 0, mrr: 0 }
         });
 
@@ -65,7 +67,7 @@ export const Onboarding = () => {
             lojaId: newLojaId
         });
 
-        // Redireciona para o painel correto (Lojista)
+        // Redireciona para o painel (que mostrará a tela de bloqueio)
         navigate('/admin/dashboard');
     }
   };
@@ -247,7 +249,7 @@ export const Onboarding = () => {
           <div className="w-full max-w-5xl animate-fade-in">
              <div className="text-center mb-8 md:mb-12">
                 <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-2 md:mb-4 tracking-tighter">Escolha seu plano</h2>
-                <p className="text-base md:text-xl text-gray-400 font-medium">Comece com 7 dias grátis. Cancele quando quiser.</p>
+                <p className="text-base md:text-xl text-gray-400 font-medium">Acesso imediato após confirmação do administrador.</p>
              </div>
 
              <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-10 md:mb-16">
@@ -280,17 +282,12 @@ export const Onboarding = () => {
                 ))}
              </div>
 
-             <div className="bg-white p-6 md:p-8 rounded-[2rem] max-w-2xl mx-auto shadow-sm border border-gray-100">
-                <h4 className="font-black text-gray-800 mb-6 flex items-center gap-2">💳 Dados de Pagamento <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded font-bold uppercase">Simulação</span></h4>
-                <div className="space-y-4">
-                   <input type="text" placeholder="Número do Cartão" className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-700 outline-none text-sm" />
-                   <div className="flex gap-4">
-                      <input type="text" placeholder="Validade (MM/AA)" className="flex-1 bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-700 outline-none text-sm" />
-                      <input type="text" placeholder="CVV" className="flex-1 bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-700 outline-none text-sm" />
-                   </div>
-                   <input type="text" placeholder="Nome no Cartão" className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-700 outline-none text-sm" />
-                </div>
-                <p className="text-[10px] text-gray-400 font-bold mt-4 text-center">Nenhuma cobrança será feita agora. Teste grátis por 7 dias.</p>
+             <div className="bg-white p-6 md:p-8 rounded-[2rem] max-w-2xl mx-auto shadow-sm border border-gray-100 text-center">
+                <h4 className="font-black text-gray-800 mb-2 text-lg">🚀 Quase lá!</h4>
+                <p className="text-sm text-gray-500">
+                    Ao finalizar o cadastro, sua loja entrará em modo de <strong>aprovação</strong>. 
+                    Nossa equipe verificará seus dados e liberará o acesso assim que o pagamento da primeira mensalidade for confirmado.
+                </p>
              </div>
           </div>
         )}

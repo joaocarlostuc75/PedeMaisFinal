@@ -7,13 +7,69 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieCha
 
 export const LojistaDashboard = () => {
   const navigate = useNavigate();
-  const { lojas, entregas, entregadores, user } = useStore();
+  const { lojas, entregas, entregadores, user, systemSettings } = useStore();
   
   // Busca a loja do usuário logado ou usa a primeira como fallback (demo)
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
   const isDemo = user?.id === 'demo-user';
 
-  // --- CÁLCULOS ESTRATÉGICOS ---
+  // --- LÓGICA DE BLOQUEIO PARA CONTA PENDENTE ---
+  if (minhaLoja.statusAssinatura === 'pendente') {
+      return (
+          <div className="max-w-4xl mx-auto pt-20 pb-20 px-6 text-center animate-fade-in font-sans">
+              <div className="bg-white p-12 rounded-[3rem] shadow-2xl border border-gray-100 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 to-orange-500" />
+                  
+                  <div className="w-24 h-24 bg-yellow-50 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 animate-pulse">
+                      ⏳
+                  </div>
+                  
+                  <h1 className="text-4xl font-black text-gray-900 tracking-tighter mb-4">Conta em Análise</h1>
+                  <p className="text-lg text-gray-500 font-medium max-w-xl mx-auto leading-relaxed mb-8">
+                      Olá, <strong>{user?.nome}</strong>! Sua loja <strong>{minhaLoja.nome}</strong> foi criada com sucesso, mas o acesso completo está aguardando liberação administrativa.
+                  </p>
+
+                  <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-200 max-w-lg mx-auto mb-10 text-left">
+                      <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-4">Próximos Passos:</h3>
+                      <ul className="space-y-4">
+                          <li className="flex items-start gap-4">
+                              <span className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">1</span>
+                              <p className="text-sm text-gray-600">Realize o pagamento da primeira mensalidade através da Chave PIX abaixo.</p>
+                          </li>
+                          <li className="flex items-start gap-4">
+                              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">2</span>
+                              <p className="text-sm text-gray-600">Envie o comprovante para nosso WhatsApp de Suporte.</p>
+                          </li>
+                          <li className="flex items-start gap-4">
+                              <span className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">3</span>
+                              <p className="text-sm text-gray-600">Após validação (até 24h), seu painel será liberado automaticamente.</p>
+                          </li>
+                      </ul>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row justify-center gap-6">
+                      <div className="bg-gray-900 text-white p-6 rounded-2xl">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Chave PIX</p>
+                          <p className="text-lg font-mono font-bold select-all">{systemSettings.pixKey || 'financeiro@pedemais.app'}</p>
+                      </div>
+                      <a 
+                        href={`https://wa.me/${systemSettings.supportPhone.replace(/\D/g,'')}?text=Olá, acabei de cadastrar a loja ${minhaLoja.nome} e gostaria de ativar minha conta.`}
+                        target="_blank"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all"
+                      >
+                          Enviar Comprovante
+                      </a>
+                  </div>
+                  
+                  <div className="mt-12 pt-8 border-t border-gray-100">
+                      <button onClick={() => navigate('/')} className="text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-gray-600">Voltar para Home</button>
+                  </div>
+              </div>
+          </div>
+      );
+  }
+
+  // --- CÁLCULOS ESTRATÉGICOS (Código existente para dashboard ATIVO) ---
 
   // 1. Dados Básicos de Hoje
   const hoje = new Date().toDateString();

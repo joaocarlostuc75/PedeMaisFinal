@@ -120,7 +120,7 @@ export interface Loja {
   nome: string;
   slug: string;
   planoId: string;
-  statusAssinatura: 'ativo' | 'cancelado' | 'teste';
+  statusAssinatura: 'ativo' | 'cancelado' | 'teste' | 'pendente';
   proximoVencimento: string;
   whatsapp: string;
   email?: string;

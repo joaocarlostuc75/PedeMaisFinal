@@ -35,7 +35,9 @@ export const SuperAdminLojas = () => {
       .filter(loja => 
         loja.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         loja.slug.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      )
+      // Ordena: Pendentes primeiro
+      .sort((a, b) => (a.statusAssinatura === 'pendente' ? -1 : 1));
   }, [lojas, searchTerm]);
 
   const totalPages = Math.ceil(filteredLojas.length / ITEMS_PER_PAGE);
@@ -95,7 +97,7 @@ export const SuperAdminLojas = () => {
   const handleGrantAccess = () => {
     if (!editingLoja) return;
     
-    const currentDate = new Date(editingLoja.proximoVencimento || new Date());
+    const currentDate = new Date(); // Começa a contar de hoje
     if (grantUnit === 'days') currentDate.setDate(currentDate.getDate() + grantAmount);
     if (grantUnit === 'months') currentDate.setMonth(currentDate.getMonth() + grantAmount);
     if (grantUnit === 'years') currentDate.setFullYear(currentDate.getFullYear() + grantAmount);
@@ -105,7 +107,18 @@ export const SuperAdminLojas = () => {
         proximoVencimento: currentDate.toISOString().split('T')[0],
         statusAssinatura: 'ativo'
     });
-    addNotification('info', `Período grátis aplicado: +${grantAmount} ${grantUnit}`);
+    addNotification('info', `Acesso liberado até ${currentDate.toLocaleDateString()}`);
+  };
+
+  const handleApproveLoja = (loja: any) => {
+      const proximoMes = new Date();
+      proximoMes.setMonth(proximoMes.getMonth() + 1);
+      
+      updateLoja(loja.id, {
+          statusAssinatura: 'ativo',
+          proximoVencimento: proximoMes.toISOString()
+      });
+      addNotification('success', `Loja ${loja.nome} aprovada e ativada!`);
   };
 
   return (
@@ -165,12 +178,25 @@ export const SuperAdminLojas = () => {
                         <div className="text-xs font-bold text-gray-600">{formatDate(loja.proximoVencimento)}</div>
                     </td>
                     <td className="p-8">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${loja.statusAssinatura === 'ativo' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            loja.statusAssinatura === 'ativo' ? 'bg-emerald-100 text-emerald-700' : 
+                            loja.statusAssinatura === 'pendente' ? 'bg-yellow-100 text-yellow-700 animate-pulse' : 
+                            'bg-red-100 text-red-700'
+                        }`}>
                         {loja.statusAssinatura}
                         </span>
                     </td>
-                    <td className="p-8 text-right">
-                        <button onClick={() => setEditingLoja(loja)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-emerald-600 hover:text-white transition-all">⚙️</button>
+                    <td className="p-8 text-right flex justify-end gap-2">
+                        {loja.statusAssinatura === 'pendente' && (
+                            <button 
+                                onClick={() => handleApproveLoja(loja)} 
+                                className="bg-emerald-500 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-md shadow-emerald-200"
+                                title="Aprovar e Liberar Acesso"
+                            >
+                                ✅ Aprovar
+                            </button>
+                        )}
+                        <button onClick={() => setEditingLoja(loja)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-200 transition-all">⚙️</button>
                     </td>
                     </tr>
                 );
@@ -279,8 +305,9 @@ export const SuperAdminLojas = () => {
                {/* Seção 2: Concessão de Acesso Grátis (Módulo Secreto) */}
                <div className="bg-emerald-50 rounded-[2rem] p-8 border-2 border-emerald-100">
                   <h4 className="font-black text-emerald-800 text-sm mb-6 flex items-center gap-2">
-                      🎁 Conceder Acesso Grátis
+                      🎁 Conceder Acesso / Ativar
                   </h4>
+                  <p className="text-xs text-emerald-700 mb-4">Isto irá ativar a loja e definir o novo vencimento a partir de hoje.</p>
                   <div className="flex gap-4">
                       <input 
                         type="number" value={grantAmount} onChange={e => setGrantAmount(Number(e.target.value))}
@@ -300,10 +327,6 @@ export const SuperAdminLojas = () => {
                       >
                           Aplicar
                       </button>
-                  </div>
-                  <div className="mt-4 flex justify-between items-center text-[10px] font-black text-emerald-600 uppercase">
-                      <span>Novo Vencimento:</span>
-                      <span>{formatDate(editingLoja.proximoVencimento)}</span>
                   </div>
                </div>
 
