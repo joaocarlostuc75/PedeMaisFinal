@@ -212,7 +212,7 @@ export const LojistaAssinatura = () => {
          </div>
 
          <div className="grid md:grid-cols-3 gap-8">
-            {planos.map(p => {
+            {planos.filter(p => !p.privado).map(p => {
               const isCurrent = p.id === loja.planoId;
               return (
                 <div key={p.id} className={`relative p-10 rounded-[3rem] border-4 flex flex-col transition-all group ${isCurrent ? 'bg-white border-emerald-500 shadow-2xl scale-105' : 'bg-gray-50/50 border-transparent hover:bg-white hover:border-gray-200'}`}>
@@ -230,10 +230,10 @@ export const LojistaAssinatura = () => {
 
                   <ul className="space-y-5 mb-12 flex-1">
                     <li className="flex items-center gap-3 text-xs font-bold text-gray-500">
-                       <span className="text-emerald-500">✓</span> {p.limitePedidos === 99999 ? 'Pedidos ilimitados' : `${p.limitePedidos} pedidos/mês`}
+                       <span className="text-emerald-500">✓</span> {p.limitePedidos >= 99999 ? 'Pedidos ilimitados' : `Até ${p.limitePedidos} pedidos/mês`}
                     </li>
                     <li className="flex items-center gap-3 text-xs font-bold text-gray-500">
-                       <span className="text-emerald-500">✓</span> {p.limiteEntregadores === 999 ? 'Entregadores ilimitados' : `${p.limiteEntregadores} entregadores`}
+                       <span className="text-emerald-500">✓</span> {p.limiteEntregadores >= 999 ? 'Entregadores ilimitados' : `${p.limiteEntregadores} entregadores`}
                     </li>
                     {p.recursos.map((r, idx) => (
                       <li key={idx} className="flex items-center gap-3 text-xs font-bold text-gray-500">
