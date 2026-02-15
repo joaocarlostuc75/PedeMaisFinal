@@ -158,3 +158,8 @@ export interface SystemSettings {
   supportPhone: string;
   pixKey: string;
 }
+
+export interface CartItem {
+  produtoId: string;
+  qtd: number;
+}

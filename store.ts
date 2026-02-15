@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto } from './types';
+import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem } from './types';
 
 // Dados iniciais da Loja Demo (Restaurante Sabor - Tucuruí)
 const LOJA_DEMO_DEFAULT: Loja = { 
@@ -48,6 +48,10 @@ interface AppState {
   isSidebarOpen: boolean;
   systemSettings: SystemSettings;
   
+  // Cart Global State
+  cart: CartItem[];
+  cartLojaId: string | null;
+
   // Actions
   setUser: (user: User | null) => void;
   updateCurrentUser: (data: Partial<User>) => void;
@@ -62,6 +66,12 @@ interface AppState {
   updateProduto: (id: string, data: Partial<Produto>) => void;
   deleteProduto: (id: string) => void;
   
+  // Cart Actions
+  addToCart: (lojaId: string, produtoId: string) => void;
+  updateCartQuantity: (produtoId: string, delta: number) => void;
+  setCartQuantity: (produtoId: string, qtd: number) => void;
+  clearCart: () => void;
+
   // Planos CRUD
   addPlano: (plano: Plano) => void;
   updatePlano: (id: string, data: Partial<Plano>) => void;
@@ -86,9 +96,11 @@ interface AppState {
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
-      user: null, // Usuário inicial nulo para forçar login
+      user: null, 
       isSidebarOpen: false,
       notifications: [],
+      cart: [],
+      cartLojaId: null,
       systemSettings: {
         appName: 'Pede Mais',
         maintenanceMode: false,
@@ -163,7 +175,6 @@ export const useStore = create<AppState>()(
         lojas: state.lojas.filter(l => l.id !== lojaId)
       })),
       
-      // Implementação CRUD Produtos
       addProduto: (produto) => set((state) => ({
         produtos: [...state.produtos, produto]
       })),
@@ -174,7 +185,39 @@ export const useStore = create<AppState>()(
         produtos: state.produtos.filter(p => p.id !== id)
       })),
 
-      // Implementação CRUD Planos
+      // Cart Logic Implementation
+      addToCart: (lojaId, produtoId) => set((state) => {
+        // Se a loja for diferente da atual no carrinho, limpa o carrinho antigo
+        const isSameStore = state.cartLojaId === lojaId;
+        const newCart = isSameStore ? [...state.cart] : [];
+        const existingItem = newCart.find(i => i.produtoId === produtoId);
+
+        if (existingItem) {
+            existingItem.qtd += 1;
+        } else {
+            newCart.push({ produtoId, qtd: 1 });
+        }
+
+        return { cart: newCart, cartLojaId: lojaId };
+      }),
+      updateCartQuantity: (produtoId, delta) => set((state) => ({
+        cart: state.cart.map(item => {
+            if (item.produtoId === produtoId) {
+                return { ...item, qtd: Math.max(0, item.qtd + delta) };
+            }
+            return item;
+        }).filter(item => item.qtd > 0)
+      })),
+      setCartQuantity: (produtoId, qtd) => set((state) => ({
+        cart: state.cart.map(item => {
+            if (item.produtoId === produtoId) {
+                return { ...item, qtd: Math.max(0, qtd) };
+            }
+            return item;
+        }).filter(item => item.qtd > 0)
+      })),
+      clearCart: () => set({ cart: [], cartLojaId: null }),
+
       addPlano: (plano) => set((state) => ({
         planos: [...state.planos, plano]
       })),
@@ -220,7 +263,6 @@ export const useStore = create<AppState>()(
         systemSettings: { ...state.systemSettings, ...settings }
       })),
       
-      // UI Actions
       addNotification: (type, message) => set((state) => ({
         notifications: [...state.notifications, { id: Math.random().toString(36), type, message }]
       })),
@@ -240,7 +282,9 @@ export const useStore = create<AppState>()(
         entregas: state.entregas,
         planos: state.planos,
         systemSettings: state.systemSettings,
-        produtos: state.produtos
+        produtos: state.produtos,
+        cart: state.cart,
+        cartLojaId: state.cartLojaId
       }),
     }
   )

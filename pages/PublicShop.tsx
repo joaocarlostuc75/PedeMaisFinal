@@ -8,14 +8,12 @@ import { formatCurrency } from '../utils';
 export const PublicShop = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { lojas, produtos } = useStore();
+  const { lojas, produtos, cart, cartLojaId, addToCart, updateCartQuantity, setCartQuantity } = useStore();
   const loja = lojas.find(l => l.slug === slug);
   
   const [busca, setBusca] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   
-  // Carrinho local com persistência de sessão para evitar perdas no carregamento
-  const [carrinho, setCarrinho] = useState<{id: string, qtd: number}[]>([]);
   const [addedFeedback, setAddedFeedback] = useState<Set<string>>(new Set());
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -35,6 +33,9 @@ export const PublicShop = () => {
     );
   }
 
+  // Verifica se o carrinho atual pertence a esta loja
+  const currentCartItems = cartLojaId === loja.id ? cart : [];
+
   const produtosDaLoja = produtos.filter(p => p.lojaId === loja.id);
 
   const categoriasDisponiveis = useMemo(() => {
@@ -50,20 +51,14 @@ export const PublicShop = () => {
   }, [categoriasDisponiveis]);
 
   // Cálculos do Carrinho
-  const totalItens = useMemo(() => carrinho.reduce((acc, curr) => acc + curr.qtd, 0), [carrinho]);
-  const totalValor = useMemo(() => carrinho.reduce((acc, curr) => {
-    const prod = produtos.find(p => p.id === curr.id);
+  const totalItens = useMemo(() => currentCartItems.reduce((acc, curr) => acc + curr.qtd, 0), [currentCartItems]);
+  const totalValor = useMemo(() => currentCartItems.reduce((acc, curr) => {
+    const prod = produtos.find(p => p.id === curr.produtoId);
     return acc + (prod?.preco || 0) * curr.qtd;
-  }, 0), [carrinho, produtos]);
+  }, 0), [currentCartItems, produtos]);
 
-  const addAoCarrinho = (id: string) => {
-    setCarrinho(prev => {
-      const itemExistente = prev.find(i => i.id === id);
-      if (itemExistente) {
-        return prev.map(i => i.id === id ? { ...i, qtd: i.qtd + 1 } : i);
-      }
-      return [...prev, { id, qtd: 1 }];
-    });
+  const handleAddToCart = (id: string) => {
+    addToCart(loja.id, id);
     
     // Feedback visual
     setAddedFeedback(prev => new Set(prev).add(id));
@@ -76,19 +71,13 @@ export const PublicShop = () => {
     }, 1000);
   };
 
-  const updateQuantidade = (id: string, delta: number) => {
-    setCarrinho(prev => prev.map(i => {
-      if (i.id === id) {
-        const novaQtd = Math.max(0, i.qtd + delta);
-        return { ...i, qtd: novaQtd };
-      }
-      return i;
-    }).filter(i => i.qtd > 0));
+  const handleUpdateQuantity = (id: string, delta: number) => {
+    updateCartQuantity(id, delta);
   };
 
-  const setQuantidadeDireta = (id: string, qtd: number) => {
+  const handleSetQuantity = (id: string, qtd: number) => {
     if (qtd < 1) return;
-    setCarrinho(prev => prev.map(i => i.id === id ? { ...i, qtd } : i));
+    setCartQuantity(id, qtd);
   };
 
   const scrollToCategory = (cat: string) => {
@@ -167,7 +156,7 @@ export const PublicShop = () => {
                       <div className="mt-auto flex items-center justify-between">
                         <span className="text-xl font-black text-emerald-600">{formatCurrency(p.preco)}</span>
                         <button 
-                          onClick={() => addAoCarrinho(p.id)}
+                          onClick={() => handleAddToCart(p.id)}
                           className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${addedFeedback.has(p.id) ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white hover:bg-emerald-600'}`}
                         >
                           {addedFeedback.has(p.id) ? '✓ Adicionado' : '+ Comprar'}
@@ -192,17 +181,17 @@ export const PublicShop = () => {
             </div>
             
             <div className="flex-1 overflow-y-auto p-8 space-y-6">
-               {carrinho.length === 0 ? (
+               {currentCartItems.length === 0 ? (
                  <div className="text-center py-20 opacity-40">
                     <span className="text-6xl block mb-4">🛒</span>
                     <p className="font-black uppercase tracking-widest text-xs">Sacola vazia</p>
                  </div>
                ) : (
-                 carrinho.map(item => {
-                   const produto = produtos.find(p => p.id === item.id);
+                 currentCartItems.map(item => {
+                   const produto = produtos.find(p => p.id === item.produtoId);
                    if (!produto) return null;
                    return (
-                     <div key={item.id} className="flex gap-4 group">
+                     <div key={item.produtoId} className="flex gap-4 group">
                         <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden shrink-0 border border-gray-50">
                            <img src={produto.imagem} className="w-full h-full object-cover" />
                         </div>
@@ -214,22 +203,22 @@ export const PublicShop = () => {
                            <div className="flex items-center gap-3">
                               <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-100">
                                  <button 
-                                    onClick={() => updateQuantidade(item.id, -1)} 
+                                    onClick={() => handleUpdateQuantity(item.produtoId, -1)} 
                                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-400 hover:text-emerald-600 transition-colors"
                                  >-</button>
                                  <input 
                                     type="number" 
                                     min="1" 
                                     value={item.qtd} 
-                                    onChange={(e) => setQuantidadeDireta(item.id, parseInt(e.target.value))}
+                                    onChange={(e) => handleSetQuantity(item.produtoId, parseInt(e.target.value))}
                                     className="w-10 bg-transparent text-center text-xs font-black outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                  />
                                  <button 
-                                    onClick={() => updateQuantidade(item.id, 1)} 
+                                    onClick={() => handleUpdateQuantity(item.produtoId, 1)} 
                                     className="w-7 h-7 flex items-center justify-center font-bold text-gray-400 hover:text-emerald-600 transition-colors"
                                  >+</button>
                               </div>
-                              <button onClick={() => updateQuantidade(item.id, -item.qtd)} className="text-[9px] font-black text-red-400 uppercase tracking-widest">Remover</button>
+                              <button onClick={() => handleUpdateQuantity(item.produtoId, -item.qtd)} className="text-[9px] font-black text-red-400 uppercase tracking-widest">Remover</button>
                            </div>
                         </div>
                      </div>
@@ -245,7 +234,7 @@ export const PublicShop = () => {
                </div>
                <button 
                   onClick={() => navigate(`/checkout/${loja.slug}`)}
-                  disabled={carrinho.length === 0}
+                  disabled={currentCartItems.length === 0}
                   className="w-full py-5 rounded-2xl bg-emerald-600 text-white font-black uppercase text-sm tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-500 disabled:bg-gray-200 disabled:shadow-none transition-all active:scale-95"
                >
                   Finalizar Pedido

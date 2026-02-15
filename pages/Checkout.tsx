@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
@@ -7,7 +7,7 @@ import { formatCurrency } from '../utils';
 export const Checkout = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { lojas } = useStore();
+  const { lojas, cart, cartLojaId, produtos, updateCartQuantity, clearCart } = useStore();
   const loja = lojas.find(l => l.slug === slug) || lojas[0];
 
   const [tipo, setTipo] = useState<'entrega' | 'retirada'>('entrega');
@@ -15,25 +15,31 @@ export const Checkout = () => {
   const [nome, setNome] = useState('');
   const [endereco, setEndereco] = useState('');
   
-  const [items, setItems] = useState([
-    { id: '1', nome: 'X-Bacon Artesanal', desc: 'Pão brioche, 180g carne, cheddar, bacon crocante.', preco: 32.90, qtd: 1, img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200' },
-    { id: '2', nome: 'Coca-Cola 2L', desc: 'Gelada', preco: 12.00, qtd: 1, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200' },
-    { id: '3', nome: 'Batata Frita Média', desc: 'Porção individual crocante.', preco: 18.50, qtd: 1, img: 'https://images.unsplash.com/photo-1573082801869-076f228dc07d?w=200' },
-  ]);
+  // Filtra itens do carrinho apenas da loja atual
+  const currentCartItems = cartLojaId === loja.id ? cart : [];
+
+  // Hidrata os itens com detalhes do produto
+  const items = useMemo(() => {
+      return currentCartItems.map(item => {
+          const produto = produtos.find(p => p.id === item.produtoId);
+          return produto ? { ...produto, qtd: item.qtd } : null;
+      }).filter(item => item !== null) as (typeof produtos[0] & { qtd: number })[];
+  }, [currentCartItems, produtos]);
 
   const subtotal = items.reduce((acc, curr) => acc + (curr.preco * curr.qtd), 0);
   const taxa = tipo === 'entrega' ? (loja.taxaEntrega || 5.50) : 0;
   const total = subtotal + taxa;
 
   const updateQtd = (id: string, delta: number) => {
-    setItems(items.map(i => i.id === id ? { ...i, qtd: Math.max(1, i.qtd + delta) } : i));
+    updateCartQuantity(id, delta);
   };
 
   const removeItem = (id: string) => {
-    setItems(items.filter(i => i.id !== id));
+    updateCartQuantity(id, -1000); // Força remoção zerando quantidade
   };
 
   const finalizarPedido = () => {
+    if (items.length === 0) return alert('Seu carrinho está vazio.');
     if (!nome) return alert('Por favor, informe seu nome.');
     if (tipo === 'entrega' && !endereco) return alert('Por favor, informe o endereço.');
 
@@ -55,6 +61,9 @@ export const Checkout = () => {
     
     const encoded = encodeURIComponent(msg);
     window.open(`https://wa.me/${loja.whatsapp}?text=${encoded}`, '_blank');
+    
+    // Opcional: Limpar carrinho após envio (comentar se preferir manter)
+    // clearCart();
   };
 
   return (
@@ -78,35 +87,46 @@ export const Checkout = () => {
           
           {/* Coluna Itens */}
           <div className="lg:col-span-7 space-y-6">
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Seu Carrinho <span className="text-gray-400 font-bold">({items.length} itens)</span></h2>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Seu Carrinho <span className="text-gray-400 font-bold">({items.reduce((acc, i) => acc + i.qtd, 0)} itens)</span></h2>
             
             <div className="space-y-4">
-              {items.map(item => (
-                <div key={item.id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-50 flex gap-6 group hover:shadow-md transition-shadow">
-                   <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden shrink-0">
-                      <img src={item.img} className="w-full h-auto object-cover min-h-full" />
-                   </div>
-                   <div className="flex-1 flex flex-col justify-between">
-                      <div className="flex justify-between items-start">
-                         <div>
-                            <h4 className="font-black text-gray-800 leading-tight">{item.nome}</h4>
-                            <p className="text-[11px] text-gray-400 font-bold mt-1 line-clamp-1">{item.desc}</p>
-                         </div>
-                         <button onClick={() => removeItem(item.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                         </button>
-                      </div>
-                      <div className="flex items-center justify-between mt-4">
-                         <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100">
-                            <button onClick={() => updateQtd(item.id, -1)} className="w-8 h-8 flex items-center justify-center font-black text-gray-400 hover:text-emerald-600 transition-colors">-</button>
-                            <span className="w-8 text-center font-black text-xs text-gray-700">{item.qtd}</span>
-                            <button onClick={() => updateQtd(item.id, 1)} className="w-8 h-8 flex items-center justify-center font-black text-gray-400 hover:text-emerald-600 transition-colors">+</button>
-                         </div>
-                         <span className="font-black text-lg text-gray-900">{formatCurrency(item.preco * item.qtd)}</span>
-                      </div>
-                   </div>
-                </div>
-              ))}
+              {items.length === 0 ? (
+                  <div className="p-10 bg-white rounded-[2rem] text-center border border-gray-100">
+                      <p className="text-gray-400 font-bold">Seu carrinho está vazio.</p>
+                      <button onClick={() => navigate(-1)} className="mt-4 text-emerald-600 font-black uppercase text-xs hover:underline">Voltar e Comprar</button>
+                  </div>
+              ) : (
+                  items.map(item => (
+                    <div key={item.id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-50 flex gap-6 group hover:shadow-md transition-shadow">
+                    <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden shrink-0">
+                        {item.imagem ? (
+                            <img src={item.imagem} className="w-full h-auto object-cover min-h-full" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">📷</div>
+                        )}
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h4 className="font-black text-gray-800 leading-tight">{item.nome}</h4>
+                                <p className="text-[11px] text-gray-400 font-bold mt-1 line-clamp-1">{item.descricao}</p>
+                            </div>
+                            <button onClick={() => removeItem(item.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                        <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100">
+                                <button onClick={() => updateQtd(item.id, -1)} className="w-8 h-8 flex items-center justify-center font-black text-gray-400 hover:text-emerald-600 transition-colors">-</button>
+                                <span className="w-8 text-center font-black text-xs text-gray-700">{item.qtd}</span>
+                                <button onClick={() => updateQtd(item.id, 1)} className="w-8 h-8 flex items-center justify-center font-black text-gray-400 hover:text-emerald-600 transition-colors">+</button>
+                            </div>
+                            <span className="font-black text-lg text-gray-900">{formatCurrency(item.preco * item.qtd)}</span>
+                        </div>
+                    </div>
+                    </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -179,7 +199,8 @@ export const Checkout = () => {
 
                <button 
                   onClick={finalizarPedido}
-                  className="w-full bg-[#2d7a3a] text-white py-6 rounded-3xl font-black text-lg tracking-tight flex items-center justify-center gap-4 shadow-2xl shadow-emerald-900/10 hover:bg-[#256631] transition-all transform hover:-translate-y-1 active:scale-95 group"
+                  disabled={items.length === 0}
+                  className="w-full bg-[#2d7a3a] text-white py-6 rounded-3xl font-black text-lg tracking-tight flex items-center justify-center gap-4 shadow-2xl shadow-emerald-900/10 hover:bg-[#256631] transition-all transform hover:-translate-y-1 active:scale-95 group disabled:bg-gray-300 disabled:shadow-none"
                >
                   <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.053-1.047-.057-.262-.069-.517-.149-1.512-.567-1.179-.494-1.925-1.635-1.984-1.712-.058-.077-.471-.625-.471-1.202 0-.577.301-.86.41-.977.108-.117.234-.146.312-.146.079 0 .158.001.228.004.075.003.176-.028.275.212.1.243.344.838.374.899.03.061.05.132.01.213-.04.081-.061.132-.121.203-.061.071-.128.158-.183.213-.061.061-.125.128-.054.25.071.121.315.52.676.841.465.412.857.541.978.601.121.061.192.051.264-.03.071-.081.305-.355.387-.477.082-.121.163-.101.275-.061.111.04.706.334.827.395.121.061.203.091.233.142.031.051.031.294-.112.699z"/></svg>
                   Finalizar no WhatsApp
