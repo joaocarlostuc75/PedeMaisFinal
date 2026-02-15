@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 
 export const Sidebar = () => {
-  const { user, setUser, isSidebarOpen, closeSidebar, lojas } = useStore();
+  const { user, setUser, isSidebarOpen, closeSidebar, lojas, entregas } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -17,6 +17,11 @@ export const Sidebar = () => {
     closeSidebar();
     navigate('/');
   };
+
+  // Calcula pedidos pendentes apenas para a loja do usuário atual
+  const pedidosPendentes = user?.lojaId 
+    ? entregas.filter(e => e.lojaId === user.lojaId && e.status === 'pendente').length 
+    : 0;
 
   const menuItems = {
     super_admin: [
@@ -31,7 +36,8 @@ export const Sidebar = () => {
     ],
     lojista: [
       { label: 'Dashboard', path: '/admin/dashboard', icon: '🏠' },
-      { label: 'Pedidos', path: '/admin/pedidos', icon: '🛍️', badge: 3 },
+      // Badge dinâmica: só mostra se houver pedidos pendentes (> 0)
+      { label: 'Pedidos', path: '/admin/pedidos', icon: '🛍️', badge: pedidosPendentes > 0 ? pedidosPendentes : undefined },
       { label: 'Cardápio', path: '/admin/produtos', icon: '🍔' },
       { label: 'Entregadores', path: '/admin/entregadores', icon: '🛵' },
       { label: 'Assinatura', path: '/admin/assinatura', icon: '💳' },
@@ -95,7 +101,7 @@ export const Sidebar = () => {
                 <span className="text-lg">{item.icon}</span>
                 <span className="text-sm">{item.label}</span>
               </div>
-              {item.badge && (
+              {item.badge !== undefined && (
                  <span className="bg-emerald-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full">{item.badge}</span>
               )}
             </Link>
