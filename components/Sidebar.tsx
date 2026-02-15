@@ -19,7 +19,6 @@ export const Sidebar = () => {
     }
 
     // 2. Navega para a home (Landing Page) PRIMEIRO
-    // Isso é crucial para evitar que o ProtectedRoute capture o user=null e jogue para /login
     navigate('/');
 
     // 3. Limpa o usuário do estado após um breve delay para garantir a transição de rota

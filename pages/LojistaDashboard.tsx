@@ -233,10 +233,14 @@ export const LojistaDashboard = () => {
 
           <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-gray-100 shadow-sm">
             <h3 className="text-lg font-black mb-4">Atalhos Rápidos</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <Link to="/admin/entregadores" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-emerald-50 hover:text-emerald-700 transition-colors group">
                 <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">🛵</span>
                 <span className="text-xs font-bold text-gray-600 uppercase group-hover:text-emerald-700">Frota</span>
+              </Link>
+              <Link to="/admin/funcionarios" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-purple-50 hover:text-purple-700 transition-colors group">
+                <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">👔</span>
+                <span className="text-xs font-bold text-gray-600 uppercase group-hover:text-purple-700">Equipe</span>
               </Link>
               <Link to="/admin/configuracoes" className="bg-gray-50 p-4 rounded-2xl text-center hover:bg-blue-50 hover:text-blue-700 transition-colors group">
                 <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">⚙️</span>
