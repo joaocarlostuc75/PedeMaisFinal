@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem, DiaFuncionamento, SupportTicket, TicketMessage } from './types';
@@ -176,6 +177,7 @@ interface AppState {
   updateTicketStatus: (id: string, status: SupportTicket['status']) => void;
   replyTicket: (ticketId: string, message: TicketMessage) => void;
 
+  addEntrega: (entrega: Entrega) => void; // Novo action
   cancelarAssinatura: (lojaId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
   atribuirEntregador: (entregaId: string, entregadorId: string) => void;
@@ -366,6 +368,9 @@ export const useStore = create<AppState>()(
         tickets: state.tickets.map(t => t.id === ticketId ? { ...t, mensagens: [...t.mensagens, message], dataAtualizacao: new Date().toISOString() } : t)
       })),
 
+      addEntrega: (entrega) => set((state) => ({
+        entregas: [entrega, ...state.entregas]
+      })),
       cancelarAssinatura: (lojaId) => set((state) => ({
         lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'cancelado' } : l)
       })),

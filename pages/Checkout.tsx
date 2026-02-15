@@ -3,11 +3,12 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
+import { Entrega } from '../types';
 
 export const Checkout = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { lojas, cart, cartLojaId, produtos, updateCartQuantity, clearCart } = useStore();
+  const { lojas, cart, cartLojaId, produtos, updateCartQuantity, clearCart, addEntrega } = useStore();
   const loja = lojas.find(l => l.slug === slug) || lojas[0];
 
   const [tipo, setTipo] = useState<'entrega' | 'retirada'>('entrega');
@@ -43,7 +44,34 @@ export const Checkout = () => {
     if (!nome) return alert('Por favor, informe seu nome.');
     if (tipo === 'entrega' && !endereco) return alert('Por favor, informe o endereço.');
 
-    let msg = `*NOVO PEDIDO - ${loja.nome}*\n`;
+    // 1. Criar o objeto do Pedido
+    const novoPedidoId = Math.random().toString(36).substr(2, 9);
+    const novoPedido: Entrega = {
+        id: `ped-${novoPedidoId}`,
+        lojaId: loja.id,
+        clienteNome: nome,
+        endereco: tipo === 'entrega' ? endereco : 'Retirada na Loja',
+        tipoEntrega: tipo,
+        metodoPagamento: pagamento,
+        valor: total,
+        status: 'pendente',
+        data: new Date().toISOString(),
+        itens: items.map(i => ({
+            qtd: i.qtd,
+            nome: i.nome,
+            preco: i.preco,
+            detalhe: i.descricao // Usando descrição como detalhe base
+        }))
+    };
+
+    // 2. Confirmar no Sistema
+    addEntrega(novoPedido);
+    
+    // 3. Limpar Carrinho
+    clearCart();
+
+    // 4. Montar mensagem do WhatsApp
+    let msg = `*NOVO PEDIDO #${novoPedidoId.toUpperCase()}*\n`;
     msg += `--------------------------------\n`;
     msg += `👤 *Cliente:* ${nome}\n`;
     msg += `🚚 *Tipo:* ${tipo.toUpperCase()}\n`;
@@ -67,8 +95,8 @@ export const Checkout = () => {
     const encoded = encodeURIComponent(msg);
     window.open(`https://wa.me/${loja.whatsapp}?text=${encoded}`, '_blank');
     
-    // Opcional: Limpar carrinho após envio (comentar se preferir manter)
-    // clearCart();
+    // 5. Redirecionar para evitar duplo envio (Voltar para loja)
+    navigate(`/loja/${loja.slug}`);
   };
 
   return (
@@ -214,7 +242,7 @@ export const Checkout = () => {
                   className="w-full bg-[#2d7a3a] text-white py-6 rounded-3xl font-black text-lg tracking-tight flex items-center justify-center gap-4 shadow-2xl shadow-emerald-900/10 hover:bg-[#256631] transition-all transform hover:-translate-y-1 active:scale-95 group disabled:bg-gray-300 disabled:shadow-none"
                >
                   <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.634.053-1.047-.057-.262-.069-.517-.149-1.512-.567-1.179-.494-1.925-1.635-1.984-1.712-.058-.077-.471-.625-.471-1.202 0-.577.301-.86.41-.977.108-.117.234-.146.312-.146.079 0 .158.001.228.004.075.003.176-.028.275.212.1.243.344.838.374.899.03.061.05.132.01.213-.04.081-.061.132-.121.203-.061.071-.128.158-.183.213-.061.061-.125.128-.054.25.071.121.315.52.676.841.465.412.857.541.978.601.121.061.192.051.264-.03.071-.081.305-.355.387-.477.082-.121.163-.101.275-.061.111.04.706.334.827.395.121.061.203.091.233.142.031.051.031.294-.112.699z"/></svg>
-                  Finalizar no WhatsApp
+                  Fazer Pedido
                </button>
                <p className="text-[10px] text-gray-400 font-bold text-center mt-6 px-4">Ao clicar, você será redirecionado para o WhatsApp com os detalhes do seu pedido prontos para enviar.</p>
             </section>
