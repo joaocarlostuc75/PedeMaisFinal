@@ -10,7 +10,8 @@ import { Checkout } from './pages/Checkout';
 import { EntregadorDashboard } from './pages/EntregadorDashboard';
 import { LojistaDashboard } from './pages/LojistaDashboard';
 import { LojistaPedidos } from './pages/LojistaPedidos';
-import { LojistaClientes } from './pages/LojistaClientes'; // Nova Importação
+import { LojistaClientes } from './pages/LojistaClientes';
+import { LojistaFuncionarios } from './pages/LojistaFuncionarios'; // Nova Importação
 import { LojistaEntregadores } from './pages/LojistaEntregadores';
 import { LojistaRelatorio } from './pages/LojistaRelatorio';
 import { LojistaConfig } from './pages/LojistaConfig';
@@ -102,7 +103,8 @@ const App = () => {
             <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaDashboard /></ProtectedRoute>} />
             <Route path="/admin/pedidos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaPedidos /></ProtectedRoute>} />
             <Route path="/admin/produtos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaProdutos /></ProtectedRoute>} />
-            <Route path="/admin/clientes" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaClientes /></ProtectedRoute>} /> {/* Nova Rota */}
+            <Route path="/admin/clientes" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaClientes /></ProtectedRoute>} />
+            <Route path="/admin/funcionarios" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaFuncionarios /></ProtectedRoute>} /> {/* Nova Rota */}
             <Route path="/admin/assinatura" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaAssinatura /></ProtectedRoute>} />
             <Route path="/admin/entregadores" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaEntregadores /></ProtectedRoute>} />
             <Route path="/admin/relatorio" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaRelatorio /></ProtectedRoute>} />

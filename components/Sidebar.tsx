@@ -39,7 +39,8 @@ export const Sidebar = () => {
       // Badge dinâmica: só mostra se houver pedidos pendentes (> 0)
       { label: 'Pedidos', path: '/admin/pedidos', icon: '🛍️', badge: pedidosPendentes > 0 ? pedidosPendentes : undefined },
       { label: 'Cardápio', path: '/admin/produtos', icon: '🍔' },
-      { label: 'Clientes', path: '/admin/clientes', icon: '👥' }, // NOVO LINK
+      { label: 'Clientes', path: '/admin/clientes', icon: '👥' },
+      { label: 'Funcionários', path: '/admin/funcionarios', icon: '👔' }, // Novo Link
       { label: 'Entregadores', path: '/admin/entregadores', icon: '🛵' },
       { label: 'Assinatura', path: '/admin/assinatura', icon: '💳' },
       { label: 'Configurações', path: '/admin/configuracoes', icon: '⚙️' },

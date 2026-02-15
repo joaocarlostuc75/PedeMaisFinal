@@ -7,7 +7,7 @@ export interface User {
   email: string;
   role: Role;
   lojaId?: string;
-  avatar?: string; // Novo campo para foto/logo do perfil
+  avatar?: string;
 }
 
 export interface Badge {
@@ -30,8 +30,31 @@ export interface Entregador {
   badges: Badge[];
   lojaId: string;
   tipoVeiculo: 'Moto' | 'Caminhão (Pesado)' | 'Caminhão (Leve)' | 'Van' | 'Sedan' | 'Bicicleta';
-  placa?: string; // Novo campo
+  placa?: string;
   dataAdesao: string;
+}
+
+export type FuncionarioCargo = 'Gerente' | 'Atendente' | 'Cozinha' | 'Entregador Fixo';
+
+export type Permissao = 
+  | 'ver_dashboard'
+  | 'gerir_pedidos'
+  | 'gerir_cardapio'
+  | 'gerir_entregadores'
+  | 'ver_financeiro'
+  | 'configuracoes_loja';
+
+export interface Funcionario {
+  id: string;
+  lojaId: string;
+  nome: string;
+  email: string; // Usado para login
+  telefone: string;
+  cargo: FuncionarioCargo;
+  ativo: boolean;
+  permissoes: Permissao[];
+  dataCriacao: string;
+  avatar?: string;
 }
 
 export interface Fatura {
@@ -57,7 +80,7 @@ export interface Plano {
   recursos: string[];
   cor?: string;
   destaque?: boolean;
-  privado?: boolean; // Novo campo para planos secretos/VIP
+  privado?: boolean;
 }
 
 export interface Intervalo {
@@ -66,7 +89,7 @@ export interface Intervalo {
 }
 
 export interface DiaFuncionamento {
-  dia: string; // Segunda, Terça, etc.
+  dia: string;
   ativo: boolean;
   intervalos: Intervalo[];
 }
@@ -111,13 +134,10 @@ export interface Loja {
   tempoMin?: number;
   tempoMax?: number;
   aceitaRetirada?: boolean;
-  areasEntrega?: AreaEntrega[]; // Novo campo
-  
-  // Novos campos de horário
-  lojaAbertaManual?: boolean; // Toggle global
+  areasEntrega?: AreaEntrega[];
+  lojaAbertaManual?: boolean;
   horarios?: DiaFuncionamento[];
   feriados?: Feriado[];
-
   stats?: {
     carrinhos: number;
     finalizados: number;
@@ -133,7 +153,7 @@ export interface Produto {
   descricao: string;
   preco: number;
   imagem: string;
-  imagens?: string[]; // Array de imagens para carrossel
+  imagens?: string[];
   destaque?: boolean;
   maisVendido?: boolean;
   disponivel: boolean;
@@ -151,7 +171,7 @@ export interface ItemPedido {
 export interface Entrega {
   id: string;
   clienteNome: string;
-  clienteTelefone?: string; // Adicionado para CRM
+  clienteTelefone?: string;
   itens: ItemPedido[];
   valor: number;
   status: 'pendente' | 'preparando' | 'pronto' | 'em_transito' | 'finalizada' | 'cancelada';
@@ -191,13 +211,12 @@ export interface CartItem {
   qtd: number;
 }
 
-// Interfaces de Suporte
 export interface TicketMessage {
   id: string;
   senderName: string;
   text: string;
   timestamp: string;
-  isAdmin: boolean; // True se for resposta do suporte, False se for lojista
+  isAdmin: boolean;
 }
 
 export interface SupportTicket {

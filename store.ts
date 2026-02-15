@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem, DiaFuncionamento, SupportTicket, TicketMessage } from './types';
+import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem, DiaFuncionamento, SupportTicket, TicketMessage, Funcionario } from './types';
 import { generateID } from './utils';
 
 // Helper para horários padrão
@@ -131,6 +131,7 @@ interface AppState {
   meiosPagamento: MeioPagamento[];
   notifications: Notification[];
   tickets: SupportTicket[];
+  funcionarios: Funcionario[];
   isSidebarOpen: boolean;
   systemSettings: SystemSettings;
   cart: CartItem[];
@@ -168,6 +169,7 @@ interface AppState {
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
   atribuirEntregador: (entregaId: string, entregadorId: string) => void;
   atualizarStatusPedido: (entregaId: string, novoStatus: Entrega['status']) => void;
+  updateEntrega: (entregaId: string, data: Partial<Entrega>) => void;
   solicitarSaque: (saque: Saque) => void;
   resetDemoStore: () => void;
   updateSystemSettings: (settings: Partial<SystemSettings>) => void;
@@ -175,6 +177,11 @@ interface AppState {
   removeNotification: (id: string) => void;
   toggleSidebar: () => void;
   closeSidebar: () => void;
+  
+  // Funcionario Actions
+  addFuncionario: (funcionario: Funcionario) => void;
+  updateFuncionario: (id: string, data: Partial<Funcionario>) => void;
+  deleteFuncionario: (id: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -208,6 +215,18 @@ export const useStore = create<AppState>()(
         { id: 'e3', nome: 'Marcos Almeida', telefone: '94 95555-4444', status: 'suspenso', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1', tipoVeiculo: 'Van', placa: 'GHI-9012', dataAdesao: '2023-01-05' },
         { id: 'e4', nome: 'Carlos Vega', telefone: '94 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Leve)', placa: 'JKL-3456', dataAdesao: '2023-11-15' },
         { id: 'e5', nome: 'Sarah Wilson', telefone: '94 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1', tipoVeiculo: 'Sedan', placa: 'MNO-7890', dataAdesao: '2024-02-28' },
+      ],
+      funcionarios: [
+        { 
+          id: 'func1', lojaId: 'l1', nome: 'Ana Gerente', email: 'ana@loja.com', telefone: '94 91111-2222', cargo: 'Gerente', ativo: true, 
+          permissoes: ['ver_dashboard', 'gerir_pedidos', 'gerir_cardapio', 'gerir_entregadores', 'ver_financeiro'], 
+          dataCriacao: new Date(Date.now() - 50000000).toISOString()
+        },
+        { 
+          id: 'func2', lojaId: 'l1', nome: 'João Cozinha', email: 'joao@loja.com', telefone: '94 93333-4444', cargo: 'Cozinha', ativo: true, 
+          permissoes: ['gerir_pedidos'], 
+          dataCriacao: new Date(Date.now() - 20000000).toISOString()
+        }
       ],
       entregas: [
         { 
@@ -366,6 +385,9 @@ export const useStore = create<AppState>()(
       atualizarStatusPedido: (entregaId, novoStatus) => set((state) => ({
         entregas: state.entregas.map(e => e.id === entregaId ? { ...e, status: novoStatus } : e)
       })),
+      updateEntrega: (entregaId, data) => set((state) => ({
+        entregas: state.entregas.map(e => e.id === entregaId ? { ...e, ...data } : e)
+      })),
       solicitarSaque: (saque) => set((state) => ({
         saques: [saque, ...state.saques],
         entregadores: state.entregadores.map(e => e.id === saque.entregadorId ? { ...e, saldo: e.saldo - saque.valor } : e)
@@ -386,6 +408,17 @@ export const useStore = create<AppState>()(
       })),
       toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       closeSidebar: () => set({ isSidebarOpen: false }),
+
+      // Funcionario Actions Implementation
+      addFuncionario: (funcionario) => set((state) => ({
+        funcionarios: [...state.funcionarios, funcionario]
+      })),
+      updateFuncionario: (id, data) => set((state) => ({
+        funcionarios: state.funcionarios.map(f => f.id === id ? { ...f, ...data } : f)
+      })),
+      deleteFuncionario: (id) => set((state) => ({
+        funcionarios: state.funcionarios.filter(f => f.id !== id)
+      })),
     }),
     {
       name: 'pede-mais-storage',
@@ -402,7 +435,8 @@ export const useStore = create<AppState>()(
         cartLojaId: state.cartLojaId,
         meiosPagamento: state.meiosPagamento,
         tickets: state.tickets,
-        myOrderIds: state.myOrderIds
+        myOrderIds: state.myOrderIds,
+        funcionarios: state.funcionarios
       }),
     }
   )

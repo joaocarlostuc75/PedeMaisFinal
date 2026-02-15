@@ -7,7 +7,7 @@ import { Entrega } from '../types';
 
 export const LojistaPedidos = () => {
   const navigate = useNavigate();
-  const { entregas, entregadores, lojas, atualizarStatusPedido, atribuirEntregador, addNotification, user } = useStore();
+  const { entregas, entregadores, lojas, atualizarStatusPedido, atribuirEntregador, addNotification, user, updateEntrega } = useStore();
   const [now, setNow] = useState(new Date());
   
   // Identifica a loja atual do usuário
@@ -239,10 +239,23 @@ export const LojistaPedidos = () => {
                                     <div className="p-4 border-b border-dashed border-gray-100">
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="flex flex-col">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">#{order.id.slice(-4)} • {order.tipoEntrega === 'retirada' ? 'Retirada' : 'Entrega'}</span>
-                                                    <button onClick={() => imprimirComanda(order)} className="text-gray-400 hover:text-gray-900 transition-colors" title="Imprimir Comanda">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">#{order.id.slice(-4)}</span>
+                                                    <span className="text-gray-300">•</span>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const newType = order.tipoEntrega === 'retirada' ? 'entrega' : 'retirada';
+                                                            updateEntrega(order.id, { tipoEntrega: newType });
+                                                            addNotification('info', `Pedido alterado para ${newType === 'retirada' ? 'Pegue e Leve' : 'Entrega'}`);
+                                                        }}
+                                                        className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded cursor-pointer border hover:shadow-sm transition-all flex items-center gap-1 ${order.tipoEntrega === 'retirada' ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+                                                        title="Alternar modo de entrega"
+                                                    >
+                                                        {order.tipoEntrega === 'retirada' ? '🛍️ Pegue e Leve' : '🛵 Entrega'}
+                                                    </button>
+                                                    <button onClick={() => imprimirComanda(order)} className="text-gray-400 hover:text-gray-900 transition-colors ml-1" title="Imprimir Comanda">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1 2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                                                     </button>
                                                 </div>
                                                 <h4 className="font-bold text-gray-800 text-base leading-tight mt-0.5">{order.clienteNome}</h4>
@@ -308,7 +321,7 @@ export const LojistaPedidos = () => {
                                         )}
                                         {col.status === 'preparando' && (
                                             <button onClick={() => atualizarStatusPedido(order.id, 'pronto')} className="w-full py-3 bg-orange-500 text-white rounded-xl font-black text-xs uppercase shadow-md shadow-orange-200 hover:bg-orange-400 transition-colors flex items-center justify-center gap-2">
-                                                <span>✅</span> Pronto para Entrega
+                                                <span>✅</span> {order.tipoEntrega === 'retirada' ? 'Pronto p/ Retirada' : 'Pronto p/ Entrega'}
                                             </button>
                                         )}
                                         {col.status === 'pronto' && order.tipoEntrega !== 'retirada' && (
