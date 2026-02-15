@@ -219,7 +219,7 @@ export const useStore = create<AppState>()(
       funcionarios: [
         { 
           id: 'func1', lojaId: 'l1', nome: 'Ana Gerente', email: 'ana@loja.com', telefone: '94 91111-2222', cargo: 'Gerente', ativo: true, 
-          permissoes: ['ver_dashboard', 'gerir_pedidos', 'gerir_cardapio', 'gerir_entregadores', 'ver_financeiro'], 
+          permissoes: ['ver_dashboard', 'gerir_pedidos', 'gerir_cardapio', 'gerir_entregadores', 'ver_financeiro', 'gerir_financeiro', 'configuracoes_loja'], 
           dataCriacao: new Date(Date.now() - 50000000).toISOString()
         },
         { 

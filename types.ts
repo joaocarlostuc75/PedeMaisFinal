@@ -42,6 +42,7 @@ export type Permissao =
   | 'gerir_cardapio'
   | 'gerir_entregadores'
   | 'ver_financeiro'
+  | 'gerir_financeiro'
   | 'configuracoes_loja';
 
 export interface Funcionario {

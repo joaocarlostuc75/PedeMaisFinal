@@ -5,7 +5,7 @@ import { Funcionario, FuncionarioCargo, Permissao } from '../types';
 import { formatDate } from '../utils';
 
 const ROLE_PRESETS: Record<FuncionarioCargo, Permissao[]> = {
-  'Gerente': ['ver_dashboard', 'gerir_pedidos', 'gerir_cardapio', 'gerir_entregadores', 'ver_financeiro', 'configuracoes_loja'],
+  'Gerente': ['ver_dashboard', 'gerir_pedidos', 'gerir_cardapio', 'gerir_entregadores', 'ver_financeiro', 'gerir_financeiro', 'configuracoes_loja'],
   'Atendente': ['gerir_pedidos', 'gerir_cardapio'],
   'Cozinha': ['gerir_pedidos'], // Visualização limitada estilo KDS
   'Entregador Fixo': ['gerir_entregadores']
@@ -16,7 +16,8 @@ const PERMISSIONS_LABELS: Record<Permissao, string> = {
   'gerir_pedidos': 'Gerenciar Pedidos',
   'gerir_cardapio': 'Editar Cardápio',
   'gerir_entregadores': 'Gerir Frota',
-  'ver_financeiro': 'Acesso Financeiro',
+  'ver_financeiro': 'Visualizar Financeiro',
+  'gerir_financeiro': 'Gerenciar Financeiro (Saques/Pagamentos)',
   'configuracoes_loja': 'Configurações da Loja'
 };
 
@@ -144,7 +145,7 @@ export const LojistaFuncionarios = () => {
                     <div className="flex flex-wrap gap-1">
                         {func.permissoes.slice(0, 3).map(p => (
                             <span key={p} className="bg-gray-50 text-gray-500 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide border border-gray-100">
-                                {PERMISSIONS_LABELS[p].split(' ')[0]}
+                                {PERMISSIONS_LABELS[p] ? PERMISSIONS_LABELS[p].split(' ')[0] : p}
                             </span>
                         ))}
                         {func.permissoes.length > 3 && (
