@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem, DiaFuncionamento, SupportTicket, TicketMessage } from './types';
+import { generateID } from './utils';
 
 // Helper para horários padrão
 const HORARIOS_PADRAO: DiaFuncionamento[] = [
@@ -31,7 +32,6 @@ const LOJA_DEMO_DEFAULT: Loja = {
   banner: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200&auto=format&fit=crop',
   logo: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
   areasEntrega: [
-    // Coordenadas aproximadas de bairros em Tucuruí
     { id: 'a1', nome: 'Centro Comercial', taxa: 4.00, tempoMin: 15, tempoMax: 25, raioKm: 2, ativa: true, tipoTaxa: 'fixa', lat: -3.766052, lng: -49.672367 },
     { id: 'a2', nome: 'Vila Permanente', taxa: 7.00, tempoMin: 30, tempoMax: 45, raioKm: 4, ativa: true, tipoTaxa: 'fixa', lat: -3.722839, lng: -49.654308 }
   ],
@@ -52,7 +52,7 @@ const TICKETS_MOCK: SupportTicket[] = [
     descricao: 'Não estou conseguindo gerar o relatório de pagamentos via PIX da semana passada.',
     status: 'Aberto',
     prioridade: 'Alta',
-    dataCriacao: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
+    dataCriacao: new Date(Date.now() - 86400000).toISOString(),
     dataAtualizacao: new Date(Date.now() - 86400000).toISOString(),
     mensagens: [
       { id: 'm1', senderName: 'Lojista', text: 'Olá, preciso de ajuda com o relatório PIX.', timestamp: new Date(Date.now() - 86400000).toISOString(), isAdmin: false }
@@ -67,7 +67,7 @@ const TICKETS_MOCK: SupportTicket[] = [
     descricao: 'Como configuro um horário especial para o Natal?',
     status: 'Resolvido',
     prioridade: 'Baixa',
-    dataCriacao: new Date(Date.now() - 172800000).toISOString(), // 2 dias atrás
+    dataCriacao: new Date(Date.now() - 172800000).toISOString(),
     dataAtualizacao: new Date(Date.now() - 100000000).toISOString(),
     mensagens: [
       { id: 'm1', senderName: 'Lojista', text: 'Como configuro feriado?', timestamp: new Date(Date.now() - 172800000).toISOString(), isAdmin: false },
@@ -88,8 +88,8 @@ const PRODUTOS_DEMO: Produto[] = [
     imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop', 
     imagens: [
       'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=600&auto=format&fit=crop', // Burger variação
-      'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=600&auto=format&fit=crop'  // Burger close
+      'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=600&auto=format&fit=crop'
     ],
     destaque: true, 
     maisVendido: true, 
@@ -133,52 +133,37 @@ interface AppState {
   tickets: SupportTicket[];
   isSidebarOpen: boolean;
   systemSettings: SystemSettings;
-  
-  // Cart Global State
   cart: CartItem[];
   cartLojaId: string | null;
-  myOrderIds: string[]; // Lista de IDs de pedidos feitos por este cliente (LocalStorage)
+  myOrderIds: string[];
 
   // Actions
   setUser: (user: User | null) => void;
   updateCurrentUser: (data: Partial<User>) => void;
-  
   updatePlanoLoja: (lojaId: string, planoId: string) => void;
   updateLoja: (lojaId: string, data: Partial<Loja>) => void;
   addLoja: (loja: Loja) => void;
   deleteLoja: (lojaId: string) => void;
-  
-  // Produtos CRUD
   addProduto: (produto: Produto) => void;
   updateProduto: (id: string, data: Partial<Produto>) => void;
   deleteProduto: (id: string) => void;
-  
-  // Cart Actions
   addToCart: (lojaId: string, produtoId: string) => void;
   updateCartQuantity: (produtoId: string, delta: number) => void;
   setCartQuantity: (produtoId: string, qtd: number) => void;
   clearCart: () => void;
-
-  // Planos CRUD
   addPlano: (plano: Plano) => void;
   updatePlano: (id: string, data: Partial<Plano>) => void;
   deletePlano: (id: string) => void;
-
   addEntregador: (entregador: any) => void;
   updateEntregador: (id: string, data: Partial<Entregador>) => void;
   deleteEntregador: (id: string) => void;
-
-  // Meios de Pagamento CRUD
   addMeioPagamento: (meio: MeioPagamento) => void;
   updateMeioPagamento: (id: string, data: Partial<MeioPagamento>) => void;
   deleteMeioPagamento: (id: string) => void;
-
-  // Tickets Actions
   addTicket: (ticket: SupportTicket) => void;
   updateTicketStatus: (id: string, status: SupportTicket['status']) => void;
   replyTicket: (ticketId: string, message: TicketMessage) => void;
-
-  addEntrega: (entrega: Entrega) => void; // Novo action
+  addEntrega: (entrega: Entrega) => void;
   cancelarAssinatura: (lojaId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
   atribuirEntregador: (entregaId: string, entregadorId: string) => void;
@@ -186,8 +171,6 @@ interface AppState {
   solicitarSaque: (saque: Saque) => void;
   resetDemoStore: () => void;
   updateSystemSettings: (settings: Partial<SystemSettings>) => void;
-  
-  // UI Actions
   addNotification: (type: 'success' | 'error' | 'info', message: string) => void;
   removeNotification: (id: string) => void;
   toggleSidebar: () => void;
@@ -288,9 +271,7 @@ export const useStore = create<AppState>()(
         produtos: state.produtos.filter(p => p.id !== id)
       })),
 
-      // Cart Logic Implementation
       addToCart: (lojaId, produtoId) => set((state) => {
-        // Se a loja for diferente da atual no carrinho, limpa o carrinho antigo
         const isSameStore = state.cartLojaId === lojaId;
         const newCart = isSameStore ? [...state.cart] : [];
         const existingItem = newCart.find(i => i.produtoId === produtoId);
@@ -348,7 +329,6 @@ export const useStore = create<AppState>()(
         entregadores: state.entregadores.filter(e => e.id !== id)
       })),
 
-      // Meios de Pagamento CRUD
       addMeioPagamento: (meio) => set((state) => ({
         meiosPagamento: [...state.meiosPagamento, meio]
       })),
@@ -359,7 +339,6 @@ export const useStore = create<AppState>()(
         meiosPagamento: state.meiosPagamento.filter(m => m.id !== id)
       })),
 
-      // Tickets Actions
       addTicket: (ticket) => set((state) => ({
         tickets: [ticket, ...state.tickets]
       })),
@@ -370,7 +349,6 @@ export const useStore = create<AppState>()(
         tickets: state.tickets.map(t => t.id === ticketId ? { ...t, mensagens: [...t.mensagens, message], dataAtualizacao: new Date().toISOString() } : t)
       })),
 
-      // Atualizado para adicionar o pedido à lista de "Meus Pedidos" do cliente
       addEntrega: (entrega) => set((state) => ({
         entregas: [entrega, ...state.entregas],
         myOrderIds: [...state.myOrderIds, entrega.id]
@@ -394,14 +372,14 @@ export const useStore = create<AppState>()(
       })),
       resetDemoStore: () => set((state) => ({
         lojas: [LOJA_DEMO_DEFAULT, ...state.lojas.filter(l => l.id !== 'l1')],
-        produtos: PRODUTOS_DEMO // Reseta produtos também
+        produtos: PRODUTOS_DEMO 
       })),
       updateSystemSettings: (settings) => set((state) => ({
         systemSettings: { ...state.systemSettings, ...settings }
       })),
       
       addNotification: (type, message) => set((state) => ({
-        notifications: [...state.notifications, { id: Math.random().toString(36), type, message }]
+        notifications: [...state.notifications, { id: generateID('not-'), type, message }]
       })),
       removeNotification: (id) => set((state) => ({
         notifications: state.notifications.filter(n => n.id !== id)
@@ -424,7 +402,7 @@ export const useStore = create<AppState>()(
         cartLojaId: state.cartLojaId,
         meiosPagamento: state.meiosPagamento,
         tickets: state.tickets,
-        myOrderIds: state.myOrderIds // Persistindo histórico do cliente
+        myOrderIds: state.myOrderIds
       }),
     }
   )

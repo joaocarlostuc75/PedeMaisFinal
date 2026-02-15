@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
 import { Entrega } from '../types';
 
 export const LojistaPedidos = () => {
+  const navigate = useNavigate();
   const { entregas, entregadores, lojas, atualizarStatusPedido, atribuirEntregador, addNotification, user } = useStore();
   const [now, setNow] = useState(new Date());
   
@@ -181,6 +183,13 @@ export const LojistaPedidos = () => {
         
         {/* Barra de Filtros */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto">
+            <button 
+                onClick={() => navigate('/meus-pedidos')}
+                className="bg-blue-50 text-blue-600 border border-blue-100 px-4 py-2 rounded-lg font-black text-[11px] uppercase tracking-wider hover:bg-blue-100 transition-colors whitespace-nowrap"
+            >
+                Ver Meus Pedidos
+            </button>
+
             {filterOptions.map(opt => (
                 <button
                     key={opt.id}
