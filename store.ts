@@ -1,7 +1,18 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem } from './types';
+import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem, DiaFuncionamento } from './types';
+
+// Helper para horários padrão
+const HORARIOS_PADRAO: DiaFuncionamento[] = [
+  { dia: 'Segunda-feira', ativo: true, intervalos: [{ inicio: '08:00', fim: '18:00' }] },
+  { dia: 'Terça-feira', ativo: true, intervalos: [{ inicio: '08:00', fim: '18:00' }] },
+  { dia: 'Quarta-feira', ativo: true, intervalos: [{ inicio: '08:00', fim: '18:00' }] },
+  { dia: 'Quinta-feira', ativo: true, intervalos: [{ inicio: '08:00', fim: '18:00' }] },
+  { dia: 'Sexta-feira', ativo: true, intervalos: [{ inicio: '08:00', fim: '22:00' }] },
+  { dia: 'Sábado', ativo: true, intervalos: [{ inicio: '10:00', fim: '23:00' }] },
+  { dia: 'Domingo', ativo: false, intervalos: [] },
+];
 
 // Dados iniciais da Loja Demo (Restaurante Sabor - Tucuruí)
 const LOJA_DEMO_DEFAULT: Loja = { 
@@ -24,6 +35,9 @@ const LOJA_DEMO_DEFAULT: Loja = {
     { id: 'a1', nome: 'Centro Comercial', taxa: 4.00, tempoMin: 15, tempoMax: 25, raioKm: 2, ativa: true, tipoTaxa: 'fixa', lat: -3.766052, lng: -49.672367 },
     { id: 'a2', nome: 'Vila Permanente', taxa: 7.00, tempoMin: 30, tempoMax: 45, raioKm: 4, ativa: true, tipoTaxa: 'fixa', lat: -3.722839, lng: -49.654308 }
   ],
+  lojaAbertaManual: true,
+  horarios: HORARIOS_PADRAO,
+  feriados: [],
   stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
 };
 
@@ -116,6 +130,11 @@ interface AppState {
   addEntregador: (entregador: any) => void;
   updateEntregador: (id: string, data: Partial<Entregador>) => void;
   deleteEntregador: (id: string) => void;
+
+  // Meios de Pagamento CRUD
+  addMeioPagamento: (meio: MeioPagamento) => void;
+  updateMeioPagamento: (id: string, data: Partial<MeioPagamento>) => void;
+  deleteMeioPagamento: (id: string) => void;
 
   cancelarAssinatura: (lojaId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
@@ -284,6 +303,17 @@ export const useStore = create<AppState>()(
         entregadores: state.entregadores.filter(e => e.id !== id)
       })),
 
+      // Meios de Pagamento CRUD
+      addMeioPagamento: (meio) => set((state) => ({
+        meiosPagamento: [...state.meiosPagamento, meio]
+      })),
+      updateMeioPagamento: (id, data) => set((state) => ({
+        meiosPagamento: state.meiosPagamento.map(m => m.id === id ? { ...m, ...data } : m)
+      })),
+      deleteMeioPagamento: (id) => set((state) => ({
+        meiosPagamento: state.meiosPagamento.filter(m => m.id !== id)
+      })),
+
       cancelarAssinatura: (lojaId) => set((state) => ({
         lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'cancelado' } : l)
       })),
@@ -329,7 +359,8 @@ export const useStore = create<AppState>()(
         systemSettings: state.systemSettings,
         produtos: state.produtos,
         cart: state.cart,
-        cartLojaId: state.cartLojaId
+        cartLojaId: state.cartLojaId,
+        meiosPagamento: state.meiosPagamento
       }),
     }
   )

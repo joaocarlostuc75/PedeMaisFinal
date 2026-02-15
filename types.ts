@@ -60,6 +60,24 @@ export interface Plano {
   privado?: boolean; // Novo campo para planos secretos/VIP
 }
 
+export interface Intervalo {
+  inicio: string;
+  fim: string;
+}
+
+export interface DiaFuncionamento {
+  dia: string; // Segunda, Terça, etc.
+  ativo: boolean;
+  intervalos: Intervalo[];
+}
+
+export interface Feriado {
+  id: string;
+  data: string;
+  descricao: string;
+  tipo: 'fechado' | 'horario_especial';
+}
+
 export interface AreaEntrega {
   id: string;
   nome: string;
@@ -94,6 +112,12 @@ export interface Loja {
   tempoMax?: number;
   aceitaRetirada?: boolean;
   areasEntrega?: AreaEntrega[]; // Novo campo
+  
+  // Novos campos de horário
+  lojaAbertaManual?: boolean; // Toggle global
+  horarios?: DiaFuncionamento[];
+  feriados?: Feriado[];
+
   stats?: {
     carrinhos: number;
     finalizados: number;

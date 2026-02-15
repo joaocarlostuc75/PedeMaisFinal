@@ -1,13 +1,54 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
-import { Fatura } from '../types';
+import { Fatura, MeioPagamento } from '../types';
 
 export const LojistaAssinatura = () => {
-  const { faturas, meiosPagamento, planos, lojas } = useStore();
+  const { faturas, meiosPagamento, planos, lojas, addMeioPagamento, updateMeioPagamento, deleteMeioPagamento, addNotification } = useStore();
   const loja = lojas[0];
   const meuPlano = planos.find(p => p.id === loja.planoId);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Partial<MeioPagamento> | null>(null);
+
+  const handleOpenModal = (payment?: MeioPagamento) => {
+    if (payment) {
+        setEditingPayment(payment);
+    } else {
+        setEditingPayment({ tipo: 'Cartão', detalhe: '', extra: '' });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSavePayment = () => {
+      if (!editingPayment?.detalhe) {
+          addNotification('error', 'O detalhe do pagamento é obrigatório.');
+          return;
+      }
+
+      if (editingPayment.id) {
+          updateMeioPagamento(editingPayment.id, editingPayment);
+          addNotification('success', 'Meio de pagamento atualizado.');
+      } else {
+          addMeioPagamento({
+              id: Math.random().toString(36).substr(2, 9),
+              tipo: editingPayment.tipo || 'Cartão',
+              detalhe: editingPayment.detalhe,
+              extra: editingPayment.extra || ''
+          } as MeioPagamento);
+          addNotification('success', 'Novo meio de pagamento adicionado.');
+      }
+      setIsModalOpen(false);
+      setEditingPayment(null);
+  };
+
+  const handleDeletePayment = (id: string) => {
+      if (window.confirm('Tem certeza que deseja remover este método de pagamento?')) {
+          deleteMeioPagamento(id);
+          addNotification('info', 'Método de pagamento removido.');
+      }
+  };
 
   const imprimirReciboAssinatura = (fatura: Fatura) => {
     const janela = window.open('', '', 'width=800,height=600');
@@ -141,10 +182,16 @@ export const LojistaAssinatura = () => {
                          <p className="text-[10px] font-medium text-gray-400">{m.extra}</p>
                       </div>
                    </div>
-                   <button className="text-[9px] font-black text-emerald-600 uppercase opacity-0 group-hover:opacity-100 transition-all">Editar</button>
+                   <div className="flex gap-2">
+                        <button onClick={() => handleOpenModal(m)} className="text-[9px] font-black text-gray-400 hover:text-emerald-600 uppercase transition-all">Editar</button>
+                        <button onClick={() => handleDeletePayment(m.id)} className="text-[9px] font-black text-gray-400 hover:text-red-500 uppercase transition-all">Excluir</button>
+                   </div>
                 </div>
               ))}
-              <button className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 transition-all mt-4">
+              <button 
+                onClick={() => handleOpenModal()}
+                className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-600 transition-all mt-4"
+              >
                 + Adicionar novo método
               </button>
            </div>
@@ -248,6 +295,56 @@ export const LojistaAssinatura = () => {
           FALAR COM SUPORTE
         </button>
       </div>
+
+      {/* Modal de Edição de Pagamento */}
+      {isModalOpen && editingPayment && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl p-8">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-black text-gray-900">{editingPayment.id ? 'Editar Pagamento' : 'Novo Método'}</h3>
+                    <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-400 hover:bg-gray-200">✕</button>
+                </div>
+                
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Tipo</label>
+                        <select 
+                            value={editingPayment.tipo}
+                            onChange={e => setEditingPayment({...editingPayment, tipo: e.target.value as any})}
+                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-gray-800 outline-none"
+                        >
+                            <option value="Cartão">Cartão de Crédito</option>
+                            <option value="PIX">PIX</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Detalhe (Ex: Final 4242 ou Chave PIX)</label>
+                        <input 
+                            type="text"
+                            value={editingPayment.detalhe}
+                            onChange={e => setEditingPayment({...editingPayment, detalhe: e.target.value})}
+                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-gray-800 outline-none"
+                            placeholder={editingPayment.tipo === 'Cartão' ? 'Mastercard Final 1234' : 'sua@chave.pix'}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Extra (Opcional - Ex: Validade)</label>
+                        <input 
+                            type="text"
+                            value={editingPayment.extra}
+                            onChange={e => setEditingPayment({...editingPayment, extra: e.target.value})}
+                            className="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-gray-800 outline-none"
+                            placeholder="Expira em 12/30"
+                        />
+                    </div>
+                    
+                    <button onClick={handleSavePayment} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-black uppercase text-xs shadow-lg hover:bg-emerald-500 transition-all mt-4">
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
