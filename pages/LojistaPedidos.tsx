@@ -148,7 +148,7 @@ export const LojistaPedidos = () => {
                             const entregador = entregadores.find(e => e.id === order.entregadorId);
 
                             return (
-                                <div key={order.id} className={`flex flex-col bg-white rounded-xl shadow-sm border transition-all hover:shadow-md ${isLate ? 'border-red-300 ring-1 ring-red-100' : 'border-gray-200'}`}>
+                                <div key={order.id} className={`flex flex-col bg-white rounded-xl shadow-sm border transition-all hover:shadow-md animate-fade-in ${isLate ? 'border-red-300 ring-1 ring-red-100' : 'border-gray-200'}`}>
                                     {/* Cabeçalho do Card */}
                                     <div className="p-4 border-b border-dashed border-gray-100">
                                         <div className="flex justify-between items-start mb-2">

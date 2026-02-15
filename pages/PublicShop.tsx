@@ -86,6 +86,11 @@ export const PublicShop = () => {
     }).filter(i => i.qtd > 0));
   };
 
+  const setQuantidadeDireta = (id: string, qtd: number) => {
+    if (qtd < 1) return;
+    setCarrinho(prev => prev.map(i => i.id === id ? { ...i, qtd } : i));
+  };
+
   const scrollToCategory = (cat: string) => {
     setActiveCategory(cat);
     const element = document.getElementById(`cat-${cat}`);
@@ -208,9 +213,21 @@ export const PublicShop = () => {
                            </div>
                            <div className="flex items-center gap-3">
                               <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-100">
-                                 <button onClick={() => updateQuantidade(item.id, -1)} className="w-7 h-7 flex items-center justify-center font-bold text-gray-400">-</button>
-                                 <span className="w-8 text-center text-xs font-black">{item.qtd}</span>
-                                 <button onClick={() => updateQuantidade(item.id, 1)} className="w-7 h-7 flex items-center justify-center font-bold text-gray-400">+</button>
+                                 <button 
+                                    onClick={() => updateQuantidade(item.id, -1)} 
+                                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-400 hover:text-emerald-600 transition-colors"
+                                 >-</button>
+                                 <input 
+                                    type="number" 
+                                    min="1" 
+                                    value={item.qtd} 
+                                    onChange={(e) => setQuantidadeDireta(item.id, parseInt(e.target.value))}
+                                    className="w-10 bg-transparent text-center text-xs font-black outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                 />
+                                 <button 
+                                    onClick={() => updateQuantidade(item.id, 1)} 
+                                    className="w-7 h-7 flex items-center justify-center font-bold text-gray-400 hover:text-emerald-600 transition-colors"
+                                 >+</button>
                               </div>
                               <button onClick={() => updateQuantidade(item.id, -item.qtd)} className="text-[9px] font-black text-red-400 uppercase tracking-widest">Remover</button>
                            </div>
