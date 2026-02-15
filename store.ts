@@ -137,6 +137,7 @@ interface AppState {
   // Cart Global State
   cart: CartItem[];
   cartLojaId: string | null;
+  myOrderIds: string[]; // Lista de IDs de pedidos feitos por este cliente (LocalStorage)
 
   // Actions
   setUser: (user: User | null) => void;
@@ -201,6 +202,7 @@ export const useStore = create<AppState>()(
       notifications: [],
       cart: [],
       cartLojaId: null,
+      myOrderIds: [],
       systemSettings: {
         appName: 'Pede Mais',
         maintenanceMode: false,
@@ -368,9 +370,12 @@ export const useStore = create<AppState>()(
         tickets: state.tickets.map(t => t.id === ticketId ? { ...t, mensagens: [...t.mensagens, message], dataAtualizacao: new Date().toISOString() } : t)
       })),
 
+      // Atualizado para adicionar o pedido à lista de "Meus Pedidos" do cliente
       addEntrega: (entrega) => set((state) => ({
-        entregas: [entrega, ...state.entregas]
+        entregas: [entrega, ...state.entregas],
+        myOrderIds: [...state.myOrderIds, entrega.id]
       })),
+      
       cancelarAssinatura: (lojaId) => set((state) => ({
         lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'cancelado' } : l)
       })),
@@ -418,7 +423,8 @@ export const useStore = create<AppState>()(
         cart: state.cart,
         cartLojaId: state.cartLojaId,
         meiosPagamento: state.meiosPagamento,
-        tickets: state.tickets
+        tickets: state.tickets,
+        myOrderIds: state.myOrderIds // Persistindo histórico do cliente
       }),
     }
   )

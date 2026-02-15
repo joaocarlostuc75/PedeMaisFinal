@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { CompartilharProduto } from '../components/CompartilharProduto';
 import { formatCurrency } from '../utils';
@@ -81,7 +81,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, isAdded }) =>
 export const PublicShop = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { lojas, produtos, cart, cartLojaId, addToCart, updateCartQuantity, setCartQuantity } = useStore();
+  const { lojas, produtos, cart, cartLojaId, addToCart, updateCartQuantity, setCartQuantity, myOrderIds } = useStore();
   const loja = lojas.find(l => l.slug === slug);
   
   const [busca, setBusca] = useState('');
@@ -181,6 +181,16 @@ export const PublicShop = () => {
             <p className="text-white/80 text-xs font-bold uppercase tracking-widest mt-1">⭐ 4.8 • {loja.categoria}</p>
           </div>
         </div>
+        
+        {/* Botão Meus Pedidos no Banner (Mobile/Desktop) */}
+        {myOrderIds.length > 0 && (
+            <Link 
+                to="/meus-pedidos"
+                className="absolute top-6 right-6 bg-white/90 backdrop-blur-md text-gray-800 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg flex items-center gap-2 hover:bg-white transition-all z-30"
+            >
+                <span>📦</span> Meus Pedidos
+            </Link>
+        )}
       </div>
 
       <header className={`sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all ${scrolled ? 'shadow-md py-2' : 'py-6'}`}>

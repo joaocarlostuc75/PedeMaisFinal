@@ -30,11 +30,13 @@ import { LoginPage } from './pages/LoginPage';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfUse } from './pages/TermsOfUse';
 import { Sidebar } from './components/Sidebar';
+import { CustomerOrders } from './pages/CustomerOrders';
+import { OrderTracking } from './pages/OrderTracking';
 
 const HeaderMobile = () => {
   const { toggleSidebar } = useStore();
   const location = useLocation();
-  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding' || location.pathname === '/politica-privacidade' || location.pathname === '/termos-uso';
+  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname.startsWith('/meus-pedidos') || location.pathname.startsWith('/rastreio') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding' || location.pathname === '/politica-privacidade' || location.pathname === '/termos-uso';
   if (isPublic) return null;
 
   return (
@@ -49,7 +51,7 @@ const HeaderMobile = () => {
 
 const Layout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
-  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding' || location.pathname === '/politica-privacidade' || location.pathname === '/termos-uso';
+  const isPublic = location.pathname.startsWith('/loja/') || location.pathname.startsWith('/checkout') || location.pathname.startsWith('/meus-pedidos') || location.pathname.startsWith('/rastreio') || location.pathname === '/' || location.pathname === '/login' || location.pathname === '/onboarding' || location.pathname === '/politica-privacidade' || location.pathname === '/termos-uso';
 
   if (isPublic) return <>{children}</>;
 
@@ -79,6 +81,10 @@ const App = () => {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/loja/:slug" element={<PublicShop />} />
           <Route path="/checkout/:slug" element={<Checkout />} />
+          
+          {/* Rotas de Cliente */}
+          <Route path="/meus-pedidos" element={<CustomerOrders />} />
+          <Route path="/rastreio/:id" element={<OrderTracking />} />
           
           {/* Legal Pages */}
           <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
