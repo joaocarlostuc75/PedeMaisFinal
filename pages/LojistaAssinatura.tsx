@@ -7,8 +7,11 @@ import { useNavigate } from 'react-router-dom';
 
 export const LojistaAssinatura = () => {
   const navigate = useNavigate();
-  const { faturas, meiosPagamento, planos, lojas, addMeioPagamento, updateMeioPagamento, deleteMeioPagamento, addNotification } = useStore();
-  const loja = lojas[0];
+  const { faturas, meiosPagamento, planos, lojas, addMeioPagamento, updateMeioPagamento, deleteMeioPagamento, updatePlanoLoja, addNotification, user } = useStore();
+  
+  // Identifica a loja atual
+  const currentLojaId = user?.lojaId || 'l1';
+  const loja = lojas.find(l => l.id === currentLojaId) || lojas[0];
   const meuPlano = planos.find(p => p.id === loja.planoId);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,11 +55,21 @@ export const LojistaAssinatura = () => {
       }
   };
 
+  const handleChangePlan = (planoId: string, nomePlano: string) => {
+      if (window.confirm(`Deseja alterar seu plano para ${nomePlano}? O novo valor será cobrado na próxima fatura.`)) {
+          updatePlanoLoja(loja.id, planoId);
+          addNotification('success', `Plano alterado para ${nomePlano} com sucesso!`);
+      }
+  };
+
   const handleOpenSupport = () => {
       navigate('/admin/suporte', { state: { openNew: true } });
   };
 
   const imprimirReciboAssinatura = (fatura: Fatura) => {
+    // Para consistência no ambiente de teste, usamos o valor do plano atual
+    const valorExibido = meuPlano?.preco || fatura.valor;
+
     const janela = window.open('', '', 'width=800,height=600');
     if (janela) {
         janela.document.write(`
@@ -101,13 +114,13 @@ export const LojistaAssinatura = () => {
                     <tbody>
                         <tr>
                             <td>Assinatura Mensal - Plano ${meuPlano?.nome || 'Standard'}</td>
-                            <td>${formatCurrency(fatura.valor)}</td>
+                            <td>${formatCurrency(valorExibido)}</td>
                         </tr>
                     </tbody>
                 </table>
 
                 <div class="total">
-                    Total Pago: ${formatCurrency(fatura.valor)}
+                    Total Pago: ${formatCurrency(valorExibido)}
                 </div>
 
                 <div class="footer">
@@ -150,7 +163,7 @@ export const LojistaAssinatura = () => {
                 <div className="space-y-2">
                    <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       <span>Pedidos no mês</span>
-                      <span className="text-gray-800">850 / 1.000</span>
+                      <span className="text-gray-800">850 / {meuPlano?.limitePedidos}</span>
                    </div>
                    <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
                       <div className="bg-emerald-500 h-full rounded-full" style={{ width: '85%' }} />
@@ -160,7 +173,7 @@ export const LojistaAssinatura = () => {
                 <div className="space-y-2">
                    <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       <span>Entregadores ativos</span>
-                      <span className="text-gray-800">4 / 10</span>
+                      <span className="text-gray-800">4 / {meuPlano?.limiteEntregadores}</span>
                    </div>
                    <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
                       <div className="bg-[#1e293b] h-full rounded-full" style={{ width: '40%' }} />
@@ -242,8 +255,12 @@ export const LojistaAssinatura = () => {
                     ))}
                   </ul>
 
-                  <button className={`w-full py-5 rounded-[1.5rem] font-black text-xs tracking-widest transition-all ${isCurrent ? 'bg-gray-100 text-gray-400' : 'bg-[#112644] text-white shadow-xl hover:bg-emerald-600'}`}>
-                    {isCurrent ? 'ATIVO' : (p.preco < meuPlano!.preco ? 'DOWNGRADE' : 'UPGRADE')}
+                  <button 
+                    onClick={() => !isCurrent && handleChangePlan(p.id, p.nome)}
+                    disabled={isCurrent}
+                    className={`w-full py-5 rounded-[1.5rem] font-black text-xs tracking-widest transition-all ${isCurrent ? 'bg-gray-100 text-gray-400 cursor-default' : 'bg-[#112644] text-white shadow-xl hover:bg-emerald-600 hover:scale-[1.02] active:scale-95'}`}
+                  >
+                    {isCurrent ? 'ATIVO' : (p.preco < (meuPlano?.preco || 0) ? 'DOWNGRADE' : 'UPGRADE')}
                   </button>
                 </div>
               );
@@ -269,7 +286,10 @@ export const LojistaAssinatura = () => {
             {faturas.map(f => (
               <tr key={f.id} className="hover:bg-gray-50 transition-colors">
                 <td className="p-8 font-bold text-gray-700 text-sm">{f.mesReferencia}</td>
-                <td className="p-8 font-bold text-gray-800">{formatCurrency(f.valor)}</td>
+                <td className="p-8 font-bold text-gray-800">
+                    {/* Exibe o valor do plano ATUAL para consistência na demo, já que as faturas mockadas são estáticas */}
+                    {formatCurrency(meuPlano?.preco || f.valor)}
+                </td>
                 <td className="p-8">
                    <span className="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{f.status}</span>
                 </td>
