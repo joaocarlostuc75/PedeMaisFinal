@@ -59,6 +59,11 @@ export const Checkout = () => {
     msg += `Taxa de Entrega: ${formatCurrency(taxa)}\n`;
     msg += `*TOTAL: ${formatCurrency(total)}*\n`;
     
+    // Adiciona nota sobre pagamento se não for dinheiro
+    if (pagamento !== 'Dinheiro') {
+        msg += `\n⚠️ *Aguardando dados para pagamento via ${pagamento}*\n`;
+    }
+    
     const encoded = encodeURIComponent(msg);
     window.open(`https://wa.me/${loja.whatsapp}?text=${encoded}`, '_blank');
     
@@ -170,10 +175,16 @@ export const Checkout = () => {
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Forma de Pagamento</label>
                      <select value={pagamento} onChange={e => setPagamento(e.target.value)} className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none appearance-none transition-all">
-                        <option value="Cartão de Crédito">Cartão de Crédito (Na entrega)</option>
-                        <option value="PIX">PIX (Na entrega)</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="PIX">PIX</option>
                         <option value="Dinheiro">Dinheiro</option>
                      </select>
+                     {(pagamento === 'PIX' || pagamento === 'Cartão de Crédito') && (
+                        <p className="text-[10px] font-bold text-gray-500 mt-2 flex items-center gap-1 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                           <span className="text-emerald-500 text-lg">ℹ️</span> 
+                           <span>O lojista enviará os dados para pagamento ({pagamento}) pelo WhatsApp após receber o pedido.</span>
+                        </p>
+                     )}
                   </div>
                </div>
             </section>
