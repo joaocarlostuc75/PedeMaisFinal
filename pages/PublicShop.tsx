@@ -125,10 +125,14 @@ export const PublicShop = () => {
 
   // Cálculos do Carrinho
   const totalItens = useMemo(() => currentCartItems.reduce((acc, curr) => acc + curr.qtd, 0), [currentCartItems]);
-  const totalValor = useMemo(() => currentCartItems.reduce((acc, curr) => {
+  
+  const subTotal = useMemo(() => currentCartItems.reduce((acc, curr) => {
     const prod = produtos.find(p => p.id === curr.produtoId);
     return acc + (prod?.preco || 0) * curr.qtd;
   }, 0), [currentCartItems, produtos]);
+
+  const taxaEntrega = loja.taxaEntrega || 0;
+  const totalValor = totalItens > 0 ? subTotal + taxaEntrega : 0;
 
   const handleAddToCart = (id: string) => {
     addToCart(loja.id, id);
@@ -281,14 +285,26 @@ export const PublicShop = () => {
             </div>
 
             <div className="p-8 border-t border-gray-100 bg-[#f8fafc]">
-               <div className="flex justify-between items-end mb-8">
-                  <span className="text-gray-400 font-black uppercase text-[10px] tracking-widest">Subtotal</span>
-                  <span className="text-3xl font-black text-gray-900 tracking-tighter">{formatCurrency(totalValor)}</span>
+               <div className="space-y-2 mb-8">
+                  <div className="flex justify-between items-center">
+                      <span className="text-gray-400 font-black uppercase text-[10px] tracking-widest">Subtotal</span>
+                      <span className="text-base font-bold text-gray-600">{formatCurrency(subTotal)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                      <span className="text-gray-400 font-black uppercase text-[10px] tracking-widest">Taxa de Entrega</span>
+                      <span className="text-base font-bold text-gray-600">{formatCurrency(taxaEntrega)}</span>
+                  </div>
+                  <div className="h-px bg-gray-200 border-t border-dashed my-2"></div>
+                  <div className="flex justify-between items-end">
+                      <span className="text-gray-900 font-black uppercase text-[10px] tracking-widest">Total</span>
+                      <span className="text-3xl font-black text-gray-900 tracking-tighter">{formatCurrency(totalValor)}</span>
+                  </div>
                </div>
+               
                <button 
                   onClick={() => navigate(`/checkout/${loja.slug}`)}
                   disabled={currentCartItems.length === 0}
-                  className="w-full py-5 rounded-2xl bg-emerald-600 text-white font-black uppercase text-sm tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-500 disabled:bg-gray-200 disabled:shadow-none transition-all active:scale-95"
+                  className="w-full py-5 rounded-2xl bg-emerald-600 text-white font-black uppercase text-sm tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-50 disabled:bg-gray-200 disabled:shadow-none transition-all active:scale-95"
                >
                   Finalizar Pedido
                </button>

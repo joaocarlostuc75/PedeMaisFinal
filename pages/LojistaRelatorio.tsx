@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../store';
 import { formatCurrency, formatDate } from '../utils';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, BarChart, Bar, Legend, LabelList } from 'recharts';
 
 const HORA_PEAK_MOCK = [
   { hora: '11:00', pedidos: 5 }, { hora: '12:00', pedidos: 22 }, { hora: '13:00', pedidos: 18 },
@@ -145,12 +145,13 @@ export const LojistaRelatorio = () => {
               </h3>
               <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartDataProdutos} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                      <BarChart data={chartDataProdutos} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                           <XAxis type="number" hide />
-                          <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 11, fontWeight: 'bold', fill: '#64748b'}} axisLine={false} tickLine={false} />
+                          <YAxis dataKey="name" type="category" width={110} tick={{fontSize: 10, fontWeight: 'bold', fill: '#64748b'}} axisLine={false} tickLine={false} />
                           <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}} />
                           <Bar dataKey="value" fill="#3b82f6" radius={[0, 10, 10, 0]} barSize={24}>
+                            <LabelList dataKey="value" position="right" fill="#64748b" fontSize={10} fontWeight="bold" formatter={(val: number) => `${val}`} />
                             {chartDataProdutos.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
