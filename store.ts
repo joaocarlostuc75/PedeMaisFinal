@@ -29,9 +29,45 @@ const LOJA_DEMO_DEFAULT: Loja = {
 
 // Produtos Iniciais (Mock Demo)
 const PRODUTOS_DEMO: Produto[] = [
-  { id: 'b1', lojaId: 'l1', nome: 'Double Bacon Master', categoria: 'Burgers Artesanais', descricao: 'Pão brioche, dois blends de 160g, cheddar inglês, bacon crocante.', preco: 42.90, imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop', destaque: true, maisVendido: true, disponivel: true, tags: ['Matador de Fome'] },
-  { id: 'p1', lojaId: 'l1', nome: 'Margherita Especial', categoria: 'Pizzas Premium', descricao: 'Molho de tomate pelati, mozzarella di bufala, manjericão e azeite trufado.', preco: 65.00, imagem: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=600&auto=format&fit=crop', disponivel: true, tags: ['Vegetariano'] },
-  { id: 'd1', lojaId: 'l1', nome: 'Coca-Cola 350ml', categoria: 'Bebidas', descricao: 'Lata gelada.', preco: 6.00, imagem: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=600&auto=format&fit=crop', disponivel: true },
+  { 
+    id: 'b1', 
+    lojaId: 'l1', 
+    nome: 'Double Bacon Master', 
+    categoria: 'Burgers Artesanais', 
+    descricao: 'Pão brioche, dois blends de 160g, cheddar inglês, bacon crocante.', 
+    preco: 42.90, 
+    imagem: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop', 
+    imagens: [
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?q=80&w=600&auto=format&fit=crop', // Burger variação
+      'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=600&auto=format&fit=crop'  // Burger close
+    ],
+    destaque: true, 
+    maisVendido: true, 
+    disponivel: true, 
+    tags: ['Matador de Fome'] 
+  },
+  { 
+    id: 'p1', 
+    lojaId: 'l1', 
+    nome: 'Margherita Especial', 
+    categoria: 'Pizzas Premium', 
+    descricao: 'Molho de tomate pelati, mozzarella di bufala, manjericão e azeite trufado.', 
+    preco: 65.00, 
+    imagem: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=600&auto=format&fit=crop', 
+    disponivel: true, 
+    tags: ['Vegetariano'] 
+  },
+  { 
+    id: 'd1', 
+    lojaId: 'l1', 
+    nome: 'Coca-Cola 350ml', 
+    categoria: 'Bebidas', 
+    descricao: 'Lata gelada.', 
+    preco: 6.00, 
+    imagem: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=600&auto=format&fit=crop', 
+    disponivel: true 
+  },
 ];
 
 interface AppState {
@@ -78,6 +114,9 @@ interface AppState {
   deletePlano: (id: string) => void;
 
   addEntregador: (entregador: any) => void;
+  updateEntregador: (id: string, data: Partial<Entregador>) => void;
+  deleteEntregador: (id: string) => void;
+
   cancelarAssinatura: (lojaId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
   atribuirEntregador: (entregaId: string, entregadorId: string) => void;
@@ -117,11 +156,11 @@ export const useStore = create<AppState>()(
       lojas: [LOJA_DEMO_DEFAULT],
       produtos: PRODUTOS_DEMO,
       entregadores: [
-        { id: 'e1', nome: 'Ricardo Santos', telefone: '94 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', dataAdesao: '2023-10-24' },
-        { id: 'e2', nome: 'Julia Mendes', telefone: '94 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', dataAdesao: '2023-09-12' },
-        { id: 'e3', nome: 'Marcos Almeida', telefone: '94 95555-4444', status: 'suspenso', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1', tipoVeiculo: 'Van', dataAdesao: '2023-01-05' },
-        { id: 'e4', nome: 'Carlos Vega', telefone: '94 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Leve)', dataAdesao: '2023-11-15' },
-        { id: 'e5', nome: 'Sarah Wilson', telefone: '94 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1', tipoVeiculo: 'Sedan', dataAdesao: '2024-02-28' },
+        { id: 'e1', nome: 'Ricardo Santos', telefone: '94 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', placa: 'ABC-1234', dataAdesao: '2023-10-24' },
+        { id: 'e2', nome: 'Julia Mendes', telefone: '94 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', placa: 'DEF-5678', dataAdesao: '2023-09-12' },
+        { id: 'e3', nome: 'Marcos Almeida', telefone: '94 95555-4444', status: 'suspenso', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1', tipoVeiculo: 'Van', placa: 'GHI-9012', dataAdesao: '2023-01-05' },
+        { id: 'e4', nome: 'Carlos Vega', telefone: '94 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Leve)', placa: 'JKL-3456', dataAdesao: '2023-11-15' },
+        { id: 'e5', nome: 'Sarah Wilson', telefone: '94 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1', tipoVeiculo: 'Sedan', placa: 'MNO-7890', dataAdesao: '2024-02-28' },
       ],
       entregas: [
         { 
@@ -235,10 +274,16 @@ export const useStore = create<AppState>()(
           nivel: 'Bronze', 
           xp: 0, 
           badges: [], 
-          tipoVeiculo: 'Moto', 
           dataAdesao: new Date().toISOString() 
         } as Entregador]
       })),
+      updateEntregador: (id, data) => set((state) => ({
+        entregadores: state.entregadores.map(e => e.id === id ? { ...e, ...data } : e)
+      })),
+      deleteEntregador: (id) => set((state) => ({
+        entregadores: state.entregadores.filter(e => e.id !== id)
+      })),
+
       cancelarAssinatura: (lojaId) => set((state) => ({
         lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'cancelado' } : l)
       })),

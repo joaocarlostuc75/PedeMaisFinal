@@ -4,6 +4,79 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { CompartilharProduto } from '../components/CompartilharProduto';
 import { formatCurrency } from '../utils';
+import { Produto } from '../types';
+
+interface ProductCardProps {
+  product: Produto;
+  onAdd: (id: string) => void;
+  isAdded: boolean;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, isAdded }) => {
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  // Se 'imagens' existir e tiver conteúdo, usa ele; senão, usa 'imagem' única.
+  const images = product.imagens && product.imagens.length > 0 ? product.imagens : [product.imagem];
+  
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setCurrentImgIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setCurrentImgIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  return (
+    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl transition-all">
+      <div className="aspect-[4/3] relative bg-gray-50 overflow-hidden">
+        <img src={images[currentImgIndex]} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={product.nome} />
+        
+        {/* Controles do Carrossel */}
+        {images.length > 1 && (
+          <>
+            <button 
+              onClick={prevImage} 
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              ‹
+            </button>
+            <button 
+              onClick={nextImage} 
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            >
+              ›
+            </button>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+              {images.map((_, idx) => (
+                <div key={idx} className={`w-1.5 h-1.5 rounded-full shadow-sm transition-colors ${idx === currentImgIndex ? 'bg-white' : 'bg-white/50'}`} />
+              ))}
+            </div>
+          </>
+        )}
+
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+           <CompartilharProduto nome={product.nome} url={window.location.href} />
+        </div>
+      </div>
+      <div className="p-6 flex flex-col flex-1">
+        <h3 className="font-black text-gray-800 text-lg leading-tight mb-2">{product.nome}</h3>
+        <p className="text-xs text-gray-400 font-medium line-clamp-2 mb-6">{product.descricao}</p>
+        <div className="mt-auto flex items-center justify-between">
+          <span className="text-xl font-black text-emerald-600">{formatCurrency(product.preco)}</span>
+          <button 
+            onClick={() => onAdd(product.id)}
+            className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${isAdded ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white hover:bg-emerald-600'}`}
+          >
+            {isAdded ? '✓ Adicionado' : '+ Comprar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const PublicShop = () => {
   const { slug } = useParams();
@@ -143,27 +216,7 @@ export const PublicShop = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {prods.map(p => (
-                  <div key={p.id} className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl transition-all">
-                    <div className="aspect-[4/3] relative bg-gray-50 overflow-hidden">
-                      <img src={p.imagem} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <CompartilharProduto nome={p.nome} url={window.location.href} />
-                      </div>
-                    </div>
-                    <div className="p-6 flex flex-col flex-1">
-                      <h3 className="font-black text-gray-800 text-lg leading-tight mb-2">{p.nome}</h3>
-                      <p className="text-xs text-gray-400 font-medium line-clamp-2 mb-6">{p.descricao}</p>
-                      <div className="mt-auto flex items-center justify-between">
-                        <span className="text-xl font-black text-emerald-600">{formatCurrency(p.preco)}</span>
-                        <button 
-                          onClick={() => handleAddToCart(p.id)}
-                          className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${addedFeedback.has(p.id) ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white hover:bg-emerald-600'}`}
-                        >
-                          {addedFeedback.has(p.id) ? '✓ Adicionado' : '+ Comprar'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <ProductCard key={p.id} product={p} onAdd={handleAddToCart} isAdded={addedFeedback.has(p.id)} />
                 ))}
               </div>
             </section>

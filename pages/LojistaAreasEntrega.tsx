@@ -17,13 +17,22 @@ const icon = L.icon({
   shadowSize: [41, 41]
 });
 
-// Componente para capturar cliques no mapa e definir nova posição
-const LocationMarker = ({ setPosition }: { setPosition: (pos: { lat: number, lng: number }) => void }) => {
-  useMapEvents({
+// Componente para manipular eventos do mapa (Clique e Redimensionamento)
+const MapInteract = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
+  const map = useMapEvents({
     click(e) {
-      setPosition(e.latlng);
+      onMapClick(e.latlng.lat, e.latlng.lng);
     },
   });
+
+  // Garante que o mapa renderize corretamente dentro do modal (invalidateSize)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        map.invalidateSize();
+    }, 400); // Pequeno delay para aguardar animação do modal
+    return () => clearTimeout(timer);
+  }, [map]);
+
   return null;
 };
 
@@ -31,7 +40,9 @@ const LocationMarker = ({ setPosition }: { setPosition: (pos: { lat: number, lng
 const MapUpdater = ({ center }: { center: { lat: number, lng: number } }) => {
   const map = useMapEvents({});
   useEffect(() => {
-    map.flyTo([center.lat, center.lng], map.getZoom());
+    map.flyTo([center.lat, center.lng], map.getZoom(), {
+        duration: 1.5 // Animação suave
+    });
   }, [center, map]);
   return null;
 };
@@ -41,7 +52,7 @@ export const LojistaAreasEntrega = () => {
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
   const areas = minhaLoja.areasEntrega || [];
 
-  // Coordenadas centrais de Tucuruí - PA
+  // Coordenadas centrais de Tucuruí - PA (Padrão)
   const TUCURUI_COORDS = { lat: -3.766052, lng: -49.672367 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,11 +74,6 @@ export const LojistaAreasEntrega = () => {
   const handleOpenModal = (area?: AreaEntrega) => {
     if (area) {
       setEditingArea(area);
-      // Se a área tem coordenadas, centraliza nelas no modal, senão usa Tucuruí
-      if(area.lat && area.lng) {
-          // O mapa do modal usará o editingArea.lat/lng para renderizar, 
-          // mas é bom garantir que o estado inicial esteja limpo.
-      }
     } else {
       setEditingArea({
         nome: '',
@@ -244,7 +250,7 @@ export const LojistaAreasEntrega = () => {
 
          {/* Legenda de Mapa */}
          <div className="absolute bottom-8 right-8 bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-xl border border-gray-100 min-w-[200px] z-[1000]">
-            <h5 className="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-4">Legenda (Tucuruí)</h5>
+            <h5 className="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-4">Legenda</h5>
             <div className="space-y-3">
                <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-emerald-100 border border-emerald-500 rounded-full" />
@@ -318,7 +324,7 @@ export const LojistaAreasEntrega = () => {
 
                         <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-[10px] text-blue-700 font-medium">
                             <span className="font-black block mb-1">📍 Defina no Mapa</span>
-                            Clique no mapa ao lado para definir o centro exato do bairro/região.
+                            Clique no mapa para definir o ponto central. O raio será desenhado a partir deste ponto.
                         </div>
 
                         <div className="flex gap-4 pt-4 mt-auto">
@@ -339,7 +345,7 @@ export const LojistaAreasEntrega = () => {
                             attribution='&copy; OpenStreetMap'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                        <LocationMarker setPosition={(pos) => setEditingArea({...editingArea, lat: pos.lat, lng: pos.lng})} />
+                        <MapInteract onMapClick={(lat, lng) => setEditingArea(prev => ({ ...prev, lat, lng }))} />
                         
                         {/* Se a área estiver sendo editada, move o mapa para lá */}
                         {editingArea.lat && editingArea.lng && (

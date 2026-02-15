@@ -29,7 +29,8 @@ export interface Entregador {
   xp: number;
   badges: Badge[];
   lojaId: string;
-  tipoVeiculo: 'Moto' | 'Caminhão (Pesado)' | 'Caminhão (Leve)' | 'Van' | 'Sedan';
+  tipoVeiculo: 'Moto' | 'Caminhão (Pesado)' | 'Caminhão (Leve)' | 'Van' | 'Sedan' | 'Bicicleta';
+  placa?: string; // Novo campo
   dataAdesao: string;
 }
 
@@ -108,6 +109,7 @@ export interface Produto {
   descricao: string;
   preco: number;
   imagem: string;
+  imagens?: string[]; // Array de imagens para carrossel
   destaque?: boolean;
   maisVendido?: boolean;
   disponivel: boolean;
