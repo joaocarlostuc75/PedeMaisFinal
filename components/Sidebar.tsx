@@ -26,6 +26,7 @@ export const Sidebar = () => {
       { label: 'Entregadores', path: '/super-admin/entregadores', icon: '🛵' },
       { label: 'Métricas', path: '/super-admin/relatorios', icon: '📈' },
       { label: 'Planos', path: '/super-admin/planos', icon: '💳' },
+      { label: 'Suporte', path: '/super-admin/suporte', icon: '🎧' },
       { label: 'Configurações', path: '/super-admin/configuracoes', icon: '⚙️' },
     ],
     lojista: [
@@ -37,6 +38,7 @@ export const Sidebar = () => {
       { label: 'Configurações', path: '/admin/configuracoes', icon: '⚙️' },
       { label: 'Horários', path: '/admin/horarios', icon: '🕒' },
       { label: 'Áreas de Entrega', path: '/admin/areas-entrega', icon: '🗺️' },
+      { label: 'Suporte', path: '/admin/suporte', icon: '🎧' },
     ],
     entregador: [
       { label: 'Entregas', path: '/entregador/dashboard', icon: '🛵' },

@@ -1,7 +1,6 @@
-
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem, DiaFuncionamento } from './types';
+import { User, Entregador, Entrega, Loja, Plano, Fatura, MeioPagamento, Saque, ItemPedido, Notification, SystemSettings, Produto, CartItem, DiaFuncionamento, SupportTicket, TicketMessage } from './types';
 
 // Helper para horários padrão
 const HORARIOS_PADRAO: DiaFuncionamento[] = [
@@ -40,6 +39,41 @@ const LOJA_DEMO_DEFAULT: Loja = {
   feriados: [],
   stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
 };
+
+// Tickets Mock
+const TICKETS_MOCK: SupportTicket[] = [
+  {
+    id: 't1',
+    lojaId: 'l1',
+    lojaNome: 'Restaurante Sabor (DEMO)',
+    assunto: 'Problema com integração de pagamento',
+    categoria: 'Financeiro',
+    descricao: 'Não estou conseguindo gerar o relatório de pagamentos via PIX da semana passada.',
+    status: 'Aberto',
+    prioridade: 'Alta',
+    dataCriacao: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
+    dataAtualizacao: new Date(Date.now() - 86400000).toISOString(),
+    mensagens: [
+      { id: 'm1', senderName: 'Lojista', text: 'Olá, preciso de ajuda com o relatório PIX.', timestamp: new Date(Date.now() - 86400000).toISOString(), isAdmin: false }
+    ]
+  },
+  {
+    id: 't2',
+    lojaId: 'l1',
+    lojaNome: 'Restaurante Sabor (DEMO)',
+    assunto: 'Dúvida sobre horário de feriado',
+    categoria: 'Técnico',
+    descricao: 'Como configuro um horário especial para o Natal?',
+    status: 'Resolvido',
+    prioridade: 'Baixa',
+    dataCriacao: new Date(Date.now() - 172800000).toISOString(), // 2 dias atrás
+    dataAtualizacao: new Date(Date.now() - 100000000).toISOString(),
+    mensagens: [
+      { id: 'm1', senderName: 'Lojista', text: 'Como configuro feriado?', timestamp: new Date(Date.now() - 172800000).toISOString(), isAdmin: false },
+      { id: 'm2', senderName: 'Suporte', text: 'Você pode ir em Configurações > Horários > Feriados.', timestamp: new Date(Date.now() - 100000000).toISOString(), isAdmin: true }
+    ]
+  }
+];
 
 // Produtos Iniciais (Mock Demo)
 const PRODUTOS_DEMO: Produto[] = [
@@ -95,6 +129,7 @@ interface AppState {
   faturas: Fatura[];
   meiosPagamento: MeioPagamento[];
   notifications: Notification[];
+  tickets: SupportTicket[];
   isSidebarOpen: boolean;
   systemSettings: SystemSettings;
   
@@ -136,6 +171,11 @@ interface AppState {
   updateMeioPagamento: (id: string, data: Partial<MeioPagamento>) => void;
   deleteMeioPagamento: (id: string) => void;
 
+  // Tickets Actions
+  addTicket: (ticket: SupportTicket) => void;
+  updateTicketStatus: (id: string, status: SupportTicket['status']) => void;
+  replyTicket: (ticketId: string, message: TicketMessage) => void;
+
   cancelarAssinatura: (lojaId: string) => void;
   batchUpdatePlano: (lojaIds: string[], planoId: string) => void;
   atribuirEntregador: (entregaId: string, entregadorId: string) => void;
@@ -174,6 +214,7 @@ export const useStore = create<AppState>()(
       ],
       lojas: [LOJA_DEMO_DEFAULT],
       produtos: PRODUTOS_DEMO,
+      tickets: TICKETS_MOCK,
       entregadores: [
         { id: 'e1', nome: 'Ricardo Santos', telefone: '94 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', placa: 'ABC-1234', dataAdesao: '2023-10-24' },
         { id: 'e2', nome: 'Julia Mendes', telefone: '94 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', placa: 'DEF-5678', dataAdesao: '2023-09-12' },
@@ -314,6 +355,17 @@ export const useStore = create<AppState>()(
         meiosPagamento: state.meiosPagamento.filter(m => m.id !== id)
       })),
 
+      // Tickets Actions
+      addTicket: (ticket) => set((state) => ({
+        tickets: [ticket, ...state.tickets]
+      })),
+      updateTicketStatus: (id, status) => set((state) => ({
+        tickets: state.tickets.map(t => t.id === id ? { ...t, status, dataAtualizacao: new Date().toISOString() } : t)
+      })),
+      replyTicket: (ticketId, message) => set((state) => ({
+        tickets: state.tickets.map(t => t.id === ticketId ? { ...t, mensagens: [...t.mensagens, message], dataAtualizacao: new Date().toISOString() } : t)
+      })),
+
       cancelarAssinatura: (lojaId) => set((state) => ({
         lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'cancelado' } : l)
       })),
@@ -360,7 +412,8 @@ export const useStore = create<AppState>()(
         produtos: state.produtos,
         cart: state.cart,
         cartLojaId: state.cartLojaId,
-        meiosPagamento: state.meiosPagamento
+        meiosPagamento: state.meiosPagamento,
+        tickets: state.tickets
       }),
     }
   )

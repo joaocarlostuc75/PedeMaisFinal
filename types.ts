@@ -189,3 +189,26 @@ export interface CartItem {
   produtoId: string;
   qtd: number;
 }
+
+// Interfaces de Suporte
+export interface TicketMessage {
+  id: string;
+  senderName: string;
+  text: string;
+  timestamp: string;
+  isAdmin: boolean; // True se for resposta do suporte, False se for lojista
+}
+
+export interface SupportTicket {
+  id: string;
+  lojaId: string;
+  lojaNome: string;
+  assunto: string;
+  categoria: 'Financeiro' | 'Técnico' | 'Comercial' | 'Outros';
+  descricao: string;
+  status: 'Aberto' | 'Em Andamento' | 'Resolvido';
+  prioridade: 'Baixa' | 'Média' | 'Alta';
+  dataCriacao: string;
+  dataAtualizacao: string;
+  mensagens: TicketMessage[];
+}

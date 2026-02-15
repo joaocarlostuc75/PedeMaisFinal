@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
 import { Fatura, MeioPagamento } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 export const LojistaAssinatura = () => {
+  const navigate = useNavigate();
   const { faturas, meiosPagamento, planos, lojas, addMeioPagamento, updateMeioPagamento, deleteMeioPagamento, addNotification } = useStore();
   const loja = lojas[0];
   const meuPlano = planos.find(p => p.id === loja.planoId);
@@ -48,6 +50,10 @@ export const LojistaAssinatura = () => {
           deleteMeioPagamento(id);
           addNotification('info', 'Método de pagamento removido.');
       }
+  };
+
+  const handleOpenSupport = () => {
+      navigate('/admin/suporte', { state: { openNew: true } });
   };
 
   const imprimirReciboAssinatura = (fatura: Fatura) => {
@@ -291,7 +297,10 @@ export const LojistaAssinatura = () => {
               <p className="text-emerald-700/80 font-medium">Nossa equipe de suporte está pronta para te auxiliar com planos personalizados.</p>
            </div>
         </div>
-        <button className="bg-[#112644] text-white px-10 py-5 rounded-[1.5rem] font-black text-sm tracking-widest shadow-xl shadow-blue-900/10 hover:bg-emerald-600 transition-all">
+        <button 
+            onClick={handleOpenSupport}
+            className="bg-[#112644] text-white px-10 py-5 rounded-[1.5rem] font-black text-sm tracking-widest shadow-xl shadow-blue-900/10 hover:bg-emerald-600 transition-all"
+        >
           FALAR COM SUPORTE
         </button>
       </div>
