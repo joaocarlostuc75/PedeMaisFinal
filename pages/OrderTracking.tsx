@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from '../utils';
 export const OrderTracking = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { entregas, lojas, entregadores } = useStore();
+  const { entregas, lojas, entregadores, atualizarStatusPedido, addNotification } = useStore();
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -44,9 +44,18 @@ export const OrderTracking = () => {
   
   // Se for cancelado, mostra um estado especial
   const isCancelled = pedido.status === 'cancelada';
+  const isFinished = pedido.status === 'finalizada';
 
   // Progresso para a barra horizontal
   const progressPercent = Math.max(0, (currentStepIndex / (steps.length - 1)) * 100);
+
+  const handleConfirmarEntrega = () => {
+      // Pergunta de segurança dupla
+      if (window.confirm("Você confirma que JÁ RECEBEU este pedido?\n\nEssa ação finalizará o pedido no sistema da loja.")) {
+          atualizarStatusPedido(pedido.id, 'finalizada');
+          addNotification('success', 'Entrega confirmada! Obrigado e bom apetite! 😋');
+      }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans pb-32">
@@ -198,6 +207,17 @@ export const OrderTracking = () => {
                  </div>
              </div>
         </div>
+
+        {/* Botão de Confirmação de Entrega pelo Cliente */}
+        {!isCancelled && !isFinished && (
+            <button
+                onClick={handleConfirmarEntrega}
+                className="w-full bg-[#112644] text-white py-5 rounded-2xl font-black shadow-xl shadow-blue-900/10 hover:bg-[#1a3b66] hover:scale-[1.02] transition-all flex items-center justify-center gap-3"
+            >
+                <span className="text-xl">🙌</span>
+                JÁ RECEBI O PEDIDO (CONFIRMAR)
+            </button>
+        )}
 
         <button 
             onClick={() => window.open(`https://wa.me/${loja.whatsapp}`, '_blank')}
