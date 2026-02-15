@@ -5,15 +5,19 @@ import { useStore } from '../store';
 import { CompartilharProduto } from '../components/CompartilharProduto';
 import { formatCurrency } from '../utils';
 import { Produto } from '../types';
+import { SEO } from '../components/SEO';
 
 interface ProductCardProps {
   product: Produto;
   onAdd: (id: string) => void;
+  onUpdateTags: (id: string, tags: string[]) => void;
   isAdded: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, isAdded }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onUpdateTags, isAdded }) => {
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  const [tagInput, setTagInput] = useState('');
+  
   // Se 'imagens' existir e tiver conteúdo, usa ele; senão, usa 'imagem' única.
   const images = product.imagens && product.imagens.length > 0 ? product.imagens : [product.imagem];
   
@@ -27,6 +31,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, isAdded }) =>
     e.stopPropagation();
     e.preventDefault();
     setCurrentImgIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const handleSaveTags = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (!tagInput.trim()) return;
+    
+    // Separa por vírgula, remove espaços extras e filtra strings vazias
+    const tagsArray = tagInput.split(',').map(tag => tag.trim()).filter(Boolean);
+    onUpdateTags(product.id, tagsArray);
   };
 
   return (
@@ -63,7 +76,39 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, isAdded }) =>
       </div>
       <div className="p-6 flex flex-col flex-1">
         <h3 className="font-black text-gray-800 text-lg leading-tight mb-2">{product.nome}</h3>
-        <p className="text-xs text-gray-400 font-medium line-clamp-2 mb-6">{product.descricao}</p>
+        <p className="text-xs text-gray-400 font-medium line-clamp-2 mb-4">{product.descricao}</p>
+        
+        {/* Exibição de Tags ou Input para Adicionar */}
+        {product.tags && product.tags.length > 0 ? (
+            <div className="flex flex-wrap gap-1 mb-4">
+                {product.tags.map((tag, i) => (
+                    <span key={i} className="text-[9px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-md uppercase tracking-wider">
+                        {tag}
+                    </span>
+                ))}
+            </div>
+        ) : (
+            <div className="mb-4 bg-gray-50 p-3 rounded-xl border border-dashed border-gray-200" onClick={(e) => e.stopPropagation()}>
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Adicionar Tags</label>
+                <div className="flex gap-2">
+                    <input 
+                        type="text" 
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        placeholder="Ex: Vegano, Promoção..."
+                        className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-emerald-500 transition-colors placeholder:text-gray-300"
+                        onKeyDown={(e) => e.key === 'Enter' && handleSaveTags(e)}
+                    />
+                    <button 
+                        onClick={handleSaveTags}
+                        className="bg-emerald-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase hover:bg-emerald-500 transition-colors shadow-sm"
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
+        )}
+
         <div className="mt-auto flex items-center justify-between">
           <span className="text-xl font-black text-emerald-600">{formatCurrency(product.preco)}</span>
           <button 
@@ -81,7 +126,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, isAdded }) =>
 export const PublicShop = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { lojas, produtos, cart, cartLojaId, addToCart, updateCartQuantity, setCartQuantity, myOrderIds } = useStore();
+  const { lojas, produtos, cart, cartLojaId, addToCart, updateCartQuantity, setCartQuantity, myOrderIds, updateProduto } = useStore();
   const loja = lojas.find(l => l.slug === slug);
   
   const [busca, setBusca] = useState('');
@@ -100,6 +145,7 @@ export const PublicShop = () => {
   if (!loja) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+        <SEO title="Loja não encontrada" description="A loja que você procura não está disponível." />
         <h1 className="text-4xl font-black text-gray-900 mb-2">Loja não encontrada</h1>
         <button onClick={() => navigate('/')} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black">Voltar</button>
       </div>
@@ -157,6 +203,10 @@ export const PublicShop = () => {
     setCartQuantity(id, qtd);
   };
 
+  const handleUpdateTags = (id: string, tags: string[]) => {
+    updateProduto(id, { tags });
+  };
+
   const scrollToCategory = (cat: string) => {
     setActiveCategory(cat);
     const element = document.getElementById(`cat-${cat}`);
@@ -166,8 +216,34 @@ export const PublicShop = () => {
     }
   };
 
+  // Structured Data (JSON-LD) para a Loja
+  const storeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": loja.nome,
+    "image": loja.logo,
+    "url": window.location.href,
+    "telephone": loja.whatsapp,
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": loja.endereco,
+      "addressCountry": "BR"
+    },
+    "servesCuisine": loja.categoria,
+    "description": loja.descricao || `Faça seu pedido em ${loja.nome} via Pede Mais.`
+  };
+
   return (
     <div className="bg-[#f8f9fa] min-h-screen pb-32 font-sans relative">
+      <SEO 
+        title={loja.nome} 
+        description={`Peça online em ${loja.nome}. ${loja.descricao || 'O melhor delivery da região.'} Confira o cardápio!`}
+        image={loja.banner || loja.logo}
+        type="website"
+        jsonLd={storeJsonLd}
+      />
+
       {/* Banner & Logo */}
       <div className="relative h-56 md:h-72 w-full overflow-hidden">
         <img src={loja.banner} className="w-full h-full object-cover" />
@@ -199,7 +275,7 @@ export const PublicShop = () => {
             <div className="relative w-full md:max-w-md">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
               <input 
-                type="text" placeholder="O que você procura hoje?" 
+                type="text" placeholder="Buscar por nome ou categoria..." 
                 value={busca} onChange={e => setBusca(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
@@ -221,7 +297,15 @@ export const PublicShop = () => {
 
       <main className="max-w-7xl mx-auto px-4 mt-12 space-y-16">
         {categoriasDisponiveis.map(cat => {
-          const prods = produtosDaLoja.filter(p => p.categoria === cat && p.nome.toLowerCase().includes(busca.toLowerCase()));
+          const prods = produtosDaLoja.filter(p => {
+            const matchesCategory = p.categoria === cat;
+            const term = busca.toLowerCase();
+            const matchesName = p.nome.toLowerCase().includes(term);
+            const matchesTags = p.tags?.some(tag => tag.toLowerCase().includes(term));
+            
+            return matchesCategory && (matchesName || matchesTags);
+          });
+
           if (prods.length === 0) return null;
           return (
             <section key={cat} id={`cat-${cat}`} className="scroll-mt-32">
@@ -230,7 +314,13 @@ export const PublicShop = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {prods.map(p => (
-                  <ProductCard key={p.id} product={p} onAdd={handleAddToCart} isAdded={addedFeedback.has(p.id)} />
+                  <ProductCard 
+                    key={p.id} 
+                    product={p} 
+                    onAdd={handleAddToCart} 
+                    onUpdateTags={handleUpdateTags}
+                    isAdded={addedFeedback.has(p.id)} 
+                  />
                 ))}
               </div>
             </section>

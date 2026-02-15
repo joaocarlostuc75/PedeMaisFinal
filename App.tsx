@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { useStore } from './store';
 import { ToastContainer } from './components/Toast';
 import { LandingPage } from './pages/LandingPage';
@@ -74,56 +75,58 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
 
 const App = () => {
   return (
-    <Router>
-      <ToastContainer />
-      <Layout>
-        <Routes>
-          {/* Rotas Públicas */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/loja/:slug" element={<PublicShop />} />
-          <Route path="/checkout/:slug" element={<Checkout />} />
-          <Route path="/meus-pedidos" element={<CustomerOrders />} />
-          <Route path="/rastreio/:id" element={<OrderTracking />} />
-          <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
-          <Route path="/termos-uso" element={<TermsOfUse />} />
-          
-          {/* Rotas de Entregador (Protegidas) */}
-          <Route path="/entregador/dashboard" element={
-            <ProtectedRoute allowedRoles={['entregador']}>
-              <EntregadorDashboard />
-            </ProtectedRoute>
-          } />
-          
-          {/* Rotas de Lojista (Protegidas) */}
-          <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaDashboard /></ProtectedRoute>} />
-          <Route path="/admin/pedidos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaPedidos /></ProtectedRoute>} />
-          <Route path="/admin/produtos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaProdutos /></ProtectedRoute>} />
-          <Route path="/admin/clientes" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaClientes /></ProtectedRoute>} /> {/* Nova Rota */}
-          <Route path="/admin/assinatura" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaAssinatura /></ProtectedRoute>} />
-          <Route path="/admin/entregadores" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaEntregadores /></ProtectedRoute>} />
-          <Route path="/admin/relatorio" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaRelatorio /></ProtectedRoute>} />
-          <Route path="/admin/configuracoes" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaConfig /></ProtectedRoute>} />
-          <Route path="/admin/horarios" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaHorarios /></ProtectedRoute>} />
-          <Route path="/admin/areas-entrega" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaAreasEntrega /></ProtectedRoute>} />
-          <Route path="/admin/suporte" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaSuporte /></ProtectedRoute>} />
-          
-          {/* Rotas de Super Admin (Protegidas) */}
-          <Route path="/super-admin/dashboard" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminDashboard /></ProtectedRoute>} />
-          <Route path="/super-admin/lojas" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminLojas /></ProtectedRoute>} />
-          <Route path="/super-admin/planos" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPlanos /></ProtectedRoute>} />
-          <Route path="/super-admin/entregadores" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminEntregadores /></ProtectedRoute>} />
-          <Route path="/super-admin/relatorios" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminRelatorios /></ProtectedRoute>} />
-          <Route path="/super-admin/usuarios" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminUsuarios /></ProtectedRoute>} />
-          <Route path="/super-admin/configuracoes" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminConfig /></ProtectedRoute>} />
-          <Route path="/super-admin/suporte" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminSuporte /></ProtectedRoute>} />
-          
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <ToastContainer />
+        <Layout>
+          <Routes>
+            {/* Rotas Públicas */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/loja/:slug" element={<PublicShop />} />
+            <Route path="/checkout/:slug" element={<Checkout />} />
+            <Route path="/meus-pedidos" element={<CustomerOrders />} />
+            <Route path="/rastreio/:id" element={<OrderTracking />} />
+            <Route path="/politica-privacidade" element={<PrivacyPolicy />} />
+            <Route path="/termos-uso" element={<TermsOfUse />} />
+            
+            {/* Rotas de Entregador (Protegidas) */}
+            <Route path="/entregador/dashboard" element={
+              <ProtectedRoute allowedRoles={['entregador']}>
+                <EntregadorDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Rotas de Lojista (Protegidas) */}
+            <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaDashboard /></ProtectedRoute>} />
+            <Route path="/admin/pedidos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaPedidos /></ProtectedRoute>} />
+            <Route path="/admin/produtos" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaProdutos /></ProtectedRoute>} />
+            <Route path="/admin/clientes" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaClientes /></ProtectedRoute>} /> {/* Nova Rota */}
+            <Route path="/admin/assinatura" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaAssinatura /></ProtectedRoute>} />
+            <Route path="/admin/entregadores" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaEntregadores /></ProtectedRoute>} />
+            <Route path="/admin/relatorio" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaRelatorio /></ProtectedRoute>} />
+            <Route path="/admin/configuracoes" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaConfig /></ProtectedRoute>} />
+            <Route path="/admin/horarios" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaHorarios /></ProtectedRoute>} />
+            <Route path="/admin/areas-entrega" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaAreasEntrega /></ProtectedRoute>} />
+            <Route path="/admin/suporte" element={<ProtectedRoute allowedRoles={['lojista']}><LojistaSuporte /></ProtectedRoute>} />
+            
+            {/* Rotas de Super Admin (Protegidas) */}
+            <Route path="/super-admin/dashboard" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminDashboard /></ProtectedRoute>} />
+            <Route path="/super-admin/lojas" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminLojas /></ProtectedRoute>} />
+            <Route path="/super-admin/planos" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminPlanos /></ProtectedRoute>} />
+            <Route path="/super-admin/entregadores" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminEntregadores /></ProtectedRoute>} />
+            <Route path="/super-admin/relatorios" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminRelatorios /></ProtectedRoute>} />
+            <Route path="/super-admin/usuarios" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminUsuarios /></ProtectedRoute>} />
+            <Route path="/super-admin/configuracoes" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminConfig /></ProtectedRoute>} />
+            <Route path="/super-admin/suporte" element={<ProtectedRoute allowedRoles={['super_admin']}><SuperAdminSuporte /></ProtectedRoute>} />
+            
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </HelmetProvider>
   );
 };
 

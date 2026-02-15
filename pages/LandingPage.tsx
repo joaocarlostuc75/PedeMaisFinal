@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { formatCurrency } from '../utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
+import { SEO } from '../components/SEO';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
@@ -32,6 +33,10 @@ export const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-white font-sans overflow-x-hidden">
+      <SEO 
+        title="Pede Mais - Seu Delivery Próprio Sem Taxas" 
+        description="Tenha seu próprio aplicativo de delivery e pare de pagar taxas abusivas. Cardápio digital, gestão de entregadores e pagamentos online."
+      />
       <nav className="p-6 md:p-8 max-w-7xl mx-auto flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <h1 className="text-2xl font-black text-emerald-700 tracking-tighter">PEDE MAIS</h1>
         <div className="flex items-center gap-6 font-black uppercase text-[10px] tracking-widest">
