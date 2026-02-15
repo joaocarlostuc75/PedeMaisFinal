@@ -1,16 +1,27 @@
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import { formatCurrency, convertFileToBase64, formatDate } from '../utils';
 import { Link } from 'react-router-dom';
 
 export const SuperAdminLojas = () => {
-  const { lojas, planos, updateLoja, deleteLoja, batchUpdatePlano, addNotification } = useStore();
+  const { lojas, planos, updateLoja, deleteLoja, addLoja, addNotification } = useStore();
   const [editingLoja, setEditingLoja] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
+  
+  // Estado para criação de loja
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newLoja, setNewLoja] = useState({ nome: '', email: '', planoId: '' });
+
+  // Define um plano padrão ao abrir o modal
+  useEffect(() => {
+    if (planos.length > 0 && !newLoja.planoId) {
+        setNewLoja(prev => ({ ...prev, planoId: planos[0].id }));
+    }
+  }, [planos, isCreateModalOpen]);
   
   // Estado para a concessão de acesso
   const [grantAmount, setGrantAmount] = useState(1);
@@ -51,6 +62,36 @@ export const SuperAdminLojas = () => {
       }
   };
 
+  const handleCreateLoja = () => {
+      if (!newLoja.nome || !newLoja.email || !newLoja.planoId) {
+          addNotification('error', 'Preencha todos os campos obrigatórios.');
+          return;
+      }
+
+      const id = Math.random().toString(36).substr(2, 9);
+      const slug = newLoja.nome.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
+      addLoja({
+          id: `loja-${id}`,
+          nome: newLoja.nome,
+          slug: slug,
+          planoId: newLoja.planoId,
+          email: newLoja.email,
+          statusAssinatura: 'ativo',
+          proximoVencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
+          whatsapp: '',
+          taxaEntrega: 0,
+          tempoMin: 30,
+          tempoMax: 60,
+          aceitaRetirada: true,
+          stats: { carrinhos: 0, finalizados: 0, mrr: 0 }
+      });
+
+      addNotification('success', `Loja ${newLoja.nome} criada com sucesso!`);
+      setIsCreateModalOpen(false);
+      setNewLoja({ nome: '', email: '', planoId: planos[0]?.id || '' });
+  };
+
   const handleGrantAccess = () => {
     if (!editingLoja) return;
     
@@ -68,7 +109,7 @@ export const SuperAdminLojas = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 md:space-y-10">
+    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 md:space-y-10 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase">Gestão de Unidades</h1>
@@ -139,7 +180,75 @@ export const SuperAdminLojas = () => {
         </div>
       </div>
 
-      {/* Modal de Edição & Concessão de Acesso */}
+      {/* Botão Flutuante (FAB) para Adicionar Nova Loja */}
+      <button 
+        onClick={() => setIsCreateModalOpen(true)}
+        className="fixed bottom-8 right-8 w-16 h-16 bg-emerald-600 text-white rounded-full shadow-2xl flex items-center justify-center text-4xl font-black hover:bg-emerald-500 hover:scale-110 active:scale-95 transition-all z-50 group"
+        title="Cadastrar Nova Loja"
+      >
+        <span className="mb-1">+</span>
+        <span className="absolute right-20 bg-gray-900 text-white text-[10px] font-black uppercase py-2 px-4 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Nova Loja
+        </span>
+      </button>
+
+      {/* Modal de Criação de Loja */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl animate-bounce-in">
+                <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Nova Loja</h3>
+                    <button onClick={() => setIsCreateModalOpen(false)} className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-400 hover:bg-gray-200">✕</button>
+                </div>
+                
+                <div className="space-y-6">
+                    <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Nome do Estabelecimento</label>
+                        <input 
+                            type="text" 
+                            value={newLoja.nome} 
+                            onChange={e => setNewLoja({...newLoja, nome: e.target.value})}
+                            className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                            placeholder="Ex: Pizzaria do João"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">E-mail do Responsável</label>
+                        <input 
+                            type="email" 
+                            value={newLoja.email} 
+                            onChange={e => setNewLoja({...newLoja, email: e.target.value})}
+                            className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                            placeholder="contato@loja.com"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Plano Inicial</label>
+                        <select 
+                            value={newLoja.planoId} 
+                            onChange={e => setNewLoja({...newLoja, planoId: e.target.value})}
+                            className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                        >
+                            {planos.map(p => (
+                                <option key={p.id} value={p.id}>
+                                    {p.nome} {p.privado ? '(Privado)' : ''} - {formatCurrency(p.preco)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    
+                    <button 
+                        onClick={handleCreateLoja}
+                        className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-emerald-200 hover:bg-emerald-500 transition-all mt-4"
+                    >
+                        Criar Loja
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* Modal de Edição & Concessão de Acesso (Existente) */}
       {editingLoja && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-[3rem] p-10 w-full max-w-xl shadow-2xl animate-bounce-in max-h-[90vh] overflow-y-auto custom-scrollbar">
