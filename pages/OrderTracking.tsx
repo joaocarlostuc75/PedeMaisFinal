@@ -10,6 +10,12 @@ export const OrderTracking = () => {
   const { entregas, lojas, entregadores, atualizarStatusPedido, addNotification, myOrderIds } = useStore();
   const [now, setNow] = useState(new Date());
 
+  // Estado local para animação de entrada
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+      setMounted(true);
+  }, []);
+
   useEffect(() => {
     // Atualiza o componente a cada 30s para atualizar tempos relativos
     const interval = setInterval(() => setNow(new Date()), 30000);
@@ -79,7 +85,7 @@ export const OrderTracking = () => {
       <main className="max-w-2xl mx-auto px-6 pt-6 space-y-6">
         
         {/* Status Card Principal */}
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 text-center relative overflow-hidden">
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 text-center relative overflow-hidden transition-all duration-500 hover:shadow-md">
             {isCancelled ? (
                 <div className="py-8">
                     <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 text-red-500 animate-bounce-in">✕</div>
@@ -91,20 +97,23 @@ export const OrderTracking = () => {
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mt-32 pointer-events-none" />
                     
                     <div className="relative z-10">
-                        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 border-[6px] border-white shadow-xl shadow-emerald-100 animate-bounce-in">
+                        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 border-[6px] border-white shadow-xl shadow-emerald-100 animate-bounce-in transition-transform duration-700 hover:scale-105">
                             {steps[currentStepIndex]?.icon || '✅'}
                         </div>
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tighter mb-2">
+                        <h2 className="text-3xl font-black text-gray-900 tracking-tighter mb-2 transition-all duration-300">
                             {steps[currentStepIndex]?.label || 'Processando'}
                         </h2>
-                        <p className="text-sm font-medium text-gray-400">
+                        <p className="text-sm font-medium text-gray-400 animate-pulse">
                             {steps[currentStepIndex]?.desc}
                         </p>
                     </div>
 
                     {/* Barra de Progresso Horizontal */}
                     <div className="mt-10 bg-gray-100 h-2 rounded-full overflow-hidden relative">
-                        <div className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }} />
+                        <div 
+                            className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-[1500ms] ease-in-out" 
+                            style={{ width: mounted ? `${progressPercent}%` : '0%' }} 
+                        />
                     </div>
                     <div className="flex justify-between mt-3 text-[9px] font-black text-gray-300 uppercase tracking-widest">
                         <span>Recebido</span>
@@ -117,26 +126,53 @@ export const OrderTracking = () => {
         {/* Timeline Detalhada (No corpo da página) */}
         {!isCancelled && (
             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
-                <h3 className="font-black text-gray-900 text-lg mb-6 flex items-center gap-2">
+                <h3 className="font-black text-gray-900 text-lg mb-8 flex items-center gap-2">
                     ⏱️ Linha do Tempo
                 </h3>
-                <div className="relative pl-4 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
+                {/* Linha vertical de fundo */}
+                <div className="relative pl-4 space-y-8">
+                    <div className="absolute left-[19px] top-2 bottom-6 w-[2px] bg-gray-100 z-0" />
+                    
+                    {/* Linha de progresso vertical colorida */}
+                    <div 
+                        className="absolute left-[19px] top-2 w-[2px] bg-emerald-500 z-0 transition-all duration-[1500ms] ease-in-out"
+                        style={{ height: mounted ? `${Math.min(100, (currentStepIndex / (steps.length - 1)) * 85)}%` : '0%' }}
+                    />
+
                     {steps.map((step, idx) => {
                         const isActive = idx === currentStepIndex;
                         const isCompleted = idx < currentStepIndex;
                         
                         return (
-                            <div key={step.id} className={`relative flex items-center gap-4 transition-opacity duration-300 ${idx > currentStepIndex ? 'opacity-40' : 'opacity-100'}`}>
-                                <div className={`relative z-10 w-6 h-6 rounded-full border-[2px] flex items-center justify-center text-[10px] transition-all duration-500 ${
-                                    isActive ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg ring-4 ring-emerald-50 scale-110' :
-                                    isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' :
-                                    'bg-white border-gray-200 text-transparent'
+                            <div 
+                                key={step.id} 
+                                className={`relative z-10 flex items-center gap-5 transition-all duration-700 ease-out ${
+                                    idx > currentStepIndex ? 'opacity-40 grayscale' : 'opacity-100'
+                                } ${isActive ? 'translate-x-2' : ''}`}
+                            >
+                                {/* Círculo do Passo */}
+                                <div className={`relative z-10 w-8 h-8 rounded-full border-[3px] flex items-center justify-center text-xs font-black transition-all duration-500 ${
+                                    isActive 
+                                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200 scale-125 ring-4 ring-emerald-50' 
+                                        : isCompleted 
+                                            ? 'bg-emerald-500 border-emerald-500 text-white scale-100' 
+                                            : 'bg-white border-gray-200 text-gray-300 scale-90'
                                 }`}>
-                                    ✓
+                                    {isCompleted ? '✓' : (idx + 1)}
                                 </div>
-                                <div>
-                                    <p className={`text-sm font-bold ${isActive ? 'text-emerald-600' : 'text-gray-800'}`}>{step.label}</p>
-                                    {isActive && <p className="text-xs text-gray-400 font-medium mt-0.5">{step.desc}</p>}
+
+                                {/* Texto do Passo */}
+                                <div className={`transition-all duration-500 ${isActive ? 'scale-105 origin-left' : ''}`}>
+                                    <p className={`text-sm font-bold transition-colors duration-300 ${
+                                        isActive ? 'text-emerald-700 text-base' : 'text-gray-800'
+                                    }`}>
+                                        {step.label}
+                                    </p>
+                                    {isActive && (
+                                        <p className="text-xs text-gray-500 font-medium mt-0.5 animate-fade-in">
+                                            {step.desc}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -145,10 +181,11 @@ export const OrderTracking = () => {
             </div>
         )}
 
+        {/* ... (Resto do componente mantido) ... */}
         {/* Card do Entregador (Aparece apenas quando estiver 'em_transito') */}
         {entregador && pedido.status === 'em_transito' && (
-            <div className="bg-gray-900 text-white p-6 rounded-[2rem] shadow-xl flex items-center gap-5 transform transition-all hover:scale-[1.02]">
-                <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center text-2xl border-2 border-gray-700">
+            <div className="bg-gray-900 text-white p-6 rounded-[2rem] shadow-xl flex items-center gap-5 transform transition-all hover:scale-[1.02] animate-bounce-in">
+                <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center text-2xl border-2 border-gray-700 animate-pulse">
                     🛵
                 </div>
                 <div className="flex-1">
