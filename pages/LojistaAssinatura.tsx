@@ -167,10 +167,10 @@ export const LojistaAssinatura = () => {
          </div>
       </section>
 
-      {/* Histórico de Cobrança (Condicional) - Só aparece se houver faturas */}
-      {minhasFaturas.length > 0 && (
-        <section className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-            <h3 className="text-xl font-black text-gray-900 mb-6 tracking-tight">Histórico de Cobrança</h3>
+      {/* Histórico de Cobrança */}
+      <section className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+          <h3 className="text-xl font-black text-gray-900 mb-6 tracking-tight">Histórico de Cobrança</h3>
+          {minhasFaturas.length > 0 ? (
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
@@ -203,8 +203,13 @@ export const LojistaAssinatura = () => {
                     </tbody>
                 </table>
             </div>
-        </section>
-      )}
+          ) : (
+            <div className="text-center py-10 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                <span className="text-4xl block mb-2">🧾</span>
+                <p className="text-gray-400 font-bold text-sm">Você ainda não possui faturas.</p>
+            </div>
+          )}
+      </section>
 
       {/* Help Card */}
       <div className="bg-[#eff7f1] p-10 rounded-[3rem] border border-emerald-100 flex flex-col md:flex-row items-center justify-between gap-8">
