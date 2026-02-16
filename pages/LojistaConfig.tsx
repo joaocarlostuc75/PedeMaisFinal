@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { convertFileToBase64 } from '../utils';
 
 export const LojistaConfig = () => {
+  const navigate = useNavigate();
   const { lojas, updateLoja, addNotification, user } = useStore();
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
   
@@ -215,6 +216,27 @@ export const LojistaConfig = () => {
 
         {/* Coluna Direita: Logística e Horários */}
         <div className="space-y-8">
+           
+           {/* Atalho para Equipe (NOVA SEÇÃO) */}
+           <section className="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-[2rem] shadow-xl overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+              <div className="p-8">
+                 <div className="flex items-center gap-3 mb-4">
+                    <span className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl">👔</span>
+                    <h3 className="font-black text-lg">Controle de Acesso & Equipe</h3>
+                 </div>
+                 <p className="text-white/60 text-sm font-medium mb-6 leading-relaxed">
+                    Gerencie quem tem acesso ao painel da sua loja. Adicione gerentes, atendentes e defina permissões.
+                 </p>
+                 <button 
+                    onClick={() => navigate('/admin/funcionarios')}
+                    className="w-full bg-white text-gray-900 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-emerald-400 hover:text-white transition-all"
+                 >
+                    Gerenciar Equipe
+                 </button>
+              </div>
+           </section>
+
            {/* Logística */}
            <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-gray-50 bg-[#fafbfc]">
