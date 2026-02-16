@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils';
 import { MapContainer, TileLayer, Circle, useMapEvents, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 
-// Fix para ícones padrão do Leaflet no React
+// --- CONFIGURAÇÃO DE ÍCONES DO LEAFLET (Fix para React) ---
 const icon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -17,32 +17,37 @@ const icon = L.icon({
   shadowSize: [41, 41]
 });
 
-// Componente para manipular eventos do mapa (Clique e Redimensionamento)
-const MapInteract = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
-  const map = useMapEvents({
+// --- COMPONENTES AUXILIARES DO MAPA ---
+
+// 1. Captura cliques no mapa para definir coordenadas
+const MapClickEvent = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
+  useMapEvents({
     click(e) {
       onMapClick(e.latlng.lat, e.latlng.lng);
     },
   });
-
-  // Garante que o mapa renderize corretamente dentro do modal (invalidateSize)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-        map.invalidateSize();
-    }, 400); // Pequeno delay para aguardar animação do modal
-    return () => clearTimeout(timer);
-  }, [map]);
-
   return null;
 };
 
-// Componente para controlar a visão do mapa (Voar para a localização)
+// 2. Corrige renderização do mapa dentro de Modais (Tela cinza)
+const MapResizer = () => {
+  const map = useMapEvents({});
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 400); // Aguarda a transição do modal
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
+};
+
+// 3. Atualiza o centro do mapa quando a coordenada muda externamente
 const MapUpdater = ({ center }: { center: { lat: number, lng: number } }) => {
   const map = useMapEvents({});
   useEffect(() => {
-    map.flyTo([center.lat, center.lng], map.getZoom(), {
-        duration: 1.5 // Animação suave
-    });
+    if (center.lat && center.lng) {
+      map.flyTo([center.lat, center.lng], map.getZoom(), { duration: 1.5 });
+    }
   }, [center, map]);
   return null;
 };
@@ -52,69 +57,68 @@ export const LojistaAreasEntrega = () => {
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
   const areas = minhaLoja.areasEntrega || [];
 
-  // Coordenadas centrais de Tucuruí - PA (Padrão)
-  const TUCURUI_COORDS = { lat: -3.766052, lng: -49.672367 };
+  // Coordenadas Padrão (Ex: Centro de SP ou Tucuruí conforme demo)
+  const DEFAULT_COORDS = { lat: -3.766052, lng: -49.672367 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mapOverviewCenter, setMapOverviewCenter] = useState(DEFAULT_COORDS);
+  
   const [editingArea, setEditingArea] = useState<Partial<AreaEntrega>>({
     nome: '',
     taxa: 0,
-    tempoMin: 20,
-    tempoMax: 40,
+    tempoMin: 30,
+    tempoMax: 50,
     raioKm: 2,
     ativa: true,
     tipoTaxa: 'fixa',
-    lat: TUCURUI_COORDS.lat,
-    lng: TUCURUI_COORDS.lng
+    lat: DEFAULT_COORDS.lat,
+    lng: DEFAULT_COORDS.lng
   });
 
-  // Estado para controlar a visão do mapa principal
-  const [mapCenter, setMapCenter] = useState(TUCURUI_COORDS);
-
+  // Abre Modal (Criação ou Edição)
   const handleOpenModal = (area?: AreaEntrega) => {
     if (area) {
-      setEditingArea(area);
+      setEditingArea({ ...area });
     } else {
+      // Nova área: Tenta pegar a última localização usada ou padrão
+      const lastLat = areas.length > 0 ? areas[areas.length - 1].lat : DEFAULT_COORDS.lat;
+      const lastLng = areas.length > 0 ? areas[areas.length - 1].lng : DEFAULT_COORDS.lng;
+      
       setEditingArea({
         nome: '',
-        taxa: 0,
-        tempoMin: 20,
-        tempoMax: 40,
-        raioKm: 2,
+        taxa: 5.00,
+        tempoMin: 30,
+        tempoMax: 50,
+        raioKm: 3,
         ativa: true,
         tipoTaxa: 'fixa',
-        lat: TUCURUI_COORDS.lat,
-        lng: TUCURUI_COORDS.lng
+        lat: lastLat,
+        lng: lastLng
       });
     }
     setIsModalOpen(true);
   };
 
-  const handleFocusArea = (area: AreaEntrega) => {
-      if (area.lat && area.lng) {
-          setMapCenter({ lat: area.lat, lng: area.lng });
-      }
-  };
-
   const handleSave = () => {
     if (!editingArea.nome) {
-        addNotification('error', 'O nome da área é obrigatório.');
-        return;
+      addNotification('error', 'Defina um nome para a área.');
+      return;
+    }
+    if (!editingArea.lat || !editingArea.lng) {
+      addNotification('error', 'Clique no mapa para definir a localização.');
+      return;
     }
 
     let newAreas;
     if (editingArea.id) {
-        // Editando existente
-        newAreas = areas.map(a => a.id === editingArea.id ? { ...a, ...editingArea } as AreaEntrega : a);
-        addNotification('success', 'Área atualizada com sucesso!');
+      // Atualizar
+      newAreas = areas.map(a => a.id === editingArea.id ? { ...a, ...editingArea } as AreaEntrega : a);
+      addNotification('success', 'Área atualizada!');
     } else {
-        // Criando nova
-        const newArea = {
-            ...editingArea,
-            id: Math.random().toString(36).substr(2, 9)
-        } as AreaEntrega;
-        newAreas = [...areas, newArea];
-        addNotification('success', 'Nova área criada!');
+      // Criar
+      const newId = Math.random().toString(36).substr(2, 9);
+      newAreas = [...areas, { ...editingArea, id: newId } as AreaEntrega];
+      addNotification('success', 'Nova área criada!');
     }
 
     updateLoja(minhaLoja.id, { areasEntrega: newAreas });
@@ -122,250 +126,240 @@ export const LojistaAreasEntrega = () => {
   };
 
   const handleDelete = (id: string) => {
-      if (window.confirm('Tem certeza que deseja remover esta área de entrega?')) {
-          const newAreas = areas.filter(a => a.id !== id);
-          updateLoja(minhaLoja.id, { areasEntrega: newAreas });
-          addNotification('info', 'Área removida.');
-      }
+    if (window.confirm('Excluir esta área de entrega?')) {
+      const newAreas = areas.filter(a => a.id !== id);
+      updateLoja(minhaLoja.id, { areasEntrega: newAreas });
+      addNotification('info', 'Área removida.');
+    }
   };
 
-  const handleToggleStatus = (id: string, currentStatus: boolean) => {
-      const newAreas = areas.map(a => a.id === id ? { ...a, ativa: !currentStatus } : a);
-      updateLoja(minhaLoja.id, { areasEntrega: newAreas });
+  const focusOnArea = (area: AreaEntrega) => {
+    if (area.lat && area.lng) {
+      setMapOverviewCenter({ lat: area.lat, lng: area.lng });
+    }
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex flex-col md:flex-row gap-6 font-sans">
-      {/* Sidebar Lista */}
-      <div className="w-full md:w-[450px] shrink-0 flex flex-col h-full bg-white md:bg-transparent rounded-[2.5rem] md:rounded-none p-6 md:p-0 shadow-sm md:shadow-none border md:border-none border-gray-100 mb-6 md:mb-0">
-        <header className="mb-6 md:mb-8">
-           <div className="flex items-center gap-2 mb-2">
-               <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest">Tucuruí - PA</span>
-           </div>
-           <h1 className="text-3xl font-black text-gray-900 tracking-tight">Áreas de Entrega</h1>
-           <p className="text-gray-500 font-medium mt-1 leading-tight">Gerencie os raios de entrega da sua loja.</p>
+    <div className="h-[calc(100vh-100px)] flex flex-col md:flex-row gap-6 font-sans pb-4">
+      
+      {/* Coluna Esquerda: Lista de Áreas */}
+      <div className="w-full md:w-[420px] shrink-0 flex flex-col h-full gap-4">
+        <header>
+           <h1 className="text-3xl font-black text-gray-900 tracking-tighter">Raios de Entrega</h1>
+           <p className="text-gray-500 font-medium text-sm mt-1">Defina onde sua loja entrega e quanto cobra.</p>
         </header>
 
         <button 
             onClick={() => handleOpenModal()}
-            className="w-full bg-[#2d7a3a] text-white py-5 rounded-2xl font-black text-sm tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-[#256631] transition-all flex items-center justify-center gap-3 mb-6"
+            className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
         >
-           <span className="text-xl leading-none">📍</span> Adicionar Nova Área
+           <span>+</span> Nova Área de Entrega
         </button>
 
-        <div className="space-y-4 overflow-y-auto pr-2 pb-10 flex-1 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
            {areas.length === 0 ? (
-               <div className="text-center py-10 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-                   <p className="text-4xl mb-4">🗺️</p>
+               <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                   <span className="text-4xl block mb-2">🗺️</span>
                    <p className="text-gray-400 font-bold text-sm">Nenhuma área configurada.</p>
                </div>
            ) : (
                areas.map(area => (
-                <div key={area.id} className={`bg-white rounded-3xl border shadow-sm overflow-hidden relative group p-6 transition-all cursor-pointer hover:shadow-md ${area.ativa ? 'border-emerald-500 opacity-100' : 'border-gray-200 opacity-60 grayscale'}`} onClick={() => handleFocusArea(area)}>
-                    <div className="absolute top-6 right-6 flex gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => handleOpenModal(area)} className="text-gray-300 hover:text-emerald-500 transition-colors p-1" title="Editar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                        </button>
-                        <button onClick={() => handleDelete(area.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1" title="Excluir">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                        <button onClick={() => handleToggleStatus(area.id, area.ativa)} className={`p-1 transition-colors ${area.ativa ? 'text-emerald-500' : 'text-gray-400'}`} title={area.ativa ? "Desativar" : "Ativar"}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-                        </button>
-                    </div>
-                    
-                    <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${area.ativa ? 'text-emerald-600' : 'text-gray-400'}`}>
-                        {area.ativa ? 'Zona Ativa' : 'Inativo'}
-                    </p>
-                    <h4 className="text-lg font-black text-gray-800 mb-4">{area.nome}</h4>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-[#f8fafc] p-3 rounded-2xl border border-gray-50">
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Taxa</p>
-                            <p className="font-black text-gray-700 text-sm">
-                                {formatCurrency(area.taxa)} 
-                                <span className="text-[9px] text-gray-400 font-bold italic ml-1">
-                                    {area.tipoTaxa === 'km' ? '/ km' : 'fixa'}
-                                </span>
-                            </p>
-                        </div>
-                        <div className="bg-[#f8fafc] p-3 rounded-2xl border border-gray-100">
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tempo</p>
-                            <p className="font-black text-gray-700 text-sm">{area.tempoMin}-{area.tempoMax} min</p>
-                        </div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-500">
-                        <span>⭕ Raio: {area.raioKm} km</span>
-                        <span className="ml-auto text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded cursor-pointer hover:bg-emerald-100">Ver no mapa</span>
-                    </div>
-                </div>
+                   <div 
+                      key={area.id} 
+                      onClick={() => focusOnArea(area)}
+                      className={`bg-white p-5 rounded-3xl border shadow-sm cursor-pointer transition-all hover:shadow-md group relative overflow-hidden ${area.ativa ? 'border-gray-100' : 'border-gray-100 opacity-60 grayscale'}`}
+                   >
+                      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${area.ativa ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                      
+                      <div className="flex justify-between items-start mb-3 pl-3">
+                          <h4 className="font-black text-gray-800 text-lg">{area.nome}</h4>
+                          <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                              <button onClick={() => handleOpenModal(area)} className="p-2 text-gray-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">✎</button>
+                              <button onClick={() => handleDelete(area.id)} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors">✕</button>
+                          </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pl-3">
+                          <div className="bg-gray-50 p-2 rounded-xl text-center">
+                              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Taxa</p>
+                              <p className="font-bold text-gray-800">{formatCurrency(area.taxa)}</p>
+                          </div>
+                          <div className="bg-gray-50 p-2 rounded-xl text-center">
+                              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Raio</p>
+                              <p className="font-bold text-gray-800">{area.raioKm} km</p>
+                          </div>
+                      </div>
+                   </div>
                ))
            )}
         </div>
       </div>
 
-      {/* Mapa Interativo Principal */}
-      <div className="flex-1 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden relative z-0 h-[400px] md:h-auto min-h-[400px]">
+      {/* Coluna Direita: Mapa Principal (Visão Geral) */}
+      <div className="flex-1 bg-white rounded-[2.5rem] border border-gray-200 shadow-sm overflow-hidden relative z-0 min-h-[400px]">
          <MapContainer 
-            center={[mapCenter.lat, mapCenter.lng]} 
-            zoom={14} 
-            style={{ height: '100%', width: '100%', zIndex: 0 }}
+            center={[mapOverviewCenter.lat, mapOverviewCenter.lng]} 
+            zoom={13} 
+            style={{ height: '100%', width: '100%' }}
             zoomControl={false}
          >
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution='&copy; OpenStreetMap'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            
-            <MapUpdater center={mapCenter} />
+            <MapUpdater center={mapOverviewCenter} />
 
-            {/* Renderiza as Áreas Existentes */}
+            {/* Renderiza todas as áreas ativas */}
             {areas.filter(a => a.ativa && a.lat && a.lng).map(area => (
                 <React.Fragment key={area.id}>
                     <Circle
                         center={[area.lat!, area.lng!]}
-                        radius={area.raioKm * 1000} // Leaflet usa metros
-                        pathOptions={{ 
-                            color: '#059669', 
-                            fillColor: '#10b981', 
-                            fillOpacity: 0.15,
-                            weight: 2 
-                        }}
+                        radius={area.raioKm * 1000} // Metros
+                        pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.1, weight: 2 }}
                     >
                         <Popup>
-                            <strong>{area.nome}</strong><br/>
-                            Taxa: {formatCurrency(area.taxa)}<br/>
-                            Raio: {area.raioKm}km
+                            <div className="text-center">
+                                <strong className="block text-sm">{area.nome}</strong>
+                                <span className="text-xs text-gray-500">{formatCurrency(area.taxa)} • {area.raioKm}km</span>
+                            </div>
                         </Popup>
                     </Circle>
-                    <Marker position={[area.lat!, area.lng!]} icon={icon}>
-                        <Popup>
-                            <strong>{area.nome}</strong><br/>
-                            Centro da zona
-                        </Popup>
-                    </Marker>
+                    <Marker position={[area.lat!, area.lng!]} icon={icon} />
                 </React.Fragment>
             ))}
          </MapContainer>
-
-         {/* Legenda de Mapa */}
-         <div className="absolute bottom-8 right-8 bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-xl border border-gray-100 min-w-[200px] z-[1000]">
-            <h5 className="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-4">Legenda</h5>
-            <div className="space-y-3">
-               <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 bg-emerald-100 border border-emerald-500 rounded-full" />
-                  <span className="text-[9px] font-black text-gray-500 uppercase">Área Ativa</span>
-               </div>
-               <div className="flex items-center gap-3">
-                  <span className="text-lg">📍</span>
-                  <span className="text-[9px] font-black text-gray-500 uppercase">Centro da Zona</span>
-               </div>
-            </div>
+         
+         <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur px-4 py-3 rounded-2xl shadow-lg border border-gray-100 text-xs font-bold text-gray-500 z-[400]">
+            Visão Geral das Zonas
          </div>
       </div>
 
-      {/* Modal de Criação/Edição */}
+      {/* MODAL DE EDIÇÃO/CRIAÇÃO COM MAPA INTERATIVO */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-5xl shadow-2xl h-[90vh] md:h-[80vh] flex flex-col md:flex-row overflow-hidden relative">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-6xl h-[90vh] shadow-2xl flex flex-col md:flex-row overflow-hidden">
                 
-                {/* Formuário */}
-                <div className="w-full md:w-1/3 p-8 border-r border-gray-100 overflow-y-auto custom-scrollbar bg-[#fafbfc]">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-xl font-black text-gray-900">{editingArea.id ? 'Editar' : 'Nova'}</h3>
-                        <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-500 font-bold hover:bg-gray-300">✕</button>
+                {/* Lado Esquerdo: Formulário */}
+                <div className="w-full md:w-[400px] p-8 border-r border-gray-100 bg-[#fafbfc] overflow-y-auto custom-scrollbar flex flex-col">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-2xl font-black text-gray-900">{editingArea.id ? 'Editar Zona' : 'Nova Zona'}</h2>
+                        <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 font-bold hover:bg-gray-300">✕</button>
                     </div>
-                    
-                    <div className="space-y-6">
+
+                    <div className="space-y-6 flex-1">
                         <div>
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Nome da Área</label>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Nome da Zona</label>
                             <input 
                                 type="text" 
-                                placeholder="Ex: Santa Mônica"
                                 value={editingArea.nome}
                                 onChange={e => setEditingArea({...editingArea, nome: e.target.value})}
-                                className="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                placeholder="Ex: Centro, Bairro Nobre..."
+                                className="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-gray-800 outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-4 flex justify-between">
+                                <span>Raio de Cobertura</span>
+                                <span className="text-emerald-600">{editingArea.raioKm} km</span>
+                            </label>
+                            <input 
+                                type="range" 
+                                min="0.5" max="20" step="0.5"
+                                value={editingArea.raioKm}
+                                onChange={e => setEditingArea({...editingArea, raioKm: Number(e.target.value)})}
+                                className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                            />
+                            <p className="text-[10px] text-gray-400 mt-2 text-center">Arraste para ajustar o tamanho da área no mapa.</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Taxa (R$)</label>
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Taxa (R$)</label>
                                 <input 
                                     type="number" step="0.50"
                                     value={editingArea.taxa}
                                     onChange={e => setEditingArea({...editingArea, taxa: Number(e.target.value)})}
-                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-800 outline-none"
+                                    className="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-gray-800 outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Tipo</label>
-                                <select 
-                                    value={editingArea.tipoTaxa}
-                                    onChange={e => setEditingArea({...editingArea, tipoTaxa: e.target.value as any})}
-                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 font-bold text-gray-800 outline-none"
-                                >
-                                    <option value="fixa">Fixa</option>
-                                    <option value="km">/ KM</option>
-                                </select>
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Tempo (min)</label>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="number" 
+                                        value={editingArea.tempoMin}
+                                        onChange={e => setEditingArea({...editingArea, tempoMin: Number(e.target.value)})}
+                                        className="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-center text-gray-800 outline-none"
+                                    />
+                                    <input 
+                                        type="number" 
+                                        value={editingArea.tempoMax}
+                                        onChange={e => setEditingArea({...editingArea, tempoMax: Number(e.target.value)})}
+                                        className="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-center text-gray-800 outline-none"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Raio (KM): {editingArea.raioKm} km</label>
-                            <input 
-                                type="range" 
-                                min="0.5" max="15" step="0.1"
-                                value={editingArea.raioKm}
-                                onChange={e => setEditingArea({...editingArea, raioKm: Number(e.target.value)})}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                            />
+                        <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                            <span className="text-2xl">📍</span>
+                            <p className="text-xs text-blue-800 font-medium leading-tight">
+                                <strong>Clique no mapa</strong> para definir o centro da região de entrega.
+                            </p>
                         </div>
+                    </div>
 
-                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 text-[10px] text-blue-700 font-medium">
-                            <span className="font-black block mb-1">📍 Defina no Mapa</span>
-                            Clique no mapa para definir o ponto central. O raio será desenhado a partir deste ponto.
-                        </div>
-
-                        <div className="flex gap-4 pt-4 mt-auto">
-                            <button onClick={() => setIsModalOpen(false)} className="flex-1 py-3 font-black text-gray-400 uppercase text-xs hover:text-gray-600">Cancelar</button>
-                            <button onClick={handleSave} className="flex-[2] bg-emerald-600 text-white rounded-xl font-black uppercase text-xs shadow-lg hover:bg-emerald-500">Salvar</button>
-                        </div>
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                        <button 
+                            onClick={handleSave}
+                            className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-emerald-500 transition-all"
+                        >
+                            Salvar Configuração
+                        </button>
                     </div>
                 </div>
 
-                {/* Mapa de Edição */}
-                <div className="flex-1 bg-gray-100 relative h-full min-h-[300px]">
+                {/* Lado Direito: Mapa Interativo de Edição */}
+                <div className="flex-1 bg-gray-100 relative">
                     <MapContainer 
-                        key={editingArea.id || 'new-area-map'} // FIX: Força remontagem ao abrir modal ou trocar área
-                        center={[editingArea.lat ?? TUCURUI_COORDS.lat, editingArea.lng ?? TUCURUI_COORDS.lng]} 
+                        center={[editingArea.lat || DEFAULT_COORDS.lat, editingArea.lng || DEFAULT_COORDS.lng]} 
                         zoom={14} 
-                        style={{ height: '100%', width: '100%', zIndex: 0 }}
+                        style={{ height: '100%', width: '100%' }}
                     >
                         <TileLayer
                             attribution='&copy; OpenStreetMap'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                        <MapInteract onMapClick={(lat, lng) => setEditingArea(prev => ({ ...prev, lat, lng }))} />
                         
-                        {/* Se a área estiver sendo editada, move o mapa para lá */}
-                        {typeof editingArea.lat === 'number' && typeof editingArea.lng === 'number' && (
-                            <MapUpdater center={{ lat: editingArea.lat, lng: editingArea.lng }} />
-                        )}
-
-                        {typeof editingArea.lat === 'number' && typeof editingArea.lng === 'number' && (
+                        {/* Funcionalidades Críticas */}
+                        <MapResizer /> 
+                        <MapClickEvent onMapClick={(lat, lng) => setEditingArea(prev => ({...prev, lat, lng}))} />
+                        
+                        {/* Visualização da Área em Edição */}
+                        {editingArea.lat && editingArea.lng && (
                             <>
+                                {/* Move o mapa se o usuário editar coordenadas via input (opcional) ou na abertura */}
+                                <MapUpdater center={{ lat: editingArea.lat, lng: editingArea.lng }} />
+                                
                                 <Circle
                                     center={[editingArea.lat, editingArea.lng]}
                                     radius={(editingArea.raioKm || 1) * 1000}
-                                    pathOptions={{ color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.3 }}
+                                    pathOptions={{ color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.2, weight: 2, dashArray: '5, 10' }}
                                 />
-                                <Marker position={[editingArea.lat, editingArea.lng]} icon={icon} />
+                                <Marker position={[editingArea.lat, editingArea.lng]} icon={icon}>
+                                    <Popup>Centro da nova área</Popup>
+                                </Marker>
                             </>
                         )}
                     </MapContainer>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg z-[1000] text-xs font-bold text-gray-600 border border-gray-200 pointer-events-none">
-                        {editingArea.lat ? 'Localização Definida' : 'Clique no mapa para posicionar'}
+
+                    {/* Overlay de Instrução */}
+                    <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-6 py-3 rounded-full shadow-lg z-[1000] border border-gray-200 pointer-events-none">
+                        <p className="text-xs font-bold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"/> 
+                            Modo de Edição
+                        </p>
                     </div>
                 </div>
             </div>
