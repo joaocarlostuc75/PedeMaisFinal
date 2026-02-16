@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useStore } from '../store';
 import { formatCurrency, formatDate } from '../utils';
 import { useNavigate } from 'react-router-dom';
 
 export const LojistaAssinatura = () => {
   const navigate = useNavigate();
-  const { planos, lojas, updatePlanoLoja, addNotification, user, faturas } = useStore();
+  const { planos, lojas, updatePlanoLoja, addNotification, user, faturas, entregas, entregadores } = useStore();
   
   // Identifica a loja atual
   const currentLojaId = user?.lojaId || 'l1';
@@ -15,6 +15,31 @@ export const LojistaAssinatura = () => {
 
   // Filtra faturas da loja atual
   const minhasFaturas = faturas ? faturas.filter(f => f.lojaId === currentLojaId) : [];
+
+  // --- CÁLCULOS DE USO REAL DO PLANO ---
+  
+  // 1. Contagem de Pedidos do Mês Atual
+  const usoPedidos = useMemo(() => {
+      const now = new Date();
+      return entregas.filter(e => {
+          const dataPedido = new Date(e.data);
+          return e.lojaId === currentLojaId && 
+                 dataPedido.getMonth() === now.getMonth() && 
+                 dataPedido.getFullYear() === now.getFullYear();
+      }).length;
+  }, [entregas, currentLojaId]);
+
+  // 2. Contagem de Entregadores
+  const usoEntregadores = useMemo(() => {
+      return entregadores.filter(e => e.lojaId === currentLojaId).length;
+  }, [entregadores, currentLojaId]);
+
+  // 3. Cálculos de Porcentagem para Barra de Progresso
+  const limitePedidos = meuPlano?.limitePedidos || 1;
+  const percentPedidos = limitePedidos >= 99999 ? 5 : Math.min(100, (usoPedidos / limitePedidos) * 100); // Se ilimitado, barra fixa pequena ou 0
+
+  const limiteEntregadores = meuPlano?.limiteEntregadores || 1;
+  const percentEntregadores = limiteEntregadores >= 999 ? 5 : Math.min(100, (usoEntregadores / limiteEntregadores) * 100);
 
   const handleChangePlan = (planoId: string, nomePlano: string) => {
       if (window.confirm(`Deseja alterar seu plano para ${nomePlano}? O novo valor será cobrado na próxima fatura.`)) {
@@ -51,23 +76,35 @@ export const LojistaAssinatura = () => {
             </div>
 
             <div className="space-y-6 max-w-md">
+              {/* Barra de Pedidos */}
               <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
                     <span>Pedidos no mês</span>
-                    <span className="text-gray-800">850 / {meuPlano?.limitePedidos}</span>
+                    <span className="text-gray-800">
+                        {usoPedidos} / {meuPlano?.limitePedidos >= 99999 ? 'Ilimitado' : meuPlano?.limitePedidos}
+                    </span>
                   </div>
                   <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
-                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: '85%' }} />
+                    <div 
+                        className={`h-full rounded-full transition-all duration-1000 ${percentPedidos > 90 ? 'bg-red-500' : 'bg-emerald-500'}`} 
+                        style={{ width: `${percentPedidos}%` }} 
+                    />
                   </div>
               </div>
 
+              {/* Barra de Entregadores */}
               <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
                     <span>Entregadores ativos</span>
-                    <span className="text-gray-800">4 / {meuPlano?.limiteEntregadores}</span>
+                    <span className="text-gray-800">
+                        {usoEntregadores} / {meuPlano?.limiteEntregadores >= 999 ? 'Ilimitado' : meuPlano?.limiteEntregadores}
+                    </span>
                   </div>
                   <div className="w-full bg-gray-50 h-3 rounded-full overflow-hidden border border-gray-100">
-                    <div className="bg-[#1e293b] h-full rounded-full" style={{ width: '40%' }} />
+                    <div 
+                        className={`h-full rounded-full transition-all duration-1000 ${percentEntregadores > 90 ? 'bg-red-500' : 'bg-[#1e293b]'}`} 
+                        style={{ width: `${percentEntregadores}%` }} 
+                    />
                   </div>
               </div>
             </div>
