@@ -78,7 +78,14 @@ export const LojistaFuncionarios = () => {
   };
 
   const handleRoleChange = (cargo: FuncionarioCargo) => {
+      // Pré-seleciona as permissões com base no cargo escolhido
       setEditingFunc(prev => prev ? ({ ...prev, cargo, permissoes: ROLE_PRESETS[cargo] }) : null);
+  };
+
+  const handleResetPermissions = () => {
+      if (!editingFunc || !editingFunc.cargo) return;
+      setEditingFunc({ ...editingFunc, permissoes: ROLE_PRESETS[editingFunc.cargo] });
+      addNotification('info', `Permissões redefinidas para o padrão de ${editingFunc.cargo}.`);
   };
 
   const togglePermission = (perm: Permissao) => {
@@ -288,7 +295,10 @@ export const LojistaFuncionarios = () => {
                                 🔐 Permissões de Acesso
                                 <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] uppercase font-black">Personalizável</span>
                             </h4>
-                            <button onClick={() => setIsGuideOpen(true)} className="text-[10px] font-bold text-emerald-600 hover:underline">Ver o que cada item faz</button>
+                            <div className="flex gap-3">
+                                <button onClick={handleResetPermissions} className="text-[10px] font-bold text-gray-400 hover:text-gray-600 underline">Restaurar Padrão</button>
+                                <button onClick={() => setIsGuideOpen(true)} className="text-[10px] font-bold text-emerald-600 hover:underline">Ver o que cada item faz</button>
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {(Object.keys(PERMISSIONS_LABELS) as Permissao[]).map(perm => (
