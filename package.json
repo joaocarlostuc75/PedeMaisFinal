@@ -9,14 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-router-dom": "^6.23.1",
     "react-helmet-async": "^2.0.5",
     "recharts": "^2.12.7",
     "zustand": "^4.5.2",
     "leaflet": "^1.9.4",
-    "react-leaflet": "^4.2.1",
+    "react-leaflet": "4.2.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.3.0",
     "lucide-react": "^0.378.0"
@@ -30,5 +30,10 @@
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3"
+  },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-leaflet": "4.2.1"
   }
 }
