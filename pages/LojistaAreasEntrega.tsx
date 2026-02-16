@@ -337,7 +337,8 @@ export const LojistaAreasEntrega = () => {
                 {/* Mapa de Edição */}
                 <div className="flex-1 bg-gray-100 relative h-full min-h-[300px]">
                     <MapContainer 
-                        center={[editingArea.lat || TUCURUI_COORDS.lat, editingArea.lng || TUCURUI_COORDS.lng]} 
+                        key={editingArea.id || 'new-area-map'} // FIX: Força remontagem ao abrir modal ou trocar área
+                        center={[editingArea.lat ?? TUCURUI_COORDS.lat, editingArea.lng ?? TUCURUI_COORDS.lng]} 
                         zoom={14} 
                         style={{ height: '100%', width: '100%', zIndex: 0 }}
                     >
@@ -348,11 +349,11 @@ export const LojistaAreasEntrega = () => {
                         <MapInteract onMapClick={(lat, lng) => setEditingArea(prev => ({ ...prev, lat, lng }))} />
                         
                         {/* Se a área estiver sendo editada, move o mapa para lá */}
-                        {editingArea.lat && editingArea.lng && (
+                        {typeof editingArea.lat === 'number' && typeof editingArea.lng === 'number' && (
                             <MapUpdater center={{ lat: editingArea.lat, lng: editingArea.lng }} />
                         )}
 
-                        {editingArea.lat && editingArea.lng && (
+                        {typeof editingArea.lat === 'number' && typeof editingArea.lng === 'number' && (
                             <>
                                 <Circle
                                     center={[editingArea.lat, editingArea.lng]}

@@ -202,13 +202,23 @@ export const LojistaClientes = () => {
           </div>
       </div>
 
-      {/* Modal de Detalhes do Cliente (Redesign) */}
+      {/* Modal de Detalhes do Cliente (Bottom Sheet em Mobile / Modal em Desktop) */}
       {selectedClient && engagement && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-0 md:p-4 animate-fade-in" onClick={() => setSelectedClient(null)}>
-              <div className="bg-white w-full md:w-[800px] h-full md:h-auto md:max-h-[90vh] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center md:p-4 animate-fade-in" onClick={() => setSelectedClient(null)}>
+              {/* Backdrop */}
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              
+              {/* Card Content */}
+              <div 
+                className="relative bg-white w-full h-[90vh] md:h-auto md:max-h-[90vh] md:w-[800px] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-slide-up-mobile md:animate-bounce-in"
+                onClick={e => e.stopPropagation()}
+              >
                   
-                  {/* Header Limpo */}
-                  <div className="p-6 md:p-8 bg-white border-b border-gray-100 relative shrink-0">
+                  {/* Header Sticky */}
+                  <div className="p-6 md:p-8 bg-white border-b border-gray-100 sticky top-0 z-10 shrink-0">
+                      {/* Mobile Handle */}
+                      <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 md:hidden" />
+
                       <button 
                         onClick={() => setSelectedClient(null)} 
                         className="absolute top-6 right-6 w-8 h-8 md:w-10 md:h-10 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center text-gray-400 font-bold transition-all"
@@ -216,16 +226,16 @@ export const LojistaClientes = () => {
                         ✕
                       </button>
                       
-                      <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                          <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-tr from-emerald-400 to-emerald-600 rounded-[2rem] flex items-center justify-center text-3xl md:text-4xl font-black text-white shadow-lg shadow-emerald-200 uppercase">
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+                          <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-tr from-emerald-400 to-emerald-600 rounded-[2rem] flex items-center justify-center text-3xl md:text-4xl font-black text-white shadow-lg shadow-emerald-200 uppercase shrink-0">
                               {selectedClient.name.charAt(0)}
                           </div>
-                          <div className="text-center md:text-left flex-1">
-                              <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tighter leading-tight">{selectedClient.name}</h2>
-                              <div className="flex flex-col md:flex-row gap-2 md:gap-4 mt-2 text-gray-500 text-xs md:text-sm font-medium justify-center md:justify-start">
-                                 <span className="flex items-center justify-center gap-1"><span className="text-lg">📞</span> {selectedClient.phone}</span>
+                          <div className="text-center sm:text-left flex-1 min-w-0 w-full">
+                              <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tighter leading-tight truncate">{selectedClient.name}</h2>
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 text-gray-500 text-xs md:text-sm font-medium justify-center sm:justify-start items-center sm:items-start">
+                                 <span className="flex items-center gap-1"><span className="text-lg">📞</span> {selectedClient.phone}</span>
                                  {selectedClient.address && (
-                                    <span className="flex items-center justify-center gap-1 max-w-[250px] truncate"><span className="text-lg">📍</span> {selectedClient.address}</span>
+                                    <span className="flex items-center gap-1 text-center sm:text-left"><span className="text-lg">📍</span> <span className="line-clamp-1">{selectedClient.address}</span></span>
                                  )}
                               </div>
                           </div>
@@ -235,8 +245,8 @@ export const LojistaClientes = () => {
                   {/* Corpo com Scroll */}
                   <div className="flex-1 overflow-y-auto bg-[#fafbfc] p-6 md:p-8 custom-scrollbar space-y-8">
                       
-                      {/* KPIs Cards */}
-                      <div className="grid grid-cols-3 gap-3 md:gap-6">
+                      {/* KPIs Cards - Responsive Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
                           <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm flex flex-col items-center justify-center text-center">
                               <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2 text-lg">💰</div>
                               <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">Total Gasto</p>
@@ -247,33 +257,33 @@ export const LojistaClientes = () => {
                               <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">Pedidos</p>
                               <p className="text-sm md:text-lg font-black text-gray-900">{selectedClient.orderCount}</p>
                           </div>
-                          <div className="bg-white p-4 rounded-2xl border border-purple-100 shadow-sm flex flex-col items-center justify-center text-center">
+                          <div className="col-span-2 md:col-span-1 bg-white p-4 rounded-2xl border border-purple-100 shadow-sm flex flex-col items-center justify-center text-center">
                               <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-2 text-lg">🎫</div>
                               <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">Ticket Médio</p>
                               <p className="text-sm md:text-lg font-black text-gray-900">{formatCurrency(calculateTicketMedio(selectedClient.totalSpent, selectedClient.orderCount))}</p>
                           </div>
                       </div>
 
-                      {/* Análise de Engajamento (NOVA SEÇÃO) */}
+                      {/* Análise de Engajamento */}
                       <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
                           <h3 className="text-xs font-black text-gray-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                               📊 Análise de Engajamento
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
-                              <div className="text-center pb-4 md:pb-0">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                              <div className="text-center pb-4 sm:pb-0">
                                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status Fidelidade</p>
                                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${engagement.statusColor}`}>
                                       {engagement.status}
                                   </span>
                               </div>
-                              <div className="text-center py-4 md:py-0">
+                              <div className="text-center py-4 sm:py-0">
                                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Ciclo de Compra</p>
                                   <p className="text-xl font-black text-gray-800">
                                       {engagement.avgDays === 0 ? '---' : `${engagement.avgDays} dias`}
                                   </p>
                                   <p className="text-[9px] text-gray-400 font-bold">Média entre pedidos</p>
                               </div>
-                              <div className="text-center pt-4 md:pt-0">
+                              <div className="text-center pt-4 sm:pt-0">
                                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Última Visita</p>
                                   <p className="text-xl font-black text-gray-800">{engagement.daysSinceLast} dias</p>
                                   <p className="text-[9px] text-gray-400 font-bold">atrás</p>
@@ -289,23 +299,23 @@ export const LojistaClientes = () => {
                           <div className="grid grid-cols-2 gap-4">
                               <button 
                                 onClick={() => handleSendPromo('discount')}
-                                className="bg-emerald-600 text-white p-4 rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-500 transition-all flex flex-col items-center gap-2 text-center active:scale-95"
+                                className="bg-emerald-600 text-white p-4 rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-500 transition-all flex flex-col items-center gap-2 text-center active:scale-95 group"
                               >
-                                  <span className="text-2xl">🏷️</span>
-                                  <span className="font-black text-xs uppercase tracking-wide">Enviar Cupom 10%</span>
+                                  <span className="text-2xl group-hover:scale-110 transition-transform">🏷️</span>
+                                  <span className="font-black text-[10px] md:text-xs uppercase tracking-wide leading-tight">Cupom 10% OFF</span>
                               </button>
                               <button 
                                 onClick={() => handleSendPromo('gift')}
-                                className="bg-gray-900 text-white p-4 rounded-2xl shadow-xl hover:bg-gray-800 transition-all flex flex-col items-center gap-2 text-center active:scale-95"
+                                className="bg-gray-900 text-white p-4 rounded-2xl shadow-xl hover:bg-gray-800 transition-all flex flex-col items-center gap-2 text-center active:scale-95 group"
                               >
-                                  <span className="text-2xl">🎁</span>
-                                  <span className="font-black text-xs uppercase tracking-wide">Oferecer Brinde</span>
+                                  <span className="text-2xl group-hover:scale-110 transition-transform">🎁</span>
+                                  <span className="font-black text-[10px] md:text-xs uppercase tracking-wide leading-tight">Oferecer Brinde</span>
                               </button>
                           </div>
                       </div>
 
                       {/* Histórico */}
-                      <div>
+                      <div className="pb-10">
                           <h3 className="text-xs font-black text-gray-800 uppercase tracking-widest mb-4 flex items-center gap-2">
                               📜 Histórico Recente
                           </h3>
@@ -334,7 +344,8 @@ export const LojistaClientes = () => {
                       </div>
                   </div>
                   
-                  <div className="p-4 md:p-6 border-t border-gray-100 bg-white shrink-0">
+                  {/* Footer Mobile Only */}
+                  <div className="p-4 bg-white border-t border-gray-100 md:hidden shrink-0">
                       <button onClick={() => setSelectedClient(null)} className="w-full bg-gray-100 text-gray-600 py-4 rounded-2xl font-black text-xs uppercase hover:bg-gray-200 transition-all">Fechar Detalhes</button>
                   </div>
               </div>
