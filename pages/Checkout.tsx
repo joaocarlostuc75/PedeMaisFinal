@@ -13,6 +13,7 @@ export const Checkout = () => {
 
   const [tipo, setTipo] = useState<'entrega' | 'retirada'>('entrega');
   const [pagamento, setPagamento] = useState('PIX');
+  const [troco, setTroco] = useState('');
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [endereco, setEndereco] = useState('');
@@ -46,6 +47,20 @@ export const Checkout = () => {
     if (!telefone) return alert('Por favor, informe seu telefone/whatsapp.');
     if (tipo === 'entrega' && !endereco) return alert('Por favor, informe o endereço.');
 
+    // Lógica de Pagamento e Troco
+    let detalhePagamento = pagamento;
+    if (pagamento === 'Dinheiro') {
+        if (troco) {
+            const valorTroco = parseFloat(troco.replace(',', '.'));
+            if (isNaN(valorTroco) || valorTroco < total) {
+                return alert('O valor para troco deve ser maior que o total do pedido.');
+            }
+            detalhePagamento = `Dinheiro (Troco para ${formatCurrency(valorTroco)})`;
+        } else {
+            detalhePagamento = 'Dinheiro (Sem troco)';
+        }
+    }
+
     // 1. Criar o objeto do Pedido
     const novoPedidoId = Math.random().toString(36).substr(2, 9);
     const novoPedido: Entrega = {
@@ -55,7 +70,7 @@ export const Checkout = () => {
         clienteTelefone: telefone, // Salva o telefone para CRM
         endereco: tipo === 'entrega' ? endereco : 'Retirada na Loja',
         tipoEntrega: tipo,
-        metodoPagamento: pagamento,
+        metodoPagamento: detalhePagamento,
         valor: total,
         status: 'pendente',
         data: new Date().toISOString(),
@@ -80,7 +95,7 @@ export const Checkout = () => {
     msg += `📱 *Tel:* ${telefone}\n`;
     msg += `🚚 *Tipo:* ${tipo.toUpperCase()}\n`;
     if (tipo === 'entrega') msg += `📍 *Endereço:* ${endereco}\n`;
-    msg += `💰 *Pagamento:* ${pagamento}\n`;
+    msg += `💰 *Pagamento:* ${detalhePagamento}\n`;
     msg += `--------------------------------\n`;
     msg += `*ITENS DO PEDIDO:*\n`;
     items.forEach(i => {
@@ -214,11 +229,30 @@ export const Checkout = () => {
 
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Forma de Pagamento</label>
-                     <select value={pagamento} onChange={e => setPagamento(e.target.value)} className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none appearance-none transition-all">
+                     <select value={pagamento} onChange={e => { setPagamento(e.target.value); setTroco(''); }} className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none appearance-none transition-all cursor-pointer">
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
                         <option value="PIX">PIX</option>
                         <option value="Dinheiro">Dinheiro</option>
                      </select>
+                     
+                     {/* Campo de Troco Condicional */}
+                     {pagamento === 'Dinheiro' && (
+                        <div className="mt-3 bg-gray-50 p-4 rounded-xl border border-gray-200 animate-fade-in">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Troco para quanto?</label>
+                           <div className="relative">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">R$</span>
+                              <input 
+                                 type="number" 
+                                 value={troco}
+                                 onChange={e => setTroco(e.target.value)}
+                                 className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                 placeholder="0,00"
+                              />
+                           </div>
+                           <p className="text-[10px] text-gray-400 font-bold mt-2 text-right">Deixe vazio se for valor exato</p>
+                        </div>
+                     )}
+
                      {(pagamento === 'PIX' || pagamento === 'Cartão de Crédito') && (
                         <p className="text-[10px] font-bold text-gray-500 mt-2 flex items-center gap-1 bg-gray-50 p-3 rounded-lg border border-gray-100">
                            <span className="text-emerald-500 text-lg">ℹ️</span> 

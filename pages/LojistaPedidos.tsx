@@ -36,6 +36,30 @@ export const LojistaPedidos = () => {
     }
   };
 
+  const handleMarkAsPaid = (e: React.MouseEvent, order: Entrega) => {
+    e.stopPropagation();
+    
+    let nextStatus: Entrega['status'] | undefined;
+    if (order.status === 'pendente') nextStatus = 'preparando';
+    else if (order.status === 'preparando') nextStatus = 'pronto';
+    
+    if (!nextStatus) return;
+
+    // Atualiza pagamento e status
+    const currentPayment = order.metodoPagamento || 'Não informado';
+    // Evita duplicar "(Pago)" se já tiver
+    const newPayment = currentPayment.toLowerCase().includes('(pago)') 
+        ? currentPayment 
+        : `${currentPayment} (Pago)`;
+
+    updateEntrega(order.id, {
+        status: nextStatus,
+        metodoPagamento: newPayment
+    });
+    
+    addNotification('success', `Pedido #${order.id.slice(-4)} marcado como pago e movido para ${nextStatus === 'preparando' ? 'Cozinha' : 'Pronto'}!`);
+  };
+
   const imprimirComanda = (pedido: Entrega) => {
     const loja = lojas.find(l => l.id === pedido.lojaId);
     const janela = window.open('', '', 'width=350,height=600');
@@ -308,21 +332,39 @@ export const LojistaPedidos = () => {
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Pagamento</span>
-                                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase">{order.metodoPagamento || 'Não Inf.'}</span>
+                                                <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${order.metodoPagamento?.toLowerCase().includes('pago') ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-600'}`}>
+                                                    {order.metodoPagamento || 'Não Inf.'}
+                                                </span>
                                             </div>
                                         </div>
 
                                         {/* Botões de Ação Contextuais */}
                                         {col.status === 'pendente' && (
-                                            <div className="flex gap-2">
-                                                <button onClick={() => atualizarStatusPedido(order.id, 'cancelada')} className="flex-1 py-3 bg-white border border-gray-200 text-red-500 rounded-xl font-bold text-xs uppercase hover:bg-red-50 transition-colors">Rejeitar</button>
-                                                <button onClick={() => atualizarStatusPedido(order.id, 'preparando')} className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase shadow-md shadow-blue-200 hover:bg-blue-500 transition-colors">Aceitar</button>
+                                            <div className="flex flex-col gap-2">
+                                                <button 
+                                                    onClick={(e) => handleMarkAsPaid(e, order)}
+                                                    className="w-full py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    💲 Marcar como Pago & Aceitar
+                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => atualizarStatusPedido(order.id, 'cancelada')} className="flex-1 py-3 bg-white border border-gray-200 text-red-500 rounded-xl font-bold text-xs uppercase hover:bg-red-50 transition-colors">Rejeitar</button>
+                                                    <button onClick={() => atualizarStatusPedido(order.id, 'preparando')} className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase shadow-md shadow-blue-200 hover:bg-blue-500 transition-colors">Aceitar</button>
+                                                </div>
                                             </div>
                                         )}
                                         {col.status === 'preparando' && (
-                                            <button onClick={() => atualizarStatusPedido(order.id, 'pronto')} className="w-full py-3 bg-orange-500 text-white rounded-xl font-black text-xs uppercase shadow-md shadow-orange-200 hover:bg-orange-400 transition-colors flex items-center justify-center gap-2">
-                                                <span>✅</span> {order.tipoEntrega === 'retirada' ? 'Pronto p/ Retirada' : 'Pronto p/ Entrega'}
-                                            </button>
+                                            <div className="flex flex-col gap-2">
+                                                <button 
+                                                    onClick={(e) => handleMarkAsPaid(e, order)}
+                                                    className="w-full py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    💲 Marcar como Pago & Pronto
+                                                </button>
+                                                <button onClick={() => atualizarStatusPedido(order.id, 'pronto')} className="w-full py-3 bg-orange-500 text-white rounded-xl font-black text-xs uppercase shadow-md shadow-orange-200 hover:bg-orange-400 transition-colors flex items-center justify-center gap-2">
+                                                    <span>✅</span> {order.tipoEntrega === 'retirada' ? 'Pronto p/ Retirada' : 'Pronto p/ Entrega'}
+                                                </button>
+                                            </div>
                                         )}
                                         {col.status === 'pronto' && order.tipoEntrega !== 'retirada' && (
                                             <button onClick={() => setSelectingCourierForOrder(order.id)} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-black text-xs uppercase shadow-md shadow-emerald-200 hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2">
