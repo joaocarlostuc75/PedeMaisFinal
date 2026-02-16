@@ -77,6 +77,55 @@ export const LojistaClientes = () => {
       return count > 0 ? total / count : 0;
   };
 
+  // Função para calcular métricas de engajamento
+  const calculateEngagement = (orders: any[]) => {
+    if (!orders || orders.length === 0) return { avgDays: 0, status: 'Novo', daysSinceLast: 0 };
+
+    const sortedDates = orders
+        .map(o => new Date(o.data).getTime())
+        .sort((a, b) => a - b);
+
+    const first = sortedDates[0];
+    const last = sortedDates[sortedDates.length - 1];
+    
+    // Cálculo de dias desde a última compra
+    const now = new Date().getTime();
+    const daysSinceLast = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+
+    // Cálculo da média de dias entre compras (Ciclo)
+    let avgDays = 0;
+    if (orders.length > 1) {
+        const totalDaysRange = (last - first) / (1000 * 60 * 60 * 24);
+        avgDays = Math.round(totalDaysRange / (orders.length - 1));
+    }
+
+    // Definição de Status
+    let status = 'Regular';
+    let statusColor = 'bg-blue-100 text-blue-700';
+
+    if (orders.length === 1) {
+        status = 'Novo Cliente';
+        statusColor = 'bg-emerald-100 text-emerald-700';
+    } else if (daysSinceLast > 45) {
+        status = 'Em Risco ⚠️';
+        statusColor = 'bg-red-100 text-red-700';
+    } else if (daysSinceLast > 90) {
+        status = 'Inativo 💤';
+        statusColor = 'bg-gray-100 text-gray-500';
+    } else if (avgDays < 10 && orders.length > 3) {
+        status = 'Super Fã 🔥';
+        statusColor = 'bg-purple-100 text-purple-700';
+    } else if (avgDays < 30) {
+        status = 'Fiel ✅';
+        statusColor = 'bg-emerald-100 text-emerald-700';
+    }
+
+    return { avgDays, status, statusColor, daysSinceLast };
+  };
+
+  // Calcula engajamento apenas se houver cliente selecionado
+  const engagement = selectedClient ? calculateEngagement(selectedClient.orders) : null;
+
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 animate-fade-in pb-20 h-[calc(100vh-80px)] flex flex-col">
       <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shrink-0">
@@ -154,7 +203,7 @@ export const LojistaClientes = () => {
       </div>
 
       {/* Modal de Detalhes do Cliente (Redesign) */}
-      {selectedClient && (
+      {selectedClient && engagement && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-0 md:p-4 animate-fade-in" onClick={() => setSelectedClient(null)}>
               <div className="bg-white w-full md:w-[800px] h-full md:h-auto md:max-h-[90vh] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                   
@@ -202,6 +251,33 @@ export const LojistaClientes = () => {
                               <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-2 text-lg">🎫</div>
                               <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">Ticket Médio</p>
                               <p className="text-sm md:text-lg font-black text-gray-900">{formatCurrency(calculateTicketMedio(selectedClient.totalSpent, selectedClient.orderCount))}</p>
+                          </div>
+                      </div>
+
+                      {/* Análise de Engajamento (NOVA SEÇÃO) */}
+                      <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                          <h3 className="text-xs font-black text-gray-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                              📊 Análise de Engajamento
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                              <div className="text-center pb-4 md:pb-0">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status Fidelidade</p>
+                                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${engagement.statusColor}`}>
+                                      {engagement.status}
+                                  </span>
+                              </div>
+                              <div className="text-center py-4 md:py-0">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Ciclo de Compra</p>
+                                  <p className="text-xl font-black text-gray-800">
+                                      {engagement.avgDays === 0 ? '---' : `${engagement.avgDays} dias`}
+                                  </p>
+                                  <p className="text-[9px] text-gray-400 font-bold">Média entre pedidos</p>
+                              </div>
+                              <div className="text-center pt-4 md:pt-0">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Última Visita</p>
+                                  <p className="text-xl font-black text-gray-800">{engagement.daysSinceLast} dias</p>
+                                  <p className="text-[9px] text-gray-400 font-bold">atrás</p>
+                              </div>
                           </div>
                       </div>
 

@@ -1,17 +1,20 @@
 
 import React from 'react';
 import { useStore } from '../store';
-import { formatCurrency } from '../utils';
+import { formatCurrency, formatDate } from '../utils';
 import { useNavigate } from 'react-router-dom';
 
 export const LojistaAssinatura = () => {
   const navigate = useNavigate();
-  const { planos, lojas, updatePlanoLoja, addNotification, user } = useStore();
+  const { planos, lojas, updatePlanoLoja, addNotification, user, faturas } = useStore();
   
   // Identifica a loja atual
   const currentLojaId = user?.lojaId || 'l1';
   const loja = lojas.find(l => l.id === currentLojaId) || lojas[0];
   const meuPlano = planos.find(p => p.id === loja.planoId);
+
+  // Filtra faturas da loja atual
+  const minhasFaturas = faturas ? faturas.filter(f => f.lojaId === currentLojaId) : [];
 
   const handleChangePlan = (planoId: string, nomePlano: string) => {
       if (window.confirm(`Deseja alterar seu plano para ${nomePlano}? O novo valor será cobrado na próxima fatura.`)) {
@@ -126,6 +129,45 @@ export const LojistaAssinatura = () => {
             })}
          </div>
       </section>
+
+      {/* Histórico de Cobrança (Condicional) - Só aparece se houver faturas */}
+      {minhasFaturas.length > 0 && (
+        <section className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+            <h3 className="text-xl font-black text-gray-900 mb-6 tracking-tight">Histórico de Cobrança</h3>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                        <tr>
+                            <th className="p-4">Mês de Referência</th>
+                            <th className="p-4">Data Vencimento</th>
+                            <th className="p-4">Valor</th>
+                            <th className="p-4">Status</th>
+                            <th className="p-4 text-right">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {minhasFaturas.map(fat => (
+                            <tr key={fat.id} className="hover:bg-gray-50 transition-colors">
+                                <td className="p-4 text-sm font-bold text-gray-700">{fat.mesReferencia}</td>
+                                <td className="p-4 text-xs text-gray-500">{fat.dataVencimento ? formatDate(fat.dataVencimento) : '-'}</td>
+                                <td className="p-4 font-black text-gray-900">{formatCurrency(fat.valor)}</td>
+                                <td className="p-4">
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${fat.status === 'Pago' ? 'bg-emerald-100 text-emerald-700' : fat.status === 'Atrasado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {fat.status}
+                                    </span>
+                                </td>
+                                <td className="p-4 text-right">
+                                    <button className="text-emerald-600 text-[10px] font-black uppercase hover:underline">
+                                        {fat.status === 'Pago' ? 'Ver Recibo' : 'Pagar Agora'}
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+      )}
 
       {/* Help Card */}
       <div className="bg-[#eff7f1] p-10 rounded-[3rem] border border-emerald-100 flex flex-col md:flex-row items-center justify-between gap-8">

@@ -60,9 +60,11 @@ export interface Funcionario {
 
 export interface Fatura {
   id: string;
+  lojaId: string;
   mesReferencia: string;
   valor: number;
   status: 'Pago' | 'Pendente' | 'Atrasado';
+  dataVencimento?: string;
 }
 
 export interface MeioPagamento {
