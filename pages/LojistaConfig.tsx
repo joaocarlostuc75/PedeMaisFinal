@@ -6,7 +6,7 @@ import { convertFileToBase64 } from '../utils';
 
 export const LojistaConfig = () => {
   const navigate = useNavigate();
-  const { lojas, updateLoja, addNotification, user } = useStore();
+  const { lojas, updateLoja, addNotification, user, systemSettings } = useStore();
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
   
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -181,12 +181,9 @@ export const LojistaConfig = () => {
                       <select 
                         value={form.categoria} onChange={e => setForm({...form, categoria: e.target.value})}
                         className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none appearance-none transition-all">
-                         <option>Mercado & Conveniência</option>
-                         <option>Restaurante</option>
-                         <option>Padaria</option>
-                         <option>Farmácia</option>
-                         <option>Lanches</option>
-                         <option>Outros</option>
+                         {(systemSettings.storeCategories || ['Restaurante', 'Mercado', 'Outros']).map(cat => (
+                             <option key={cat} value={cat}>{cat}</option>
+                         ))}
                       </select>
                    </div>
                 </div>

@@ -11,6 +11,7 @@ export const SuperAdminConfig = () => {
       email: user?.email || '',
       avatar: user?.avatar || ''
   });
+  const [newCategory, setNewCategory] = useState('');
   
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,6 +53,23 @@ export const SuperAdminConfig = () => {
         addNotification('error', 'Erro ao processar imagem.');
       }
     }
+  };
+
+  const addStoreCategory = () => {
+      if (!newCategory.trim()) return;
+      const cats = form.storeCategories || [];
+      if (cats.includes(newCategory)) {
+          addNotification('error', 'Categoria já existe.');
+          return;
+      }
+      const updatedCats = [...cats, newCategory.trim()];
+      setForm({...form, storeCategories: updatedCats});
+      setNewCategory('');
+  };
+
+  const removeStoreCategory = (cat: string) => {
+      const updatedCats = (form.storeCategories || []).filter(c => c !== cat);
+      setForm({...form, storeCategories: updatedCats});
   };
 
   return (
@@ -149,6 +167,36 @@ export const SuperAdminConfig = () => {
                     className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
                  />
               </div>
+           </div>
+        </section>
+
+        {/* Gestão de Categorias de Lojas */}
+        <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+           <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+              <span className="text-purple-500">🏷️</span> Categorias de Estabelecimento
+           </h3>
+           <div className="space-y-4">
+               <div className="flex gap-4">
+                   <input 
+                        type="text"
+                        placeholder="Nova categoria (ex: Floricultura)"
+                        value={newCategory}
+                        onChange={e => setNewCategory(e.target.value)}
+                        className="flex-1 bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
+                        onKeyDown={e => e.key === 'Enter' && addStoreCategory()}
+                   />
+                   <button onClick={addStoreCategory} className="bg-purple-600 text-white px-6 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-purple-500 transition-all">
+                       Adicionar
+                   </button>
+               </div>
+               <div className="flex flex-wrap gap-2">
+                   {(form.storeCategories || []).map((cat, idx) => (
+                       <div key={idx} className="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 border border-purple-100">
+                           {cat}
+                           <button onClick={() => removeStoreCategory(cat)} className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs text-purple-800 hover:bg-purple-300 transition-colors">✕</button>
+                       </div>
+                   ))}
+               </div>
            </div>
         </section>
 

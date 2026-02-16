@@ -141,6 +141,7 @@ export interface Loja {
   lojaAbertaManual?: boolean;
   horarios?: DiaFuncionamento[];
   feriados?: Feriado[];
+  categoriasCardapio?: string[]; // Novas categorias personalizadas do lojista
   stats?: {
     carrinhos: number;
     finalizados: number;
@@ -207,6 +208,7 @@ export interface SystemSettings {
   globalAnnouncement: string;
   supportPhone: string;
   pixKey: string;
+  storeCategories: string[]; // Novas categorias globais de estabelecimentos
 }
 
 export interface CartItem {

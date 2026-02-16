@@ -38,6 +38,7 @@ const LOJA_DEMO_DEFAULT: Loja = {
   lojaAbertaManual: true,
   horarios: HORARIOS_PADRAO,
   feriados: [],
+  categoriasCardapio: ['Burgers Artesanais', 'Pizzas Premium', 'Bebidas', 'Sobremesas', 'Combos', 'Entradas'],
   stats: { carrinhos: 1200, finalizados: 850, mrr: 199.90 } 
 };
 
@@ -199,7 +200,8 @@ export const useStore = create<AppState>()(
         allowNewRegistrations: true,
         globalAnnouncement: '',
         supportPhone: '5511999999999',
-        pixKey: 'financeiro@pedemais.app'
+        pixKey: 'financeiro@pedemais.app',
+        storeCategories: ['Restaurante', 'Mercado & Conveniência', 'Padaria', 'Farmácia', 'Lanches', 'Pet Shop', 'Outros']
       },
       planos: [
         { id: '1', nome: 'Básico', preco: 99.90, limitePedidos: 500, limiteEntregadores: 5, recursos: ['WhatsApp Pay', 'Cardápio Digital', 'Suporte por e-mail'], cor: 'bg-gray-100' },

@@ -5,18 +5,27 @@ import { formatCurrency, convertFileToBase64 } from '../utils';
 import { Produto } from '../types';
 
 export const LojistaProdutos = () => {
-  const { produtos, addProduto, updateProduto, deleteProduto, addNotification, user } = useStore();
+  const { produtos, addProduto, updateProduto, deleteProduto, addNotification, user, updateLoja, lojas } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Partial<Produto> | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Filtra apenas os produtos da loja atual
+  // Filtra apenas os produtos e a loja atual
   const currentLojaId = user?.lojaId || 'l1';
   const meusProdutos = produtos.filter(p => p.lojaId === currentLojaId);
+  const minhaLoja = lojas.find(l => l.id === currentLojaId);
+  
+  // Categorias: Default se não houver personalizadas
+  const categoriasDisponiveis = minhaLoja?.categoriasCardapio && minhaLoja.categoriasCardapio.length > 0
+    ? minhaLoja.categoriasCardapio
+    : ['Geral', 'Lanches', 'Bebidas', 'Sobremesas'];
 
   const initialProduto: Partial<Produto> = {
     nome: '',
-    categoria: 'Geral',
+    categoria: categoriasDisponiveis[0],
     descricao: '',
     preco: 0,
     imagem: '',
@@ -84,6 +93,26 @@ export const LojistaProdutos = () => {
     }
   };
 
+  // Funções de Gestão de Categoria
+  const handleAddCategory = () => {
+      if (!newCategoryName.trim()) return;
+      if (categoriasDisponiveis.includes(newCategoryName)) {
+          addNotification('error', 'Categoria já existe.');
+          return;
+      }
+      const newCats = [...categoriasDisponiveis, newCategoryName.trim()];
+      updateLoja(currentLojaId, { categoriasCardapio: newCats });
+      setNewCategoryName('');
+      addNotification('success', 'Categoria adicionada!');
+  };
+
+  const handleDeleteCategory = (cat: string) => {
+      if (window.confirm(`Excluir a categoria "${cat}"?`)) {
+          const newCats = categoriasDisponiveis.filter(c => c !== cat);
+          updateLoja(currentLojaId, { categoriasCardapio: newCats });
+      }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
@@ -91,12 +120,20 @@ export const LojistaProdutos = () => {
             <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Cardápio & Produtos</h1>
             <p className="text-gray-500 font-medium mt-1">Gerencie o que aparece na sua loja virtual.</p>
         </div>
-        <button 
-            onClick={() => handleOpenModal()}
-            className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:scale-105 transition-all flex items-center gap-2"
-        >
-            <span>+</span> NOVO ITEM
-        </button>
+        <div className="flex gap-3">
+            <button 
+                onClick={() => setIsCategoryModalOpen(true)}
+                className="bg-white border border-gray-200 text-gray-700 px-6 py-4 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
+            >
+                <span>🏷️</span> Categorias
+            </button>
+            <button 
+                onClick={() => handleOpenModal()}
+                className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+            >
+                <span>+</span> NOVO ITEM
+            </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -119,6 +156,7 @@ export const LojistaProdutos = () => {
                         <h3 className="font-black text-gray-800 text-lg leading-tight">{p.nome}</h3>
                         <p className="font-black text-emerald-600 whitespace-nowrap ml-2">{formatCurrency(p.preco)}</p>
                     </div>
+                    <span className="inline-block px-2 py-1 bg-gray-100 text-gray-500 text-[9px] font-bold uppercase rounded mb-2">{p.categoria}</span>
                     <p className="text-xs text-gray-500 line-clamp-2 mb-4">{p.descricao}</p>
                 </div>
                 
@@ -140,7 +178,40 @@ export const LojistaProdutos = () => {
         )}
       </div>
 
-      {/* Modal de Edição/Criação */}
+      {/* Modal de Gestão de Categorias */}
+      {isCategoryModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in" onClick={() => setIsCategoryModalOpen(false)}>
+              <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-black text-gray-900">Categorias do Cardápio</h3>
+                      <button onClick={() => setIsCategoryModalOpen(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold hover:bg-gray-200">✕</button>
+                  </div>
+                  
+                  <div className="flex gap-2 mb-6">
+                      <input 
+                          type="text" 
+                          placeholder="Nova categoria..." 
+                          className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-gray-700 outline-none focus:ring-2 focus:ring-emerald-500"
+                          value={newCategoryName}
+                          onChange={e => setNewCategoryName(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
+                      />
+                      <button onClick={handleAddCategory} className="bg-emerald-600 text-white px-4 rounded-xl font-bold hover:bg-emerald-500">+</button>
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-2">
+                      {categoriasDisponiveis.map((cat, idx) => (
+                          <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl group hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100">
+                              <span className="font-bold text-gray-700 text-sm">{cat}</span>
+                              <button onClick={() => handleDeleteCategory(cat)} className="text-gray-400 hover:text-red-500 p-1">🗑️</button>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Modal de Edição/Criação de Produto */}
       {isModalOpen && editingProduto && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -221,12 +292,9 @@ export const LojistaProdutos = () => {
                                     onChange={e => setEditingProduto({...editingProduto, categoria: e.target.value})}
                                     className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
                                 >
-                                    <option>Geral</option>
-                                    <option>Lanches</option>
-                                    <option>Bebidas</option>
-                                    <option>Sobremesas</option>
-                                    <option>Pizzas</option>
-                                    <option>Combos</option>
+                                    {categoriasDisponiveis.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
