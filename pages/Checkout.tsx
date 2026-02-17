@@ -33,6 +33,10 @@ export const Checkout = () => {
   const taxa = tipo === 'entrega' ? (loja.taxaEntrega || 5.50) : 0;
   const total = subtotal + taxa;
 
+  // Cálculos de Troco
+  const valorEntregue = troco ? parseFloat(troco.replace(',', '.')) : 0;
+  const valorTroco = valorEntregue - total;
+
   const updateQtd = (id: string, delta: number) => {
     updateCartQuantity(id, delta);
   };
@@ -51,11 +55,10 @@ export const Checkout = () => {
     let detalhePagamento = pagamento;
     if (pagamento === 'Dinheiro') {
         if (troco) {
-            const valorTroco = parseFloat(troco.replace(',', '.'));
-            if (isNaN(valorTroco) || valorTroco < total) {
+            if (isNaN(valorEntregue) || valorEntregue < total) {
                 return alert('O valor para troco deve ser maior que o total do pedido.');
             }
-            detalhePagamento = `Dinheiro (Troco para ${formatCurrency(valorTroco)})`;
+            detalhePagamento = `Dinheiro (Troco para ${formatCurrency(valorEntregue)})`;
         } else {
             detalhePagamento = 'Dinheiro (Sem troco)';
         }
@@ -105,6 +108,11 @@ export const Checkout = () => {
     msg += `Subtotal: ${formatCurrency(subtotal)}\n`;
     msg += `Taxa de Entrega: ${formatCurrency(taxa)}\n`;
     msg += `*TOTAL: ${formatCurrency(total)}*\n`;
+    
+    if (pagamento === 'Dinheiro' && valorTroco > 0) {
+        msg += `*Troco: ${formatCurrency(valorTroco)}*\n`;
+    }
+
     msg += `\n🔗 *Acompanhe seu pedido:* ${window.location.origin}/#/rastreio/${novoPedido.id}`;
     
     // Adiciona nota sobre pagamento se não for dinheiro
@@ -280,6 +288,21 @@ export const Checkout = () => {
                      <span className="text-2xl font-black text-gray-900 tracking-tighter">Total</span>
                      <span className="text-3xl font-black text-[#2d7a3a] tracking-tighter">{formatCurrency(total)}</span>
                   </div>
+
+                  {/* Exibição do Troco no Resumo */}
+                  {pagamento === 'Dinheiro' && valorEntregue > 0 && (
+                      <div className={`mt-4 p-4 rounded-xl border flex justify-between items-center animate-fade-in ${valorTroco >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                          <div>
+                              <p className={`text-[10px] font-black uppercase tracking-widest ${valorTroco >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                  {valorTroco >= 0 ? 'Troco a receber' : 'Valor insuficiente'}
+                              </p>
+                              {valorTroco >= 0 && <p className="text-[10px] font-bold text-emerald-500/80">Levar para {formatCurrency(valorEntregue)}</p>}
+                          </div>
+                          <span className={`text-xl font-black ${valorTroco >= 0 ? 'text-emerald-700' : 'text-red-500'}`}>
+                              {valorTroco >= 0 ? formatCurrency(valorTroco) : 'Faltam ' + formatCurrency(Math.abs(valorTroco))}
+                          </span>
+                      </div>
+                  )}
                </div>
 
                <button 
