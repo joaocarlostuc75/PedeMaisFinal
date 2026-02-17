@@ -88,7 +88,7 @@ export const Onboarding = () => {
   return (
     <div className="min-h-screen bg-[#f1f4f9] flex flex-col font-sans">
       {/* Header Stepper */}
-      <header className="bg-white px-4 md:px-8 py-4 md:py-6 flex items-center justify-between border-b border-gray-100 sticky top-0 z-50">
+      <header className="bg-white px-4 md:px-8 py-4 md:py-6 flex items-center justify-between border-b border-gray-100 sticky top-0 z-50 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-black text-lg md:text-xl">M</div>
           <span className="text-lg md:text-xl font-black text-gray-900 tracking-tighter">Pede Mais</span>
@@ -125,7 +125,7 @@ export const Onboarding = () => {
         <button onClick={() => navigate('/')} className="text-[10px] md:text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest">Sair</button>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-12 relative overflow-hidden pb-32">
+      <main className="flex-1 flex flex-col items-center justify-start md:justify-center p-4 md:p-12 relative w-full pb-48 overflow-y-auto">
         {/* Step 1: Dados Básicos */}
         {step === 1 && (
           <div className="w-full max-w-3xl bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden animate-fade-in">
