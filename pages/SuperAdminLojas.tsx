@@ -65,7 +65,8 @@ export const SuperAdminLojas = () => {
   };
 
   const handleCreateLoja = () => {
-      if (!newLoja.nome || !newLoja.email || !newLoja.planoId) {
+      // Validação reforçada com trim()
+      if (!newLoja.nome.trim() || !newLoja.email.trim() || !newLoja.planoId) {
           addNotification('error', 'Preencha todos os campos obrigatórios.');
           return;
       }
@@ -75,10 +76,10 @@ export const SuperAdminLojas = () => {
 
       addLoja({
           id: `loja-${id}`,
-          nome: newLoja.nome,
+          nome: newLoja.nome.trim(),
           slug: slug,
           planoId: newLoja.planoId,
-          email: newLoja.email,
+          email: newLoja.email.trim(),
           statusAssinatura: 'ativo',
           proximoVencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
           whatsapp: '',

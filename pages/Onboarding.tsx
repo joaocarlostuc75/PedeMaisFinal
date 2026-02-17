@@ -8,7 +8,7 @@ type Step = 1 | 2 | 3;
 
 export const Onboarding = () => {
   const navigate = useNavigate();
-  const { setUser, addLoja, planos } = useStore();
+  const { setUser, addLoja, planos, addNotification } = useStore();
   const [step, setStep] = useState<Step>(1);
   const [selectedPlan, setSelectedPlan] = useState(planos[0]?.id || '1'); 
   
@@ -30,7 +30,15 @@ export const Onboarding = () => {
   const slug = form.nomeLoja.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
   const handleNext = () => {
-    if (step < 3) {
+    if (step === 1) {
+        // VALIDAÇÃO RIGOROSA DO PASSO 1
+        if (!form.responsavel.trim() || !form.whatsapp.trim() || !form.email.trim() || !form.nomeLoja.trim() || !form.endereco.trim()) {
+            addNotification('error', 'Por favor, preencha todos os campos obrigatórios (Responsável, WhatsApp, E-mail, Nome da Loja e Endereço).');
+            return;
+        }
+        setStep((step + 1) as Step);
+    } else if (step === 2) {
+        // Validação opcional para o passo 2 se desejar forçar logo/banner
         setStep((step + 1) as Step);
     } else {
         // FINALIZAR CADASTRO - CRIAÇÃO REAL DA LOJA
@@ -38,10 +46,10 @@ export const Onboarding = () => {
         
         addLoja({
             id: newLojaId,
-            nome: form.nomeLoja || 'Nova Loja',
+            nome: form.nomeLoja.trim() || 'Nova Loja',
             slug: slug || `loja-${newLojaId}`,
             planoId: selectedPlan,
-            // AQUI ESTÁ A MUDANÇA: Status pendente para bloquear acesso e dados vazios
+            // Status pendente para bloquear acesso e dados vazios
             statusAssinatura: 'pendente',
             proximoVencimento: new Date().toISOString(), // Vencido/Pendente de ativação
             whatsapp: form.whatsapp,
@@ -61,7 +69,7 @@ export const Onboarding = () => {
         // Define o usuário como LOJISTA logado vinculado a esta nova loja
         setUser({
             id: `user-${Date.now()}`,
-            nome: form.responsavel || 'Lojista',
+            nome: form.responsavel.trim() || 'Lojista',
             email: form.email || 'lojista@pedemais.app',
             role: 'lojista',
             lojaId: newLojaId
@@ -135,17 +143,17 @@ export const Onboarding = () => {
               
               <div className="grid md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-10">
                 <div className="space-y-2">
-                  <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Nome do Responsável</label>
+                  <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Nome do Responsável <span className="text-red-500">*</span></label>
                   <input 
-                    type="text" placeholder="Ex: João Silva" 
+                    type="text" placeholder="Ex: João Silva" required
                     className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-3 md:py-4 px-4 md:px-6 font-bold text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-sm md:text-base"
                     value={form.responsavel} onChange={e => setForm({...form, responsavel: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">WhatsApp de Contato</label>
+                  <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">WhatsApp de Contato <span className="text-red-500">*</span></label>
                   <input 
-                    type="text" placeholder="(00) 00000-0000" 
+                    type="text" placeholder="(00) 00000-0000" required
                     className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-3 md:py-4 px-4 md:px-6 font-bold text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-sm md:text-base"
                     value={form.whatsapp} onChange={e => setForm({...form, whatsapp: e.target.value})}
                   />
@@ -153,27 +161,27 @@ export const Onboarding = () => {
               </div>
 
               <div className="space-y-2 mb-6 md:mb-10">
-                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">E-mail</label>
+                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">E-mail <span className="text-red-500">*</span></label>
                 <input 
-                  type="email" placeholder="seu@email.com" 
+                  type="email" placeholder="seu@email.com" required
                   className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-3 md:py-4 px-4 md:px-6 font-bold text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-sm md:text-base"
                   value={form.email} onChange={e => setForm({...form, email: e.target.value})}
                 />
               </div>
 
               <div className="space-y-2 mb-6 md:mb-10">
-                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Nome da Loja</label>
+                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Nome da Loja <span className="text-red-500">*</span></label>
                 <input 
-                  type="text" placeholder="Ex: Burger do João" 
+                  type="text" placeholder="Ex: Burger do João" required
                   className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-3 md:py-4 px-4 md:px-6 font-bold text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-sm md:text-base"
                   value={form.nomeLoja} onChange={e => setForm({...form, nomeLoja: e.target.value})}
                 />
               </div>
 
               <div className="space-y-2 mb-6 md:mb-10">
-                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Endereço Completo</label>
+                <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">Endereço Completo <span className="text-red-500">*</span></label>
                 <input 
-                  type="text" 
+                  type="text" required
                   placeholder="Ex: Av. Brasil, 1500 - Centro, Rio de Janeiro - RJ" 
                   className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl py-3 md:py-4 px-4 md:px-6 font-bold text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-sm md:text-base"
                   value={form.endereco} 

@@ -44,6 +44,10 @@ export const LojistaConfig = () => {
   }, [minhaLoja]);
 
   const handleSave = () => {
+    if (!form.nome.trim()) {
+        addNotification('error', 'O nome da loja é obrigatório.');
+        return;
+    }
     updateLoja(minhaLoja.id, form);
     addNotification('success', 'Configurações da loja atualizadas com sucesso!');
   };
@@ -158,7 +162,7 @@ export const LojistaConfig = () => {
              </div>
              <div className="p-8 space-y-6">
                 <div className="space-y-2">
-                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Nome da Loja</label>
+                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Nome da Loja <span className="text-red-500">*</span></label>
                    <input 
                       type="text" value={form.nome} onChange={e => setForm({...form, nome: e.target.value})}
                       className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
