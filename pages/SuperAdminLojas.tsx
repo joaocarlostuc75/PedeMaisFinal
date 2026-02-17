@@ -111,6 +111,7 @@ export const SuperAdminLojas = () => {
     addNotification('info', `Acesso liberado até ${currentDate.toLocaleDateString()}`);
   };
 
+  // Aprovar: Ativa a loja e dá 30 dias (ou mês seguinte)
   const handleApproveLoja = (loja: any) => {
       const proximoMes = new Date();
       proximoMes.setMonth(proximoMes.getMonth() + 1);
@@ -120,6 +121,22 @@ export const SuperAdminLojas = () => {
           proximoVencimento: proximoMes.toISOString()
       });
       addNotification('success', `Loja ${loja.nome} aprovada e ativada!`);
+  };
+
+  // Recusar: Muda status para cancelado (bloqueia acesso, mantém registro)
+  const handleRejectLoja = (loja: any) => {
+      if(window.confirm(`Deseja recusar a solicitação da loja "${loja.nome}"? Ela ficará com status Cancelado.`)) {
+          updateLoja(loja.id, { statusAssinatura: 'cancelado' });
+          addNotification('info', `Solicitação de ${loja.nome} foi recusada.`);
+      }
+  };
+
+  // Excluir: Remove permanentemente
+  const handleDeleteLoja = (id: string, nome: string) => {
+      if(window.confirm(`ATENÇÃO: Deseja excluir PERMANENTEMENTE a loja "${nome}"? Esta ação não pode ser desfeita.`)) {
+          deleteLoja(id);
+          addNotification('info', `Loja ${nome} excluída do sistema.`);
+      }
   };
 
   return (
@@ -187,17 +204,39 @@ export const SuperAdminLojas = () => {
                         {loja.statusAssinatura}
                         </span>
                     </td>
-                    <td className="p-8 text-right flex justify-end gap-2">
-                        {loja.statusAssinatura === 'pendente' && (
-                            <button 
-                                onClick={() => handleApproveLoja(loja)} 
-                                className="bg-emerald-500 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-md shadow-emerald-200"
-                                title="Aprovar e Liberar Acesso"
-                            >
-                                ✅ Aprovar
-                            </button>
+                    <td className="p-8 text-right flex justify-end gap-2 items-center">
+                        {loja.statusAssinatura === 'pendente' ? (
+                            <>
+                                <button 
+                                    onClick={() => handleApproveLoja(loja)} 
+                                    className="bg-emerald-500 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-emerald-600 transition-all shadow-md shadow-emerald-200"
+                                    title="Aprovar e Liberar Acesso"
+                                >
+                                    ✅
+                                </button>
+                                <button 
+                                    onClick={() => handleRejectLoja(loja)} 
+                                    className="bg-amber-500 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-amber-600 transition-all shadow-md shadow-amber-200"
+                                    title="Recusar Solicitação"
+                                >
+                                    🚫
+                                </button>
+                                <button 
+                                    onClick={() => handleDeleteLoja(loja.id, loja.nome)} 
+                                    className="bg-red-500 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-600 transition-all shadow-md shadow-red-200"
+                                    title="Excluir Permanentemente"
+                                >
+                                    🗑️
+                                </button>
+                            </>
+                        ) : (
+                            <button onClick={() => setEditingLoja(loja)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-200 transition-all">⚙️</button>
                         )}
-                        <button onClick={() => setEditingLoja(loja)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-200 transition-all">⚙️</button>
+                        
+                        {/* Se não for pendente, permitir excluir pelo menu de edição ou adicionar botão extra aqui se desejar */}
+                        {loja.statusAssinatura !== 'pendente' && (
+                             <button onClick={() => handleDeleteLoja(loja.id, loja.nome)} className="p-3 bg-red-50 text-red-300 rounded-xl hover:bg-red-100 hover:text-red-500 transition-all" title="Excluir Loja">🗑️</button>
+                        )}
                     </td>
                     </tr>
                 );
