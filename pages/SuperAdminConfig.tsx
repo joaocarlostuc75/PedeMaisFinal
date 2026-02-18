@@ -73,20 +73,20 @@ export const SuperAdminConfig = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 animate-fade-in font-sans pb-20">
-      <header className="mb-12">
-        <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Configurações Globais</h1>
-        <p className="text-gray-500 font-bold mt-1">Parâmetros críticos de funcionamento da plataforma.</p>
+    <div className="max-w-5xl mx-auto p-4 md:p-8 animate-fade-in font-sans pb-24">
+      <header className="mb-8 md:mb-12">
+        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tighter">Configurações Globais</h1>
+        <p className="text-gray-500 font-bold mt-1 text-sm md:text-base">Parâmetros críticos de funcionamento da plataforma.</p>
       </header>
 
-      <div className="grid gap-8">
+      <div className="grid gap-6 md:gap-8">
         
         {/* Perfil do Administrador */}
-        <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
            <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-emerald-600">👤</span> Perfil do Administrador
            </h3>
-           <div className="flex flex-col md:flex-row gap-8 items-start">
+           <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
                <div className="flex flex-col items-center gap-4">
                    <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                    <div 
@@ -126,7 +126,7 @@ export const SuperAdminConfig = () => {
                    </div>
                    <button 
                        onClick={handleSaveProfile}
-                       className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-emerald-500 transition-all self-end"
+                       className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-emerald-500 transition-all w-full md:w-auto self-end"
                    >
                        Salvar Perfil
                    </button>
@@ -135,7 +135,7 @@ export const SuperAdminConfig = () => {
         </section>
 
         {/* Identidade do Sistema */}
-        <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
            <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-blue-500">🌍</span> Identidade & Contato
            </h3>
@@ -171,12 +171,12 @@ export const SuperAdminConfig = () => {
         </section>
 
         {/* Gestão de Categorias de Lojas */}
-        <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
            <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-purple-500">🏷️</span> Categorias de Estabelecimento
            </h3>
            <div className="space-y-4">
-               <div className="flex gap-4">
+               <div className="flex flex-col md:flex-row gap-4">
                    <input 
                         type="text"
                         placeholder="Nova categoria (ex: Floricultura)"
@@ -185,7 +185,7 @@ export const SuperAdminConfig = () => {
                         className="flex-1 bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
                         onKeyDown={e => e.key === 'Enter' && addStoreCategory()}
                    />
-                   <button onClick={addStoreCategory} className="bg-purple-600 text-white px-6 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-purple-500 transition-all">
+                   <button onClick={addStoreCategory} className="bg-purple-600 text-white px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-purple-500 transition-all">
                        Adicionar
                    </button>
                </div>
@@ -201,7 +201,7 @@ export const SuperAdminConfig = () => {
         </section>
 
         {/* Controles de Risco */}
-        <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
            <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-red-500">🚨</span> Zona de Perigo & Controle
            </h3>
@@ -209,8 +209,8 @@ export const SuperAdminConfig = () => {
            <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
                  <div>
-                    <p className="font-black text-gray-800">Modo Manutenção</p>
-                    <p className="text-xs text-gray-500 font-medium mt-1">Bloqueia acesso a todas as lojas e painéis (exceto Super Admin).</p>
+                    <p className="font-black text-gray-800 text-sm md:text-base">Modo Manutenção</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Bloqueia acesso a todas as lojas e painéis.</p>
                  </div>
                  <div className="relative cursor-pointer" onClick={() => setForm({...form, maintenanceMode: !form.maintenanceMode})}>
                     <div className={`w-14 h-8 rounded-full transition-colors ${form.maintenanceMode ? 'bg-red-500' : 'bg-gray-300'}`} />
@@ -220,8 +220,8 @@ export const SuperAdminConfig = () => {
 
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
                  <div>
-                    <p className="font-black text-gray-800">Novos Cadastros</p>
-                    <p className="text-xs text-gray-500 font-medium mt-1">Permitir que novos lojistas criem contas na landing page.</p>
+                    <p className="font-black text-gray-800 text-sm md:text-base">Novos Cadastros</p>
+                    <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Permitir novos lojistas na landing page.</p>
                  </div>
                  <div className="relative cursor-pointer" onClick={() => setForm({...form, allowNewRegistrations: !form.allowNewRegistrations})}>
                     <div className={`w-14 h-8 rounded-full transition-colors ${form.allowNewRegistrations ? 'bg-emerald-500' : 'bg-gray-300'}`} />
@@ -232,7 +232,7 @@ export const SuperAdminConfig = () => {
         </section>
 
         {/* Comunicação */}
-        <section className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
+        <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
            <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-blue-500">📢</span> Anúncio Global
            </h3>

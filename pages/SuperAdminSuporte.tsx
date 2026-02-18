@@ -62,18 +62,18 @@ export const SuperAdminSuporte = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 animate-fade-in pb-20">
-      <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      <header className="mb-10 flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Central de Suporte</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase">Central de Suporte</h1>
           <p className="text-gray-500 font-bold mt-2">Gerenciamento técnico de chamados e solicitações.</p>
         </div>
         
-        <div className="flex gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100 w-full xl:w-auto overflow-x-auto no-scrollbar">
           {['Todos', 'Aberto', 'Em Andamento', 'Resolvido'].map(status => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterStatus === status ? 'bg-gray-900 text-white' : 'text-gray-400 hover:bg-gray-50'}`}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterStatus === status ? 'bg-gray-900 text-white' : 'text-gray-400 hover:bg-gray-50'}`}
             >
               {status}
             </button>
@@ -82,65 +82,67 @@ export const SuperAdminSuporte = () => {
       </header>
 
       <div className="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
-            <tr>
-              <th className="p-8">Loja Solicitante</th>
-              <th className="p-8">Assunto & Categoria</th>
-              <th className="p-8">Status</th>
-              <th className="p-8">Prioridade</th>
-              <th className="p-8 text-right">Ação</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {filteredTickets.map(ticket => (
-              <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-8">
-                  <p className="font-black text-gray-800 text-sm">{ticket.lojaNome}</p>
-                  <p className="text-[10px] text-gray-400 font-bold mt-1">ID: #{ticket.id.slice(-4)} • {formatDate(ticket.dataCriacao)}</p>
-                </td>
-                <td className="p-8">
-                  <p className="font-bold text-gray-800 text-sm mb-1">{ticket.assunto}</p>
-                  <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{ticket.categoria}</span>
-                </td>
-                <td className="p-8">
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(ticket.status)}`}>
-                    {ticket.status}
-                  </span>
-                </td>
-                <td className="p-8">
-                  <span className={`px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest ${getPriorityColor(ticket.prioridade)}`}>
-                    {ticket.prioridade}
-                  </span>
-                </td>
-                <td className="p-8 text-right">
-                  <button 
-                    onClick={() => setSelectedTicket(ticket)}
-                    className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
-                  >
-                    Atender
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filteredTickets.length === 0 && (
+        <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
                 <tr>
-                    <td colSpan={5} className="p-12 text-center text-gray-400 font-bold text-sm uppercase tracking-widest">
-                        Nenhum chamado encontrado com este filtro.
+                <th className="p-8">Loja Solicitante</th>
+                <th className="p-8">Assunto & Categoria</th>
+                <th className="p-8">Status</th>
+                <th className="p-8">Prioridade</th>
+                <th className="p-8 text-right">Ação</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+                {filteredTickets.map(ticket => (
+                <tr key={ticket.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-8">
+                    <p className="font-black text-gray-800 text-sm">{ticket.lojaNome}</p>
+                    <p className="text-[10px] text-gray-400 font-bold mt-1">ID: #{ticket.id.slice(-4)} • {formatDate(ticket.dataCriacao)}</p>
+                    </td>
+                    <td className="p-8">
+                    <p className="font-bold text-gray-800 text-sm mb-1">{ticket.assunto}</p>
+                    <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{ticket.categoria}</span>
+                    </td>
+                    <td className="p-8">
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusColor(ticket.status)}`}>
+                        {ticket.status}
+                    </span>
+                    </td>
+                    <td className="p-8">
+                    <span className={`px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest ${getPriorityColor(ticket.prioridade)}`}>
+                        {ticket.prioridade}
+                    </span>
+                    </td>
+                    <td className="p-8 text-right">
+                    <button 
+                        onClick={() => setSelectedTicket(ticket)}
+                        className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                    >
+                        Atender
+                    </button>
                     </td>
                 </tr>
-            )}
-          </tbody>
-        </table>
+                ))}
+                {filteredTickets.length === 0 && (
+                    <tr>
+                        <td colSpan={5} className="p-12 text-center text-gray-400 font-bold text-sm uppercase tracking-widest">
+                            Nenhum chamado encontrado com este filtro.
+                        </td>
+                    </tr>
+                )}
+            </tbody>
+            </table>
+        </div>
       </div>
 
-      {/* Modal de Atendimento */}
+      {/* Modal de Atendimento (Z-INDEX Ajustado e Responsivo) */}
       {selectedTicket && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[80vh]">
             
             {/* Detalhes do Ticket (Esquerda) */}
-            <div className="w-full md:w-1/3 bg-gray-50 border-r border-gray-100 p-8 overflow-y-auto">
+            <div className="w-full md:w-1/3 bg-gray-50 border-r border-gray-100 p-8 overflow-y-auto hidden md:block">
                 <div className="mb-8">
                     <span className={`inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest mb-3 ${getPriorityColor(selectedTicket.prioridade)}`}>
                         Prioridade {selectedTicket.prioridade}
@@ -178,11 +180,17 @@ export const SuperAdminSuporte = () => {
             {/* Chat (Direita) */}
             <div className="flex-1 flex flex-col bg-white">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
-                    <h3 className="font-black text-gray-800 uppercase tracking-widest text-sm">Histórico de Mensagens</h3>
-                    <button onClick={() => setSelectedTicket(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors">✕</button>
+                    <h3 className="font-black text-gray-800 uppercase tracking-widest text-sm md:block hidden">Histórico de Mensagens</h3>
+                    <h3 className="font-black text-gray-800 uppercase tracking-widest text-sm md:hidden truncate pr-2">{selectedTicket.assunto}</h3>
+                    <button onClick={() => setSelectedTicket(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors shrink-0">✕</button>
                 </div>
 
                 <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-[#fafbfc]">
+                    <div className="md:hidden bg-gray-50 p-4 rounded-xl mb-4 border border-gray-100 text-xs">
+                        <p className="font-bold text-gray-800 mb-1">Descrição:</p>
+                        {selectedTicket.descricao}
+                    </div>
+
                     {selectedTicket.mensagens.map((msg) => (
                         <div key={msg.id} className={`flex flex-col ${msg.isAdmin ? 'items-end' : 'items-start'}`}>
                             <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-medium ${msg.isAdmin ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-white border border-gray-200 text-gray-700 rounded-tl-none shadow-sm'}`}>

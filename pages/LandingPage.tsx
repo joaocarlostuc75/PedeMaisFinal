@@ -130,7 +130,7 @@ export const LandingPage = () => {
                     <ul className="space-y-4 mb-10 text-gray-500 font-medium text-sm">
                         <li>Até {plan.limitePedidos} pedidos/mês</li>
                         <li>{plan.limiteEntregadores} entregadores</li>
-                        {plan.recursos.slice(0, 3).map((r, i) => <li key={i}>{r}</li>)}
+                        {plan.recursos.map((r, i) => <li key={i}>{r}</li>)}
                     </ul>
                     <button onClick={() => navigate('/onboarding')} className="mt-auto w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-emerald-600 transition-all">Começar Agora</button>
                 </div>

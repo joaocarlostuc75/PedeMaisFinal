@@ -85,8 +85,8 @@ export const SuperAdminUsuarios = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl animate-bounce-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl animate-bounce-in max-h-[90vh] overflow-y-auto custom-scrollbar">
             <h3 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tighter">Criar Novo Acesso</h3>
             <div className="space-y-6">
               <div>

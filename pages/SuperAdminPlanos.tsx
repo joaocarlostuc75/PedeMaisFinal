@@ -8,6 +8,9 @@ export const SuperAdminPlanos = () => {
   const { planos, addPlano, updatePlano, deletePlano, addNotification } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlano, setEditingPlano] = useState<Partial<Plano> | null>(null);
+  
+  // Estado local para adicionar novo recurso dentro do modal
+  const [newRecursoInput, setNewRecursoInput] = useState('');
 
   const initialPlano: Partial<Plano> = {
     nome: '',
@@ -22,6 +25,7 @@ export const SuperAdminPlanos = () => {
 
   const handleOpenModal = (plano?: Plano) => {
     setEditingPlano(plano ? { ...plano } : initialPlano);
+    setNewRecursoInput('');
     setIsModalOpen(true);
   };
 
@@ -63,10 +67,23 @@ export const SuperAdminPlanos = () => {
       handleOpenModal(p);
   };
 
-  const updateRecursos = (text: string) => {
-    if (editingPlano) {
-      setEditingPlano({ ...editingPlano, recursos: text.split(',').map(s => s.trim()).filter(Boolean) });
-    }
+  const handleAddRecurso = () => {
+      if (!newRecursoInput.trim()) return;
+      if (editingPlano) {
+          setEditingPlano({
+              ...editingPlano,
+              recursos: [...(editingPlano.recursos || []), newRecursoInput.trim()]
+          });
+          setNewRecursoInput('');
+      }
+  };
+
+  const handleRemoveRecurso = (index: number) => {
+      if (editingPlano && editingPlano.recursos) {
+          const updated = [...editingPlano.recursos];
+          updated.splice(index, 1);
+          setEditingPlano({ ...editingPlano, recursos: updated });
+      }
   };
 
   const colors = [
@@ -78,7 +95,7 @@ export const SuperAdminPlanos = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto p-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto p-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
         <div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Planos & Preços</h1>
@@ -126,6 +143,12 @@ export const SuperAdminPlanos = () => {
                   <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-md flex items-center justify-center text-xs">🛵</span> 
                   {p.limiteEntregadores >= 999 ? 'Entregadores ilimitados' : `Até ${p.limiteEntregadores} entregadores`}
                 </li>
+                {p.recursos.map((rec, i) => (
+                    <li key={i} className="flex items-center gap-3 text-gray-600 font-bold text-sm">
+                        <span className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-md flex items-center justify-center text-xs">✓</span>
+                        {rec}
+                    </li>
+                ))}
               </ul>
             </div>
             
@@ -138,7 +161,7 @@ export const SuperAdminPlanos = () => {
       </div>
 
       {isModalOpen && editingPlano && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <div className="p-8 border-b border-gray-100">
                     <h2 className="text-2xl font-black text-gray-900">{editingPlano.id ? 'Editar Plano' : 'Novo Plano'}</h2>
@@ -174,6 +197,54 @@ export const SuperAdminPlanos = () => {
                                 {colors.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                             </select>
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Limite Pedidos</label>
+                            <input 
+                                type="number"
+                                value={editingPlano.limitePedidos} 
+                                onChange={e => setEditingPlano({...editingPlano, limitePedidos: Number(e.target.value)})}
+                                className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Limite Entregadores</label>
+                            <input 
+                                type="number"
+                                value={editingPlano.limiteEntregadores} 
+                                onChange={e => setEditingPlano({...editingPlano, limiteEntregadores: Number(e.target.value)})}
+                                className="w-full bg-gray-50 border-none rounded-xl p-4 font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Gestão de Benefícios */}
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-3">Benefícios & Recursos</label>
+                        <div className="flex gap-2 mb-3">
+                            <input 
+                                type="text"
+                                value={newRecursoInput}
+                                onChange={e => setNewRecursoInput(e.target.value)}
+                                placeholder="Ex: Suporte 24h"
+                                className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold outline-none"
+                                onKeyDown={e => e.key === 'Enter' && handleAddRecurso()}
+                            />
+                            <button onClick={handleAddRecurso} className="bg-emerald-600 text-white px-3 py-2 rounded-lg font-black text-xs uppercase hover:bg-emerald-500">Add</button>
+                        </div>
+                        <ul className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                            {editingPlano.recursos && editingPlano.recursos.map((rec, idx) => (
+                                <li key={idx} className="flex justify-between items-center bg-white p-2 rounded-lg border border-gray-100 text-xs font-bold text-gray-700">
+                                    <span>{rec}</span>
+                                    <button onClick={() => handleRemoveRecurso(idx)} className="text-red-400 hover:text-red-600 font-black px-2">✕</button>
+                                </li>
+                            ))}
+                            {(!editingPlano.recursos || editingPlano.recursos.length === 0) && (
+                                <p className="text-[10px] text-gray-400 text-center italic">Nenhum benefício adicionado.</p>
+                            )}
+                        </ul>
                     </div>
 
                     <div 

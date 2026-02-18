@@ -140,7 +140,7 @@ export const SuperAdminLojas = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 md:space-y-10 relative">
+    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 md:space-y-10 relative pb-24">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase">Gestão de Unidades</h1>
@@ -258,10 +258,10 @@ export const SuperAdminLojas = () => {
         </span>
       </button>
 
-      {/* Modal de Criação de Loja */}
+      {/* Modal de Criação de Loja (Z-INDEX ALTO) */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-            <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl animate-bounce-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+            <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl animate-bounce-in max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <div className="flex justify-between items-center mb-8">
                     <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Nova Loja</h3>
                     <button onClick={() => setIsCreateModalOpen(false)} className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-400 hover:bg-gray-200">✕</button>
@@ -314,9 +314,9 @@ export const SuperAdminLojas = () => {
         </div>
       )}
 
-      {/* Modal de Edição & Concessão de Acesso (Existente) */}
+      {/* Modal de Edição & Concessão de Acesso (Z-INDEX ALTO) */}
       {editingLoja && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-[3rem] p-10 w-full max-w-xl shadow-2xl animate-bounce-in max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center mb-8">
                 <h3 className="text-2xl font-black uppercase tracking-tighter">Gerenciar Assinatura</h3>
@@ -348,7 +348,7 @@ export const SuperAdminLojas = () => {
                       🎁 Conceder Acesso / Ativar
                   </h4>
                   <p className="text-xs text-emerald-700 mb-4">Isto irá ativar a loja e definir o novo vencimento a partir de hoje.</p>
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 flex-wrap">
                       <input 
                         type="number" value={grantAmount} onChange={e => setGrantAmount(Number(e.target.value))}
                         className="w-20 bg-white border border-emerald-200 rounded-xl p-4 font-black text-center" 
@@ -363,7 +363,7 @@ export const SuperAdminLojas = () => {
                       </select>
                       <button 
                         onClick={handleGrantAccess}
-                        className="bg-emerald-600 text-white px-6 py-4 rounded-xl font-black text-[10px] uppercase shadow-md hover:bg-emerald-500 transition-all"
+                        className="bg-emerald-600 text-white px-6 py-4 rounded-xl font-black text-[10px] uppercase shadow-md hover:bg-emerald-500 transition-all w-full sm:w-auto"
                       >
                           Aplicar
                       </button>
