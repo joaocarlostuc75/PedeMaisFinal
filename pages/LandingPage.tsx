@@ -95,12 +95,15 @@ export const LandingPage = () => {
               </div>
             </div>
 
-            <div className="bg-[#064e3b] text-white rounded-[3rem] p-8 md:p-16 shadow-3xl text-center relative overflow-hidden flex flex-col justify-center items-center transform transition-all hover:scale-[1.02] duration-500">
-               <div className="relative z-10 w-full">
+            <div className="bg-[#064e3b] text-white rounded-[3rem] p-8 lg:p-12 xl:p-16 shadow-3xl text-center relative overflow-hidden flex flex-col justify-center items-center transform transition-all hover:scale-[1.02] duration-500">
+               <div className="relative z-10 w-full flex flex-col items-center">
                    <p className="text-emerald-400 font-black uppercase tracking-widest text-[10px] md:text-xs mb-6 md:mb-8">ECONOMIA MENSAL POTENCIAL</p>
-                   <h3 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-8 md:mb-12 tracking-tighter text-white drop-shadow-md">
+                   
+                   {/* Texto ajustado para responsividade e sem quebra de linha */}
+                   <h3 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black mb-8 md:mb-12 tracking-tighter text-white drop-shadow-md whitespace-nowrap leading-none">
                      {formatCurrency(roiExtra)}
                    </h3>
+                   
                    <p className="text-emerald-100/80 font-medium text-base md:text-lg max-w-md mx-auto mb-10 md:mb-14 leading-relaxed">
                      Este é o valor que você recupera todos os meses usando nossa plataforma de canal direto.
                    </p>
