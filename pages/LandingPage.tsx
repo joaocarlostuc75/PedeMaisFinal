@@ -7,7 +7,7 @@ import { SEO } from '../components/SEO';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
-  const { setUser, resetDemoStore, planos, systemSettings } = useStore();
+  const { setUser, planos, systemSettings } = useStore(); // Removido resetDemoStore da desestruturação se não for usado, ou mantido apenas no store
   const [ticket, setTicket] = useState(75);
   const [pedidos, setPedidos] = useState(500);
 
@@ -26,7 +26,7 @@ export const LandingPage = () => {
   }, [systemSettings.supportPhone]);
 
   const handleDemoAccess = () => {
-    resetDemoStore();
+    // REMOVIDO: resetDemoStore(); -> Isso apagava os dados ao entrar
     setUser({
         id: 'demo-user',
         nome: 'Visitante (Demo)',

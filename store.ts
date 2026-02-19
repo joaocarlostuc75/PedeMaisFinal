@@ -420,6 +420,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'pede-mais-storage',
+      version: 1, // Adicionado versionamento para evitar conflitos de cache
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ 
         user: state.user,
