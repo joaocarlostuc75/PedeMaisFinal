@@ -10,7 +10,9 @@ export const Onboarding = () => {
   const navigate = useNavigate();
   const { setUser, addLoja, planos, addNotification } = useStore();
   const [step, setStep] = useState<Step>(1);
-  const [selectedPlan, setSelectedPlan] = useState(planos[0]?.id || '1'); 
+  // Garante que o plano selecionado padrão não seja privado
+  const publicPlanos = planos.filter(p => !p.privado);
+  const [selectedPlan, setSelectedPlan] = useState(publicPlanos[0]?.id || '1'); 
   
   // Referências para os inputs de arquivo invisíveis
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -133,10 +135,11 @@ export const Onboarding = () => {
         <button onClick={() => navigate('/')} className="text-[10px] md:text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest">Sair</button>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-start md:justify-center p-4 md:p-12 relative w-full pb-48 overflow-y-auto">
+      {/* Main Content - Removido justify-center para evitar conflito de scroll em telas menores */}
+      <main className="flex-1 flex flex-col items-center justify-start p-4 md:p-12 relative w-full pb-48 overflow-y-auto">
         {/* Step 1: Dados Básicos */}
         {step === 1 && (
-          <div className="w-full max-w-3xl bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden animate-fade-in">
+          <div className="w-full max-w-3xl bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden animate-fade-in mb-32">
             <div className="p-6 md:p-16">
               <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-2 md:mb-4 tracking-tighter">Vamos começar</h2>
               <p className="text-gray-400 font-medium mb-8 md:mb-12 text-sm md:text-base">Preencha as informações iniciais para criar sua identidade digital.</p>
@@ -194,7 +197,7 @@ export const Onboarding = () => {
 
         {/* Step 2: Identidade Visual */}
         {step === 2 && (
-          <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-8 md:gap-12 animate-fade-in">
+          <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-8 md:gap-12 animate-fade-in mb-32">
             <div className="flex-1 space-y-8 md:space-y-12">
               <div>
                 <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-2 md:mb-4 tracking-tighter leading-none">Defina a cara da sua loja</h2>
@@ -222,7 +225,7 @@ export const Onboarding = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="pb-12">
                 <h3 className="text-2xl md:text-3xl font-black text-gray-900 mb-4 tracking-tighter">Qual o seu ramo?</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                   {['Restaurante', 'Mercado', 'Lanches', 'Pet Shop', 'Farmácia', 'Outros'].map(cat => (
@@ -252,16 +255,17 @@ export const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 3: Pagamento (Nova) */}
+        {/* Step 3: Pagamento */}
         {step === 3 && (
-          <div className="w-full max-w-5xl animate-fade-in">
+          <div className="w-full max-w-5xl animate-fade-in mb-32">
              <div className="text-center mb-8 md:mb-12">
                 <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-2 md:mb-4 tracking-tighter">Escolha seu plano</h2>
                 <p className="text-base md:text-xl text-gray-400 font-medium">Acesso imediato após confirmação do administrador.</p>
              </div>
 
              <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-10 md:mb-16">
-                {planos.map((plan) => (
+                {/* Filtrar planos privados para não aparecerem no onboarding */}
+                {planos.filter(p => !p.privado).map((plan) => (
                    <div 
                       key={plan.id}
                       onClick={() => setSelectedPlan(plan.id)}
