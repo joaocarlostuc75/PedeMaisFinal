@@ -75,15 +75,15 @@ export const SuperAdminConfig = () => {
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 animate-fade-in font-sans pb-24">
       <header className="mb-8 md:mb-12">
-        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tighter">Configurações Globais</h1>
-        <p className="text-gray-500 font-bold mt-1 text-sm md:text-base">Parâmetros críticos de funcionamento da plataforma.</p>
+        <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tighter">Configurações Globais</h1>
+        <p className="text-gray-500 font-bold mt-1 text-xs md:text-base">Parâmetros críticos de funcionamento da plataforma.</p>
       </header>
 
       <div className="grid gap-6 md:gap-8">
         
         {/* Perfil do Administrador */}
         <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
-           <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+           <h3 className="text-lg md:text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-emerald-600">👤</span> Perfil do Administrador
            </h3>
            <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
@@ -91,7 +91,7 @@ export const SuperAdminConfig = () => {
                    <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                    <div 
                         onClick={() => avatarInputRef.current?.click()}
-                        className="w-32 h-32 rounded-full border-4 border-emerald-500 overflow-hidden cursor-pointer hover:opacity-80 transition-all relative group bg-gray-100"
+                        className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-emerald-500 overflow-hidden cursor-pointer hover:opacity-80 transition-all relative group bg-gray-100"
                    >
                        {userForm.avatar ? (
                            <img src={userForm.avatar} className="w-full h-full object-cover" />
@@ -136,10 +136,10 @@ export const SuperAdminConfig = () => {
 
         {/* Identidade do Sistema */}
         <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
-           <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+           <h3 className="text-lg md:text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-blue-500">🌍</span> Identidade & Contato
            </h3>
-           <div className="grid md:grid-cols-2 gap-6">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Nome da Aplicação</label>
                  <input 
@@ -172,7 +172,7 @@ export const SuperAdminConfig = () => {
 
         {/* Gestão de Categorias de Lojas */}
         <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
-           <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+           <h3 className="text-lg md:text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-purple-500">🏷️</span> Categorias de Estabelecimento
            </h3>
            <div className="space-y-4">
@@ -191,7 +191,7 @@ export const SuperAdminConfig = () => {
                </div>
                <div className="flex flex-wrap gap-2">
                    {(form.storeCategories || []).map((cat, idx) => (
-                       <div key={idx} className="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 border border-purple-100">
+                       <div key={idx} className="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg font-bold text-xs md:text-sm flex items-center gap-2 border border-purple-100">
                            {cat}
                            <button onClick={() => removeStoreCategory(cat)} className="w-5 h-5 bg-purple-200 rounded-full flex items-center justify-center text-xs text-purple-800 hover:bg-purple-300 transition-colors">✕</button>
                        </div>
@@ -202,7 +202,7 @@ export const SuperAdminConfig = () => {
 
         {/* Controles de Risco */}
         <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
-           <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+           <h3 className="text-lg md:text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-red-500">🚨</span> Zona de Perigo & Controle
            </h3>
            
@@ -213,8 +213,8 @@ export const SuperAdminConfig = () => {
                     <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Bloqueia acesso a todas as lojas e painéis.</p>
                  </div>
                  <div className="relative cursor-pointer" onClick={() => setForm({...form, maintenanceMode: !form.maintenanceMode})}>
-                    <div className={`w-14 h-8 rounded-full transition-colors ${form.maintenanceMode ? 'bg-red-500' : 'bg-gray-300'}`} />
-                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${form.maintenanceMode ? 'translate-x-7 left-0' : 'translate-x-1 left-0'}`} />
+                    <div className={`w-12 md:w-14 h-7 md:h-8 rounded-full transition-colors ${form.maintenanceMode ? 'bg-red-500' : 'bg-gray-300'}`} />
+                    <div className={`absolute top-1 w-5 h-5 md:w-6 md:h-6 bg-white rounded-full shadow-md transition-transform ${form.maintenanceMode ? 'translate-x-6 md:translate-x-7 left-0' : 'translate-x-1 left-0'}`} />
                  </div>
               </div>
 
@@ -224,8 +224,8 @@ export const SuperAdminConfig = () => {
                     <p className="text-[10px] md:text-xs text-gray-500 font-medium mt-1">Permitir novos lojistas na landing page.</p>
                  </div>
                  <div className="relative cursor-pointer" onClick={() => setForm({...form, allowNewRegistrations: !form.allowNewRegistrations})}>
-                    <div className={`w-14 h-8 rounded-full transition-colors ${form.allowNewRegistrations ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${form.allowNewRegistrations ? 'translate-x-7 left-0' : 'translate-x-1 left-0'}`} />
+                    <div className={`w-12 md:w-14 h-7 md:h-8 rounded-full transition-colors ${form.allowNewRegistrations ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                    <div className={`absolute top-1 w-5 h-5 md:w-6 md:h-6 bg-white rounded-full shadow-md transition-transform ${form.allowNewRegistrations ? 'translate-x-6 md:translate-x-7 left-0' : 'translate-x-1 left-0'}`} />
                  </div>
               </div>
            </div>
@@ -233,7 +233,7 @@ export const SuperAdminConfig = () => {
 
         {/* Comunicação */}
         <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100">
-           <h3 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
+           <h3 className="text-lg md:text-xl font-black text-gray-800 mb-6 flex items-center gap-2">
               <span className="text-blue-500">📢</span> Anúncio Global
            </h3>
            <div>

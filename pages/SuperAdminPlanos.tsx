@@ -161,12 +161,12 @@ export const SuperAdminPlanos = () => {
       </div>
 
       {isModalOpen && editingPlano && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-fade-in">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-[9999] p-0 md:p-4">
+            <div className="bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-in">
                 <div className="p-8 border-b border-gray-100">
                     <h2 className="text-2xl font-black text-gray-900">{editingPlano.id ? 'Editar Plano' : 'Novo Plano'}</h2>
                 </div>
-                <div className="p-8 space-y-6">
+                <div className="p-8 space-y-6 pb-8 md:pb-0">
                     <div>
                         <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Nome do Plano</label>
                         <input 
