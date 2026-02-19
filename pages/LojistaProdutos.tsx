@@ -27,6 +27,7 @@ export const LojistaProdutos = () => {
     nome: '',
     categoria: categoriasDisponiveis[0],
     descricao: '',
+    ingredientes: '', // Inicializa campo de ingredientes
     preco: 0,
     imagem: '',
     destaque: false,
@@ -306,7 +307,18 @@ export const LojistaProdutos = () => {
                             value={editingProduto.descricao} 
                             onChange={e => setEditingProduto({...editingProduto, descricao: e.target.value})}
                             className="w-full bg-gray-50 border-none rounded-xl p-4 font-medium text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none h-32 resize-none"
-                            placeholder="Ingredientes, modo de preparo, detalhes..."
+                            placeholder="Descreva o prato..."
+                        />
+                    </div>
+
+                    {/* Novo Campo: Ingredientes e Acompanhamentos */}
+                    <div>
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">Ingredientes e Acompanhamentos</label>
+                        <textarea
+                            value={editingProduto.ingredientes || ''}
+                            onChange={e => setEditingProduto({...editingProduto, ingredientes: e.target.value})}
+                            className="w-full bg-gray-50 border-none rounded-xl p-4 font-medium text-sm text-gray-700 focus:ring-2 focus:ring-emerald-500 outline-none h-24 resize-none"
+                            placeholder="Ex: Acompanha arroz, feijão, farofa e vinagrete..."
                         />
                     </div>
 

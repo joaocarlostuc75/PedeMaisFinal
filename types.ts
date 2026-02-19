@@ -163,6 +163,7 @@ export interface Produto {
   disponivel: boolean;
   tags?: string[];
   oldPrice?: number;
+  ingredientes?: string; // Novo campo
 }
 
 export interface ItemPedido {
