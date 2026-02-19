@@ -7,10 +7,9 @@ import { SEO } from '../components/SEO';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
-  const { setUser, resetDemoStore, planos } = useStore();
+  const { setUser, resetDemoStore, planos, systemSettings } = useStore();
   const [ticket, setTicket] = useState(75);
   const [pedidos, setPedidos] = useState(500);
-  const [email, setEmail] = useState('');
 
   // Filtra apenas planos públicos para exibição
   const planosPublicos = useMemo(() => planos.filter(p => !p.privado), [planos]);
@@ -18,6 +17,13 @@ export const LandingPage = () => {
   const roiExtra = useMemo(() => {
     return pedidos * ticket * 0.27;
   }, [ticket, pedidos]);
+
+  // Gera o link do WhatsApp baseado na configuração do Super Admin
+  const whatsappLink = useMemo(() => {
+      const phone = systemSettings.supportPhone.replace(/\D/g, '');
+      const text = encodeURIComponent("Olá! Gostaria de saber mais sobre o Pede Mais.");
+      return `https://wa.me/${phone}?text=${text}`;
+  }, [systemSettings.supportPhone]);
 
   const handleDemoAccess = () => {
     resetDemoStore();
@@ -127,13 +133,26 @@ export const LandingPage = () => {
         <h2 className="text-4xl font-black text-gray-900 text-center mb-16 tracking-tighter uppercase">Planos Profissionais</h2>
         <div className="grid md:grid-cols-3 gap-8">
             {planosPublicos.map(plan => (
-                <div key={plan.id} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col items-center text-center hover:shadow-xl transition-shadow">
+                <div key={plan.id} className={`bg-white p-10 rounded-[3rem] border shadow-sm flex flex-col items-center text-center hover:shadow-xl transition-all ${plan.destaque ? 'border-emerald-500 ring-4 ring-emerald-50 relative' : 'border-gray-100'}`}>
+                    {plan.destaque && (
+                        <div className="absolute -top-4 bg-emerald-500 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">Mais Popular</div>
+                    )}
                     <h3 className="text-2xl font-black text-gray-800 mb-2">{plan.nome}</h3>
                     <p className="text-4xl font-black text-emerald-600 mb-6">{formatCurrency(plan.preco)}<span className="text-sm font-bold text-gray-400">/mês</span></p>
-                    <ul className="space-y-4 mb-10 text-gray-500 font-medium text-sm">
-                        <li>Até {plan.limitePedidos} pedidos/mês</li>
-                        <li>{plan.limiteEntregadores} entregadores</li>
-                        {plan.recursos.map((r, i) => <li key={i}>{r}</li>)}
+                    <ul className="space-y-4 mb-10 text-gray-500 font-medium text-sm w-full">
+                        <li className="flex items-center justify-center gap-2">
+                            <span className="text-emerald-500">✓</span>
+                            {plan.limitePedidos >= 99999 ? 'Pedidos ilimitados' : `Até ${plan.limitePedidos} pedidos/mês`}
+                        </li>
+                        <li className="flex items-center justify-center gap-2">
+                            <span className="text-emerald-500">✓</span>
+                            {plan.limiteEntregadores >= 999 ? 'Entregadores ilimitados' : `${plan.limiteEntregadores} entregadores`}
+                        </li>
+                        {plan.recursos.map((r, i) => (
+                            <li key={i} className="flex items-center justify-center gap-2">
+                                <span className="text-emerald-500">✓</span> {r}
+                            </li>
+                        ))}
                     </ul>
                     <button onClick={() => navigate('/onboarding')} className="mt-auto w-full bg-gray-900 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-emerald-600 transition-all">Começar Agora</button>
                 </div>
@@ -152,11 +171,18 @@ export const LandingPage = () => {
             <ul className="space-y-4 font-bold text-gray-400">
               <li><Link to="/politica-privacidade" className="hover:text-emerald-600 transition-colors">Política de Privacidade</Link></li>
               <li><Link to="/termos-uso" className="hover:text-emerald-600 transition-colors">Termos de Uso</Link></li>
-              <li><a href="https://wa.me/5594999999999" className="hover:text-emerald-600 transition-colors">Suporte 24h</a></li>
+              <li><a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 transition-colors">Suporte 24h</a></li>
             </ul>
           </div>
           <div className="flex flex-col items-center md:items-end justify-between">
-             <div className="bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black shadow-lg cursor-pointer hover:scale-105 transition-transform">WHATSAPP VENDAS</div>
+             <a 
+                href={whatsappLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black shadow-lg cursor-pointer hover:scale-105 transition-transform flex items-center gap-2"
+             >
+                WHATSAPP VENDAS
+             </a>
              <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mt-10">© 2024 Pede Mais Tech</p>
           </div>
         </div>
