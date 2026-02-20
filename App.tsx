@@ -63,7 +63,7 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
     <div className="flex min-h-[100dvh] bg-[#f8fafc]">
       <Sidebar />
       {/* Wrapper principal */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300"> 
+      <div className="flex-1 flex flex-col min-w-0"> 
         <HeaderMobile />
         {/* Main Content */}
         <main className="flex-1 p-4 md:p-8 pt-24 lg:pt-8 overflow-x-hidden overflow-y-auto h-auto min-h-[100dvh]">
@@ -77,7 +77,7 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
 const App = () => {
   return (
     <HelmetProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ToastContainer />
         <Layout>
           <Routes>

@@ -159,10 +159,10 @@ export const Checkout = () => {
                   </div>
               ) : (
                   items.map(item => (
-                    <div key={item.id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-50 flex gap-6 group hover:shadow-md transition-shadow">
-                    <div className="w-24 h-24 bg-gray-100 rounded-2xl overflow-hidden shrink-0">
+                    <div key={item.id} className="bg-white rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-50 flex flex-col sm:flex-row gap-4 sm:gap-6 group hover:shadow-md transition-shadow">
+                    <div className="w-full sm:w-24 h-40 sm:h-24 bg-gray-100 rounded-2xl overflow-hidden shrink-0">
                         {item.imagem ? (
-                            <img src={item.imagem} className="w-full h-auto object-cover min-h-full" />
+                            <img src={item.imagem} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300">📷</div>
                         )}

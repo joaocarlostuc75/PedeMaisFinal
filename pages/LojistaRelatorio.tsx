@@ -201,11 +201,12 @@ export const LojistaRelatorio = () => {
       </div>
 
       <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-gray-50 flex justify-between items-center">
+        <div className="p-8 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <h3 className="text-xl font-black uppercase tracking-widest">Histórico Detalhado</h3>
-          <button className="bg-gray-50 text-gray-600 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-700 transition-all">Exportar Excel</button>
+          <button className="w-full sm:w-auto bg-gray-50 text-gray-600 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-700 transition-all">Exportar Excel</button>
         </div>
-        <table className="w-full text-left">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
           <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
             <tr>
               <th className="p-8">Data</th>
@@ -241,5 +242,6 @@ export const LojistaRelatorio = () => {
         </table>
       </div>
     </div>
+  </div>
   );
 };

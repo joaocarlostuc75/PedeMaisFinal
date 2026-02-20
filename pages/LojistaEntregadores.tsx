@@ -195,9 +195,12 @@ export const LojistaEntregadores = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-2 tracking-tighter">{editingId ? 'Editar Membro' : 'Novo Membro'}</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-t-[2rem] sm:rounded-[3rem] p-6 md:p-10 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div className="flex justify-between items-center mb-2">
+                <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tighter">{editingId ? 'Editar Membro' : 'Novo Membro'}</h2>
+                <button onClick={() => setShowModal(false)} className="sm:hidden w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">✕</button>
+            </div>
             <p className="text-gray-400 font-medium mb-8 md:mb-10 text-sm">Preencha os dados para atualizar sua frota.</p>
             
             <div className="space-y-6 mb-10">

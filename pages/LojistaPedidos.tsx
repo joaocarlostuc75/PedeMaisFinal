@@ -400,13 +400,16 @@ export const LojistaPedidos = () => {
 
       {/* Modal Seleção Entregador */}
       {selectingCourierForOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-           <div className="bg-white rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl animate-bounce-in flex flex-col max-h-[80vh]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+           <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl animate-bounce-in flex flex-col max-h-[90vh] sm:max-h-[80vh]">
               <div className="p-6 border-b border-gray-100 bg-gray-50 shrink-0">
-                 <h3 className="text-xl md:text-2xl font-black text-gray-900">Selecione o Entregador</h3>
+                 <div className="flex justify-between items-center">
+                    <h3 className="text-xl md:text-2xl font-black text-gray-900">Selecione o Entregador</h3>
+                    <button onClick={() => setSelectingCourierForOrder(null)} className="sm:hidden w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">✕</button>
+                 </div>
                  <p className="text-gray-400 font-medium text-sm">Quem levará o pedido #{selectingCourierForOrder.slice(-4)}?</p>
               </div>
-              <div className="p-6 overflow-y-auto">
+              <div className="p-6 overflow-y-auto custom-scrollbar">
                  {meusEntregadores.length === 0 ? (
                     <div className="text-center py-10">
                        <p className="text-gray-400 font-bold mb-4">Nenhum entregador cadastrado ou disponível.</p>
@@ -418,23 +421,23 @@ export const LojistaPedidos = () => {
                           <button 
                              key={e.id}
                              onClick={() => handleDispatch(e.id)}
-                             className="w-full flex items-center justify-between p-4 rounded-2xl border border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all group text-left"
+                             className="w-full flex items-center justify-between p-3 sm:p-4 rounded-2xl border border-gray-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all group text-left gap-2"
                           >
-                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-lg font-black text-gray-300 group-hover:text-emerald-600">
+                             <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className="w-10 h-10 shrink-0 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-lg font-black text-gray-300 group-hover:text-emerald-600">
                                    {e.nome.charAt(0)}
                                 </div>
-                                <div>
-                                   <p className="font-black text-gray-800 group-hover:text-emerald-900 text-sm">{e.nome}</p>
-                                   <div className="flex gap-2 text-[10px] font-bold uppercase">
-                                      <span className={e.status === 'disponível' ? 'text-emerald-500' : 'text-amber-500'}>{e.status}</span>
-                                      <span className="text-gray-300">•</span>
-                                      <span className="text-gray-400">{e.tipoVeiculo}</span>
+                                <div className="min-w-0 flex-1">
+                                   <p className="font-black text-gray-800 group-hover:text-emerald-900 text-sm truncate">{e.nome}</p>
+                                   <div className="flex items-center gap-1 sm:gap-2 text-[10px] font-bold uppercase flex-wrap">
+                                      <span className={`shrink-0 ${e.status === 'disponível' ? 'text-emerald-500' : 'text-amber-500'}`}>{e.status}</span>
+                                      <span className="text-gray-300 shrink-0 hidden sm:inline">•</span>
+                                      <span className="text-gray-400 truncate">{e.tipoVeiculo}</span>
                                    </div>
                                 </div>
                              </div>
                              {e.status === 'disponível' && (
-                                <span className="bg-emerald-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase shadow-lg shadow-emerald-200">
+                                <span className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-lg shadow-emerald-200 shrink-0">
                                    Chamar
                                 </span>
                              )}

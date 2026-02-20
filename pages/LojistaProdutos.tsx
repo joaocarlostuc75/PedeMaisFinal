@@ -181,8 +181,8 @@ export const LojistaProdutos = () => {
 
       {/* Modal de Gestão de Categorias */}
       {isCategoryModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-fade-in" onClick={() => setIsCategoryModalOpen(false)}>
-              <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[110] p-0 sm:p-4 animate-fade-in" onClick={() => setIsCategoryModalOpen(false)}>
+              <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md shadow-2xl p-8" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-6">
                       <h3 className="text-xl font-black text-gray-900">Categorias do Cardápio</h3>
                       <button onClick={() => setIsCategoryModalOpen(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold hover:bg-gray-200">✕</button>
@@ -214,10 +214,10 @@ export const LojistaProdutos = () => {
 
       {/* Modal de Edição/Criação de Produto */}
       {isModalOpen && editingProduto && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                <div className="p-8 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-2xl font-black text-gray-900">{editingProduto.id ? 'Editar Produto' : 'Novo Produto'}</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 animate-fade-in">
+            <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                    <h2 className="text-xl md:text-2xl font-black text-gray-900">{editingProduto.id ? 'Editar Produto' : 'Novo Produto'}</h2>
                     <button onClick={handleCloseModal} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 transition-colors">✕</button>
                 </div>
                 
