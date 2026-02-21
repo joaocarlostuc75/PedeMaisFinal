@@ -420,8 +420,50 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'pede-mais-storage',
-      version: 1, // Adicionado versionamento para evitar conflitos de cache
+      version: 2, // Incrementando versão para forçar a migração
       storage: createJSONStorage(() => localStorage),
+      migrate: (persistedState: any, version: number) => {
+        // Se a versão for anterior a 2, fazemos o merge manual
+        if (version < 2) {
+            // Pega o estado padrão atual (com os novos campos)
+            const defaultState = {
+                systemSettings: {
+                    appName: 'Pede Mais',
+                    maintenanceMode: false,
+                    allowNewRegistrations: true,
+                    globalAnnouncement: '',
+                    supportPhone: '5511999999999',
+                    pixKey: 'financeiro@pedemais.app',
+                    storeCategories: ['Restaurante', 'Mercado & Conveniência', 'Padaria', 'Farmácia', 'Lanches', 'Pet Shop', 'Outros']
+                },
+                // ... outros defaults se necessário
+            };
+
+            return {
+                ...persistedState,
+                // Garante que systemSettings tenha todos os campos, preservando os existentes
+                systemSettings: {
+                    ...defaultState.systemSettings,
+                    ...(persistedState.systemSettings || {})
+                },
+                // Garante que as lojas tenham os novos campos de tema
+                lojas: (persistedState.lojas || []).map((loja: any) => ({
+                    ...loja,
+                    themeColor: loja.themeColor || '#059669',
+                    font: loja.font || 'Inter',
+                    categoriasCardapio: loja.categoriasCardapio || []
+                })),
+                // Garante que produtos tenham novos campos
+                produtos: (persistedState.produtos || []).map((prod: any) => ({
+                    ...prod,
+                    ingredientes: prod.ingredientes || '',
+                    informacoesNutricionais: prod.informacoesNutricionais || '',
+                    acompanhamentos: prod.acompanhamentos || []
+                }))
+            };
+        }
+        return persistedState as AppState;
+      },
       partialize: (state) => ({ 
         user: state.user,
         lojas: state.lojas,
