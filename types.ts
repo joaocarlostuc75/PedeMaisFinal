@@ -142,6 +142,8 @@ export interface Loja {
   horarios?: DiaFuncionamento[];
   feriados?: Feriado[];
   categoriasCardapio?: string[]; // Novas categorias personalizadas do lojista
+  themeColor?: string; // Cor principal da loja pública
+  font?: string; // Fonte da loja pública
   stats?: {
     carrinhos: number;
     finalizados: number;

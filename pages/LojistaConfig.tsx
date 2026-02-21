@@ -23,7 +23,9 @@ export const LojistaConfig = () => {
     aceitaRetirada: minhaLoja.aceitaRetirada ?? true,
     descricao: minhaLoja.descricao || '',
     email: minhaLoja.email || '',
-    telefone: minhaLoja.telefone || ''
+    telefone: minhaLoja.telefone || '',
+    themeColor: minhaLoja.themeColor || '#059669',
+    font: minhaLoja.font || 'Inter'
   });
 
   const [isCustomCategory, setIsCustomCategory] = useState(false);
@@ -41,7 +43,9 @@ export const LojistaConfig = () => {
         aceitaRetirada: minhaLoja.aceitaRetirada ?? true,
         descricao: minhaLoja.descricao || '',
         email: minhaLoja.email || '',
-        telefone: minhaLoja.telefone || ''
+        telefone: minhaLoja.telefone || '',
+        themeColor: minhaLoja.themeColor || '#059669',
+        font: minhaLoja.font || 'Inter'
       });
 
       const categories = systemSettings.storeCategories || [];
@@ -245,6 +249,51 @@ export const LojistaConfig = () => {
         {/* Coluna Direita: Logística e Horários */}
         <div className="space-y-8">
            
+           {/* Aparência da Loja Pública (NOVA SEÇÃO) */}
+           <section className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-8 border-b border-gray-50 bg-[#fafbfc]">
+                 <h3 className="font-black text-gray-800 flex items-center gap-3">
+                   <span className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-sm">🎨</span>
+                   Aparência da Loja
+                 </h3>
+              </div>
+              <div className="p-8 space-y-6">
+                 <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Cor Principal</label>
+                    <div className="flex items-center gap-3">
+                       <input 
+                          type="color" 
+                          value={form.themeColor} 
+                          onChange={e => setForm({...form, themeColor: e.target.value})}
+                          className="w-12 h-12 rounded-xl border-0 p-0 overflow-hidden cursor-pointer shadow-sm"
+                       />
+                       <input 
+                          type="text" 
+                          value={form.themeColor} 
+                          onChange={e => setForm({...form, themeColor: e.target.value})}
+                          className="flex-1 bg-[#f8fafc] border border-gray-100 rounded-xl py-3 px-4 font-mono text-sm text-gray-600 uppercase"
+                       />
+                    </div>
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Fonte Principal</label>
+                    <select 
+                       value={form.font} 
+                       onChange={e => setForm({...form, font: e.target.value})}
+                       className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none appearance-none transition-all"
+                    >
+                       <option value="Inter">Inter (Padrão)</option>
+                       <option value="Roboto">Roboto</option>
+                       <option value="Lato">Lato</option>
+                       <option value="Montserrat">Montserrat</option>
+                       <option value="Open Sans">Open Sans</option>
+                       <option value="Poppins">Poppins</option>
+                    </select>
+                 </div>
+              </div>
+           </section>
+
            {/* Atalho para Equipe (NOVA SEÇÃO) */}
            <section className="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-[2rem] shadow-xl overflow-hidden relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />

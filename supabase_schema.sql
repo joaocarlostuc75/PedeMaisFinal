@@ -149,3 +149,19 @@ DROP TRIGGER IF EXISTS on_auth_user_link_funcionario ON auth.users;
 CREATE TRIGGER on_auth_user_link_funcionario
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.link_funcionario_on_signup();
+
+-- =============================================================================
+-- ATUALIZAÇÃO V2.2: DETALHES DO PRODUTO E CATEGORIAS
+-- =============================================================================
+
+-- 1. Atualizações na Tabela de Produtos
+ALTER TABLE produtos 
+ADD COLUMN IF NOT EXISTS ingredientes TEXT,
+ADD COLUMN IF NOT EXISTS informacoes_nutricionais TEXT,
+ADD COLUMN IF NOT EXISTS acompanhamentos JSONB DEFAULT '[]';
+
+-- 2. Atualizações na Tabela de Lojas
+ALTER TABLE lojas
+ADD COLUMN IF NOT EXISTS categorias_cardapio TEXT[] DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS theme_color TEXT DEFAULT '#059669',
+ADD COLUMN IF NOT EXISTS font TEXT DEFAULT 'Inter';

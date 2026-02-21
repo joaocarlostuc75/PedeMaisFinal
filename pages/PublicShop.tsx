@@ -416,6 +416,29 @@ export const PublicShop = () => {
         jsonLd={storeJsonLd}
       />
 
+      <style>{`
+        :root {
+          --theme-color: ${loja.themeColor || '#059669'};
+          --theme-font: ${loja.font || 'Inter'};
+        }
+        body {
+          font-family: var(--theme-font), sans-serif;
+        }
+        .text-emerald-600 { color: var(--theme-color) !important; }
+        .bg-emerald-600 { background-color: var(--theme-color) !important; }
+        .bg-emerald-500 { background-color: var(--theme-color) !important; }
+        .hover\\:bg-emerald-600:hover { background-color: var(--theme-color) !important; filter: brightness(0.9); }
+        .hover\\:bg-emerald-500:hover { background-color: var(--theme-color) !important; filter: brightness(1.1); }
+        .hover\\:text-emerald-600:hover { color: var(--theme-color) !important; }
+        .focus\\:ring-emerald-500:focus { --tw-ring-color: var(--theme-color) !important; }
+        .focus\\:border-emerald-500:focus { border-color: var(--theme-color) !important; }
+        
+        /* Custom scrollbar color */
+        ::-webkit-scrollbar-thumb {
+          background-color: var(--theme-color) !important;
+        }
+      `}</style>
+
       {/* Banner & Logo */}
       <div className="relative h-56 md:h-72 w-full overflow-hidden">
         <img src={loja.banner} className="w-full h-full object-cover" />
