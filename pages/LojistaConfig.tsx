@@ -26,6 +26,8 @@ export const LojistaConfig = () => {
     telefone: minhaLoja.telefone || ''
   });
 
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+
   // Atualiza o formulário se a loja mudar
   useEffect(() => {
       setForm({
@@ -41,7 +43,14 @@ export const LojistaConfig = () => {
         email: minhaLoja.email || '',
         telefone: minhaLoja.telefone || ''
       });
-  }, [minhaLoja]);
+
+      const categories = systemSettings.storeCategories || [];
+      const currentCat = minhaLoja.categoria || 'Restaurante';
+      // Se a categoria atual não estiver na lista (e não for vazia), é customizada
+      const isCustom = currentCat && !categories.includes(currentCat);
+      setIsCustomCategory(!!isCustom);
+
+  }, [minhaLoja, systemSettings.storeCategories]);
 
   const handleSave = () => {
     if (!form.nome.trim()) {
@@ -181,14 +190,32 @@ export const LojistaConfig = () => {
                       </div>
                    </div>
                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Categoria Principal</label>
-                      <select 
-                        value={form.categoria} onChange={e => setForm({...form, categoria: e.target.value})}
-                        className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none appearance-none transition-all">
-                         {(systemSettings.storeCategories || ['Restaurante', 'Mercado', 'Outros']).map(cat => (
-                             <option key={cat} value={cat}>{cat}</option>
-                         ))}
-                      </select>
+                      <div className="flex justify-between items-center">
+                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Categoria Principal</label>
+                         <button 
+                             onClick={() => setIsCustomCategory(!isCustomCategory)} 
+                             className="text-[10px] font-bold text-emerald-600 uppercase hover:underline"
+                         >
+                             {isCustomCategory ? 'Selecionar da lista' : 'Digitar outra'}
+                         </button>
+                      </div>
+                      {isCustomCategory ? (
+                          <input 
+                              type="text" 
+                              value={form.categoria} 
+                              onChange={e => setForm({...form, categoria: e.target.value})}
+                              placeholder="Digite a categoria da sua loja"
+                              className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                          />
+                      ) : (
+                          <select 
+                            value={form.categoria} onChange={e => setForm({...form, categoria: e.target.value})}
+                            className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 font-medium text-gray-700 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none appearance-none transition-all">
+                             {(systemSettings.storeCategories || ['Restaurante', 'Mercado', 'Outros']).map(cat => (
+                                 <option key={cat} value={cat}>{cat}</option>
+                             ))}
+                          </select>
+                      )}
                    </div>
                 </div>
 

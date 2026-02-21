@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { CompartilharProduto } from '../components/CompartilharProduto';
@@ -12,9 +13,10 @@ interface ProductCardProps {
   onAdd: (id: string) => void;
   onUpdateTags: (id: string, tags: string[]) => void;
   isAdded: boolean;
+  onClick: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onUpdateTags, isAdded }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onUpdateTags, isAdded, onClick }) => {
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
   const [tagInput, setTagInput] = useState('');
   
@@ -43,7 +45,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onUpdateTags,
   };
 
   return (
-    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl transition-all">
+    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-xl transition-all cursor-pointer" onClick={onClick}>
       <div className="aspect-[4/3] relative bg-gray-50 overflow-hidden">
         <img src={images[currentImgIndex]} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt={product.nome} />
         
@@ -112,11 +114,164 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onUpdateTags,
         <div className="mt-auto flex items-center justify-between">
           <span className="text-xl font-black text-emerald-600">{formatCurrency(product.preco)}</span>
           <button 
-            onClick={() => onAdd(product.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd(product.id);
+            }}
             className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${isAdded ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white hover:bg-emerald-600'}`}
           >
             {isAdded ? '✓ Adicionado' : '+ Comprar'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface ProductDetailsModalProps {
+  product: Produto;
+  onClose: () => void;
+  onAddToCart: (product: Produto, quantity: number) => void;
+}
+
+const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ product, onClose, onAddToCart }) => {
+  const [quantity, setQuantity] = useState(1);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [selectedAccompaniments, setSelectedAccompaniments] = useState<Set<string>>(new Set());
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const toggleAccompaniment = (name: string) => {
+    const newSet = new Set(selectedAccompaniments);
+    if (newSet.has(name)) newSet.delete(name);
+    else newSet.add(name);
+    setSelectedAccompaniments(newSet);
+  };
+
+  const handleAddToCart = () => {
+    onAddToCart(product, quantity);
+    onClose();
+  };
+
+  const images = product.imagens && product.imagens.length > 0 ? product.imagens : [product.imagem];
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
+  const nextImage = () => setCurrentImgIndex((prev) => (prev + 1) % images.length);
+  const prevImage = () => setCurrentImgIndex((prev) => (prev - 1 + images.length) % images.length);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-end md:items-center justify-center p-0 md:p-4 animate-fade-in" onClick={onClose}>
+      <div className="bg-white w-full md:max-w-4xl h-[90vh] md:h-auto md:max-h-[90vh] rounded-t-[2rem] md:rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-slide-up-mobile md:animate-fade-in" onClick={e => e.stopPropagation()}>
+        
+        {/* Image Section */}
+        <div className="w-full md:w-1/2 h-64 md:h-auto relative bg-gray-100">
+          <img src={images[currentImgIndex]} className="w-full h-full object-cover" alt={product.nome} />
+          <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-800 font-bold shadow-lg hover:bg-white transition-all z-20 md:hidden">✕</button>
+          
+          {images.length > 1 && (
+            <>
+              <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-lg transition-all">‹</button>
+              <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white shadow-lg transition-all">›</button>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {images.map((_, idx) => (
+                  <div key={idx} className={`w-2 h-2 rounded-full shadow-sm transition-all ${idx === currentImgIndex ? 'bg-white scale-125' : 'bg-white/50'}`} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Details Section */}
+        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight mb-2">{product.nome}</h2>
+                        <p className="text-sm text-gray-500 font-medium leading-relaxed">{product.descricao}</p>
+                    </div>
+                    <button onClick={onClose} className="hidden md:flex w-10 h-10 bg-gray-50 rounded-full items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all">✕</button>
+                </div>
+
+                <div className="space-y-4">
+                    {/* Ingredientes Accordion */}
+                    <div className="border border-gray-100 rounded-2xl overflow-hidden">
+                        <button 
+                            onClick={() => toggleSection('ingredientes')}
+                            className="w-full px-6 py-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
+                        >
+                            <span className="text-xs font-black uppercase tracking-widest text-gray-700">Ingredientes</span>
+                            <span className={`transform transition-transform ${expandedSection === 'ingredientes' ? 'rotate-180' : ''}`}>▼</span>
+                        </button>
+                        {expandedSection === 'ingredientes' && (
+                            <div className="p-6 bg-white text-sm text-gray-600 leading-relaxed border-t border-gray-100 animate-fade-in">
+                                {product.ingredientes || "Ingredientes não informados."}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Nutricional Accordion */}
+                    <div className="border border-gray-100 rounded-2xl overflow-hidden">
+                        <button 
+                            onClick={() => toggleSection('nutricional')}
+                            className="w-full px-6 py-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors"
+                        >
+                            <span className="text-xs font-black uppercase tracking-widest text-gray-700">Informação Nutricional</span>
+                            <span className={`transform transition-transform ${expandedSection === 'nutricional' ? 'rotate-180' : ''}`}>▼</span>
+                        </button>
+                        {expandedSection === 'nutricional' && (
+                            <div className="p-6 bg-white text-sm text-gray-600 leading-relaxed border-t border-gray-100 animate-fade-in">
+                                {product.informacoesNutricionais || "Informações nutricionais não disponíveis."}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Acompanhamentos */}
+                    {product.acompanhamentos && product.acompanhamentos.length > 0 && (
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Acompanhamentos</h3>
+                            <div className="space-y-2">
+                                {product.acompanhamentos.map((item, idx) => (
+                                    <label key={idx} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 cursor-pointer hover:border-emerald-200 hover:bg-emerald-50/30 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedAccompaniments.has(item.nome)}
+                                                onChange={() => toggleAccompaniment(item.nome)}
+                                                className="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                            />
+                                            <span className="text-sm font-bold text-gray-700">{item.nome}</span>
+                                        </div>
+                                        <span className="text-sm font-black text-emerald-600">+{formatCurrency(item.preco)}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-6 md:p-8 border-t border-gray-100 bg-gray-50 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
+                        <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-emerald-600 font-bold text-lg transition-colors">-</button>
+                        <span className="w-8 text-center font-black text-gray-800">{quantity}</span>
+                        <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-emerald-600 font-bold text-lg transition-colors">+</button>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total</p>
+                        <p className="text-2xl font-black text-gray-900">{formatCurrency(product.preco * quantity)}</p>
+                    </div>
+                </div>
+                <button 
+                    onClick={handleAddToCart}
+                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                    <span>🛒</span> Adicionar à Sacola
+                </button>
+            </div>
         </div>
       </div>
     </div>
@@ -129,6 +284,7 @@ export const PublicShop = () => {
   const { lojas, produtos, cart, cartLojaId, addToCart, updateCartQuantity, setCartQuantity, myOrderIds, updateProduto } = useStore();
   const loja = lojas.find(l => l.slug === slug);
   
+  const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const [busca, setBusca] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   
@@ -189,6 +345,22 @@ export const PublicShop = () => {
       setAddedFeedback(prev => {
         const next = new Set(prev);
         next.delete(id);
+        return next;
+      });
+    }, 1000);
+  };
+
+  const handleAddToCartWithQuantity = (product: Produto, quantity: number) => {
+    addToCart(loja.id, product.id);
+    if (quantity > 1) {
+        updateCartQuantity(product.id, quantity - 1);
+    }
+    
+    setAddedFeedback(prev => new Set(prev).add(product.id));
+    setTimeout(() => {
+      setAddedFeedback(prev => {
+        const next = new Set(prev);
+        next.delete(product.id);
         return next;
       });
     }, 1000);
@@ -320,6 +492,7 @@ export const PublicShop = () => {
                     onAdd={handleAddToCart} 
                     onUpdateTags={handleUpdateTags}
                     isAdded={addedFeedback.has(p.id)} 
+                    onClick={() => setSelectedProduct(p)}
                   />
                 ))}
               </div>
@@ -327,6 +500,16 @@ export const PublicShop = () => {
           );
         })}
       </main>
+
+      {/* Product Details Modal */}
+      {selectedProduct && createPortal(
+        <ProductDetailsModal 
+          product={selectedProduct} 
+          onClose={() => setSelectedProduct(null)} 
+          onAddToCart={handleAddToCartWithQuantity}
+        />,
+        document.body
+      )}
 
       {/* Cart Drawer */}
       {isCartOpen && (

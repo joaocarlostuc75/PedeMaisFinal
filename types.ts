@@ -164,6 +164,8 @@ export interface Produto {
   tags?: string[];
   oldPrice?: number;
   ingredientes?: string; // Novo campo
+  informacoesNutricionais?: string;
+  acompanhamentos?: { nome: string; preco: number }[];
 }
 
 export interface ItemPedido {
