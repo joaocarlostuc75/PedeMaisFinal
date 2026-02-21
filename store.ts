@@ -458,7 +458,8 @@ export const useStore = create<AppState>()(
                     ...prod,
                     ingredientes: prod.ingredientes || '',
                     informacoesNutricionais: prod.informacoesNutricionais || '',
-                    acompanhamentos: prod.acompanhamentos || []
+                    acompanhamentos: prod.acompanhamentos || [],
+                    tempoPreparo: prod.tempoPreparo || 15
                 }))
             };
         }

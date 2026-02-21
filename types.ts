@@ -168,6 +168,7 @@ export interface Produto {
   ingredientes?: string; // Novo campo
   informacoesNutricionais?: string;
   acompanhamentos?: { nome: string; preco: number }[];
+  tempoPreparo?: number; // Tempo estimado em minutos
 }
 
 export interface ItemPedido {

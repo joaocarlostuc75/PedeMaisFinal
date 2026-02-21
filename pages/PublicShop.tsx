@@ -189,6 +189,13 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({ product, onCl
                 <div className="flex justify-between items-start">
                     <div>
                         <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight mb-2">{product.nome}</h2>
+                        <div className="flex items-center gap-3 mb-2">
+                            {product.tempoPreparo && (
+                                <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                                    ⏱️ {product.tempoPreparo} min
+                                </span>
+                            )}
+                        </div>
                         <p className="text-sm text-gray-500 font-medium leading-relaxed">{product.descricao}</p>
                     </div>
                     <button onClick={onClose} className="hidden md:flex w-10 h-10 bg-gray-50 rounded-full items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all">✕</button>

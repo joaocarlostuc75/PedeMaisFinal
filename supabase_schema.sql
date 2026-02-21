@@ -158,7 +158,8 @@ CREATE TRIGGER on_auth_user_link_funcionario
 ALTER TABLE produtos 
 ADD COLUMN IF NOT EXISTS ingredientes TEXT,
 ADD COLUMN IF NOT EXISTS informacoes_nutricionais TEXT,
-ADD COLUMN IF NOT EXISTS acompanhamentos JSONB DEFAULT '[]';
+ADD COLUMN IF NOT EXISTS acompanhamentos JSONB DEFAULT '[]',
+ADD COLUMN IF NOT EXISTS tempo_preparo INTEGER DEFAULT 15;
 
 -- 2. Atualizações na Tabela de Lojas
 ALTER TABLE lojas
