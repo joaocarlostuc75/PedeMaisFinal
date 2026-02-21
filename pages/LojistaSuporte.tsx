@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { useStore } from '../store';
 import { SupportTicket, TicketMessage } from '../types';
@@ -147,8 +148,8 @@ export const LojistaSuporte = () => {
       </div>
 
       {/* Modal Novo Chamado */}
-      {isModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+      {isModalOpen && createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
               <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl p-8 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
                   <div className="flex justify-between items-center mb-8">
                       <h2 className="text-2xl font-black text-gray-900 tracking-tight">Novo Chamado</h2>
@@ -213,12 +214,13 @@ export const LojistaSuporte = () => {
                       </button>
                   </div>
               </div>
-          </div>
+          </div>,
+          document.body
       )}
 
       {/* Modal Visualização Ticket + Chat */}
-      {viewTicket && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+      {viewTicket && createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
               <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl h-[80vh] flex flex-col overflow-hidden">
                   <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                       <div>
@@ -267,7 +269,8 @@ export const LojistaSuporte = () => {
                       </div>
                   )}
               </div>
-          </div>
+          </div>,
+          document.body
       )}
     </div>
   );

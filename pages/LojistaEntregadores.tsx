@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { formatCurrency, formatDate } from '../utils';
 import { Entregador } from '../types';
@@ -194,8 +195,8 @@ export const LojistaEntregadores = () => {
         )}
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in">
+      {showModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[9999] p-0 sm:p-4 animate-fade-in">
           <div className="bg-white rounded-t-[2rem] sm:rounded-[3rem] p-6 md:p-10 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center mb-2">
                 <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tighter">{editingId ? 'Editar Membro' : 'Novo Membro'}</h2>
@@ -258,7 +259,8 @@ export const LojistaEntregadores = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { formatCurrency, convertFileToBase64 } from '../utils';
 import { Produto } from '../types';
@@ -180,8 +181,8 @@ export const LojistaProdutos = () => {
       </div>
 
       {/* Modal de Gestão de Categorias */}
-      {isCategoryModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[110] p-0 sm:p-4 animate-fade-in" onClick={() => setIsCategoryModalOpen(false)}>
+      {isCategoryModalOpen && createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[9999] p-0 sm:p-4 animate-fade-in" onClick={() => setIsCategoryModalOpen(false)}>
               <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-md shadow-2xl p-8" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-6">
                       <h3 className="text-xl font-black text-gray-900">Categorias do Cardápio</h3>
@@ -209,12 +210,13 @@ export const LojistaProdutos = () => {
                       ))}
                   </div>
               </div>
-          </div>
+          </div>,
+          document.body
       )}
 
       {/* Modal de Edição/Criação de Produto */}
-      {isModalOpen && editingProduto && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 animate-fade-in">
+      {isModalOpen && editingProduto && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[9999] p-0 sm:p-4 animate-fade-in">
             <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-2xl shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
                     <h2 className="text-xl md:text-2xl font-black text-gray-900">{editingProduto.id ? 'Editar Produto' : 'Novo Produto'}</h2>
@@ -350,7 +352,8 @@ export const LojistaProdutos = () => {
                     <button onClick={handleSave} className="flex-[2] bg-emerald-600 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:bg-emerald-500 transition-colors">Salvar Produto</button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

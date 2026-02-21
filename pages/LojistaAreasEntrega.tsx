@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { AreaEntrega } from '../types';
 import { formatCurrency } from '../utils';
@@ -235,8 +236,8 @@ export const LojistaAreasEntrega = () => {
       </div>
 
       {/* MODAL DE EDIÇÃO/CRIAÇÃO COM MAPA INTERATIVO */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 animate-fade-in">
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-6xl h-[90vh] shadow-2xl flex flex-col md:flex-row overflow-hidden">
                 
                 {/* Lado Esquerdo: Formulário */}
@@ -363,7 +364,8 @@ export const LojistaAreasEntrega = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

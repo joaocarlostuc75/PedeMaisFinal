@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { Funcionario, FuncionarioCargo, Permissao } from '../types';
 import { formatDate } from '../utils';
@@ -203,8 +204,8 @@ export const LojistaFuncionarios = () => {
       </div>
 
       {/* Modal Guia de Permissões */}
-      {isGuideOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsGuideOpen(false)}>
+      {isGuideOpen && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in" onClick={() => setIsGuideOpen(false)}>
             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl p-10 max-h-[90vh] overflow-y-auto custom-scrollbar" onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-8">
                     <h3 className="text-2xl font-black text-gray-900 tracking-tighter">Guia de Atribuições</h3>
@@ -223,12 +224,13 @@ export const LojistaFuncionarios = () => {
                     <button onClick={() => setIsGuideOpen(false)} className="bg-gray-900 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-800">Entendi</button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal de Edição/Criação */}
-      {isModalOpen && editingFunc && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
+      {isModalOpen && editingFunc && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                     <div>
@@ -328,7 +330,8 @@ export const LojistaFuncionarios = () => {
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

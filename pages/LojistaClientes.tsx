@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { formatCurrency, formatDate } from '../utils';
 
@@ -203,14 +204,14 @@ export const LojistaClientes = () => {
       </div>
 
       {/* Modal de Detalhes do Cliente (Bottom Sheet em Mobile / Modal em Desktop) */}
-      {selectedClient && engagement && (
-          <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center md:p-4 animate-fade-in" onClick={() => setSelectedClient(null)}>
+      {selectedClient && engagement && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center md:p-4 animate-fade-in" onClick={() => setSelectedClient(null)}>
               {/* Backdrop */}
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
               
               {/* Card Content */}
               <div 
-                className="relative bg-white w-full h-[90vh] md:h-auto md:max-h-[90vh] md:w-[800px] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-slide-up-mobile md:animate-bounce-in"
+                className="relative bg-white w-full h-[90vh] md:h-auto md:max-h-[90vh] md:w-[800px] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-slide-up-mobile md:animate-fade-in"
                 onClick={e => e.stopPropagation()}
               >
                   
@@ -349,7 +350,8 @@ export const LojistaClientes = () => {
                       <button onClick={() => setSelectedClient(null)} className="w-full bg-gray-100 text-gray-600 py-4 rounded-2xl font-black text-xs uppercase hover:bg-gray-200 transition-all">Fechar Detalhes</button>
                   </div>
               </div>
-          </div>
+          </div>,
+          document.body
       )}
     </div>
   );

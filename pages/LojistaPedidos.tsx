@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
@@ -399,9 +400,9 @@ export const LojistaPedidos = () => {
       </div>
 
       {/* Modal Seleção Entregador */}
-      {selectingCourierForOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-           <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl animate-bounce-in flex flex-col max-h-[90vh] sm:max-h-[80vh]">
+      {selectingCourierForOrder && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+           <div className="bg-white rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in flex flex-col max-h-[90vh] sm:max-h-[80vh]">
               <div className="p-6 border-b border-gray-100 bg-gray-50 shrink-0">
                  <div className="flex justify-between items-center">
                     <h3 className="text-xl md:text-2xl font-black text-gray-900">Selecione o Entregador</h3>
@@ -450,7 +451,8 @@ export const LojistaPedidos = () => {
                  <button onClick={() => setSelectingCourierForOrder(null)} className="text-gray-400 font-black text-xs uppercase tracking-widest hover:text-gray-600 px-4">Cancelar</button>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
