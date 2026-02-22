@@ -7,6 +7,7 @@ import { CompartilharProduto } from '../components/CompartilharProduto';
 import { formatCurrency } from '../utils';
 import { Produto } from '../types';
 import { SEO } from '../components/SEO';
+import { sanitizeInput, validateAlphanumeric } from '../utils/security';
 
 interface ProductCardProps {
   product: Produto;
@@ -39,9 +40,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd, onUpdateTags,
     e.stopPropagation();
     if (!tagInput.trim()) return;
     
-    // Separa por vírgula, remove espaços extras e filtra strings vazias
-    const tagsArray = tagInput.split(',').map(tag => tag.trim()).filter(Boolean);
+    // Sanitiza e separa por vírgula
+    const sanitizedTags = sanitizeInput(tagInput);
+    const tagsArray = sanitizedTags.split(',').map(tag => tag.trim()).filter(Boolean);
     onUpdateTags(product.id, tagsArray);
+    setTagInput(''); // Limpa o input após salvar
   };
 
   return (
@@ -315,6 +318,17 @@ export const PublicShop = () => {
     );
   }
 
+  // Validação do Slug para evitar Path Traversal (CWE-22)
+  if (slug && !validateAlphanumeric(slug)) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+            <h1 className="text-4xl font-black text-gray-900 mb-2">URL Inválida</h1>
+            <p className="text-gray-500">O endereço da loja contém caracteres inválidos.</p>
+            <button onClick={() => navigate('/')} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black mt-4">Voltar</button>
+        </div>
+      );
+  }
+
   // Verifica se o carrinho atual pertence a esta loja
   const currentCartItems = cartLojaId === loja.id ? cart : [];
 
@@ -478,7 +492,7 @@ export const PublicShop = () => {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
               <input 
                 type="text" placeholder="Buscar por nome ou categoria..." 
-                value={busca} onChange={e => setBusca(e.target.value)}
+                value={busca} onChange={e => setBusca(sanitizeInput(e.target.value))}
                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>

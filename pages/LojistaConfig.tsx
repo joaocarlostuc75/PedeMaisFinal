@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../store';
 import { Link, useNavigate } from 'react-router-dom';
 import { convertFileToBase64 } from '../utils';
+import { sanitizeInput, validateAlphanumeric, validateEmail } from '../utils/security';
 
 export const LojistaConfig = () => {
   const navigate = useNavigate();
@@ -57,11 +58,62 @@ export const LojistaConfig = () => {
   }, [minhaLoja, systemSettings.storeCategories]);
 
   const handleSave = () => {
-    if (!form.nome.trim()) {
+    // Validação e Sanitização
+    const sanitizedNome = sanitizeInput(form.nome);
+    const sanitizedDescricao = sanitizeInput(form.descricao);
+    const sanitizedEndereco = sanitizeInput(form.endereco);
+    const sanitizedWhatsapp = sanitizeInput(form.whatsapp);
+    const sanitizedCategoria = sanitizeInput(form.categoria);
+    const sanitizedThemeColor = sanitizeInput(form.themeColor);
+    const sanitizedFont = sanitizeInput(form.font);
+    const sanitizedEmail = sanitizeInput(form.email);
+    const sanitizedTelefone = sanitizeInput(form.telefone);
+
+    if (!sanitizedNome.trim()) {
         addNotification('error', 'O nome da loja é obrigatório.');
         return;
     }
-    updateLoja(minhaLoja.id, form);
+
+    if (sanitizedNome.length > 50) {
+        addNotification('error', 'O nome da loja deve ter no máximo 50 caracteres.');
+        return;
+    }
+
+    if (sanitizedEmail && !validateEmail(sanitizedEmail)) {
+        addNotification('error', 'O e-mail informado é inválido.');
+        return;
+    }
+
+    if (form.taxaEntrega < 0) {
+        addNotification('error', 'A taxa de entrega não pode ser negativa.');
+        return;
+    }
+
+    if (form.tempoMin < 0 || form.tempoMax < 0) {
+        addNotification('error', 'Os tempos de entrega não podem ser negativos.');
+        return;
+    }
+
+    if (form.tempoMin > form.tempoMax) {
+        addNotification('error', 'O tempo mínimo não pode ser maior que o tempo máximo.');
+        return;
+    }
+
+    // Atualiza com dados sanitizados
+    const cleanForm = {
+        ...form,
+        nome: sanitizedNome,
+        descricao: sanitizedDescricao,
+        endereco: sanitizedEndereco,
+        whatsapp: sanitizedWhatsapp,
+        categoria: sanitizedCategoria,
+        themeColor: sanitizedThemeColor,
+        font: sanitizedFont,
+        email: sanitizedEmail,
+        telefone: sanitizedTelefone
+    };
+
+    updateLoja(minhaLoja.id, cleanForm);
     addNotification('success', 'Configurações da loja atualizadas com sucesso!');
   };
 

@@ -414,55 +414,324 @@ export const useStore = create<AppState>()(
       updateFuncionario: (id, data) => set((state) => ({
         funcionarios: state.funcionarios.map(f => f.id === id ? { ...f, ...data } : f)
       })),
+// Helper para Deep Merge
+const deepMerge = (target: any, source: any): any => {
+  if (typeof target !== 'object' || target === null) return source;
+  if (typeof source !== 'object' || source === null) return target;
+
+  const output = Array.isArray(target) ? [...target] : { ...target };
+
+  // Se for array, tentamos preservar os itens existentes e adicionar propriedades novas se forem objetos
+  if (Array.isArray(target) && Array.isArray(source)) {
+      if (source.length > 0) {
+          const template = source[0];
+          return target.map(item => deepMerge(item, template)); 
+      }
+      return target;
+  }
+
+  // Para objetos
+  Object.keys(source).forEach(key => {
+    if (!(key in target)) {
+      output[key] = source[key];
+    } else if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+       output[key] = deepMerge(target[key], source[key]);
+    }
+  });
+  
+  return output;
+};
+
+export const useStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      user: null, 
+      isSidebarOpen: false,
+      notifications: [],
+      cart: [],
+      cartLojaId: null,
+      myOrderIds: [],
+      systemSettings: {
+        appName: 'Pede Mais',
+        maintenanceMode: false,
+        allowNewRegistrations: true,
+        globalAnnouncement: '',
+        supportPhone: '5511999999999',
+        pixKey: 'financeiro@pedemais.app',
+        storeCategories: ['Restaurante', 'Mercado & Conveniência', 'Padaria', 'Farmácia', 'Lanches', 'Pet Shop', 'Outros']
+      },
+      planos: [
+        { id: '1', nome: 'Básico', preco: 99.90, limitePedidos: 500, limiteEntregadores: 5, recursos: ['WhatsApp Pay', 'Cardápio Digital', 'Suporte por e-mail'], cor: 'bg-gray-100' },
+        { id: '2', nome: 'Pro Amazônia', preco: 199.90, limitePedidos: 1000, limiteEntregadores: 10, recursos: ['Suporte prioritário 24/7', 'Dashboard avançado', 'IA de Roteirização'], cor: 'bg-emerald-600', destaque: true },
+        { id: '3', nome: 'Enterprise', preco: 499.90, limitePedidos: 99999, limiteEntregadores: 999, recursos: ['Gerente de conta dedicado', 'Integração API customizada', 'White Label total'], cor: 'bg-purple-600' },
+      ],
+      lojas: [LOJA_DEMO_DEFAULT],
+      produtos: PRODUTOS_DEMO,
+      tickets: TICKETS_MOCK,
+      entregadores: [
+        { id: 'e1', nome: 'Ricardo Santos', telefone: '94 91234-5678', status: 'disponível', saldo: 150.50, entregasHoje: 12, entregasTotal: 145, nivel: 'Diamante', xp: 850, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Pesado)', placa: 'ABC-1234', dataAdesao: '2023-10-24' },
+        { id: 'e2', nome: 'Julia Mendes', telefone: '94 98765-4321', status: 'em_pausa', saldo: 89.00, entregasHoje: 8, entregasTotal: 45, nivel: 'Prata', xp: 320, badges: [], lojaId: 'l1', tipoVeiculo: 'Moto', placa: 'DEF-5678', dataAdesao: '2023-09-12' },
+        { id: 'e3', nome: 'Marcos Almeida', telefone: '94 95555-4444', status: 'suspenso', saldo: 210.00, entregasHoje: 15, entregasTotal: 88, nivel: 'Ouro', xp: 610, badges: [], lojaId: 'l1', tipoVeiculo: 'Van', placa: 'GHI-9012', dataAdesao: '2023-01-05' },
+        { id: 'e4', nome: 'Carlos Vega', telefone: '94 94444-3333', status: 'disponível', saldo: 45.00, entregasHoje: 10, entregasTotal: 22, nivel: 'Bronze', xp: 150, badges: [], lojaId: 'l1', tipoVeiculo: 'Caminhão (Leve)', placa: 'JKL-3456', dataAdesao: '2023-11-15' },
+        { id: 'e5', nome: 'Sarah Wilson', telefone: '94 92222-1111', status: 'disponível', saldo: 300.00, entregasHoje: 14, entregasTotal: 210, nivel: 'Diamante', xp: 980, badges: [], lojaId: 'l1', tipoVeiculo: 'Sedan', placa: 'MNO-7890', dataAdesao: '2024-02-28' },
+      ],
+      funcionarios: [
+        { 
+          id: 'func1', lojaId: 'l1', nome: 'Ana Gerente', email: 'ana@loja.com', telefone: '94 91111-2222', cargo: 'Gerente', ativo: true, 
+          permissoes: ['ver_dashboard', 'gerir_pedidos', 'gerir_cardapio', 'gerir_entregadores', 'ver_financeiro', 'gerir_financeiro', 'configuracoes_loja'], 
+          dataCriacao: new Date(Date.now() - 50000000).toISOString()
+        },
+        { 
+          id: 'func2', lojaId: 'l1', nome: 'João Cozinha', email: 'joao@loja.com', telefone: '94 93333-4444', cargo: 'Cozinha', ativo: true, 
+          permissoes: ['gerir_pedidos'], 
+          dataCriacao: new Date(Date.now() - 20000000).toISOString()
+        }
+      ],
+      entregas: [
+        { 
+          id: 'ent1', valor: 45.90, status: 'pendente', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Mariana Silva', clienteTelefone: '94 99123-4567', endereco: 'Rua das Flores, 123',
+          itens: [
+            { qtd: 1, nome: 'X-Bacon Duplo', detalhe: 'Sem cebola, maionese extra', preco: 35.90 }, 
+            { qtd: 1, nome: 'Coca-Cola 2L', detalhe: 'Bem gelada', preco: 10.00 }
+          ]
+        },
+        { 
+          id: 'ent2', valor: 82.50, status: 'preparando', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Carlos Oliveira', clienteTelefone: '94 98888-7777', endereco: 'Av. Paulista, 1000',
+          itens: [
+            { qtd: 2, nome: 'Pizza Calabresa', detalhe: 'Borda recheada de catupiry', preco: 35.00 }, 
+            { qtd: 1, nome: 'Guaraná Antártica 2L', preco: 12.50 }
+          ]
+        },
+        { 
+          id: 'ent3', valor: 30.00, status: 'pronto', data: new Date().toISOString(), lojaId: 'l1', clienteNome: 'Fernanda Costa', clienteTelefone: '94 97777-6666', endereco: 'Rua Augusta, 500',
+          itens: [{ qtd: 1, nome: 'Combo Sushi', detalhe: '12 peças variadas (Salmão/Atum)', preco: 30.00 }]
+        },
+        { 
+          id: 'ent4', valor: 18.90, status: 'finalizada', data: '2023-10-20T14:30:00Z', lojaId: 'l1', entregadorId: 'e1', clienteNome: 'Roberto Dias', clienteTelefone: '94 96666-5555', endereco: 'Retirada',
+          itens: [{ qtd: 1, nome: 'Açaí 500ml', detalhe: 'Com granola, leite ninho e morango', preco: 18.90 }]
+        },
+      ],
+      saques: [],
+      // Faturas vazias para ambiente real
+      faturas: [],
+      // Meios de pagamento vazios para ambiente real
+      meiosPagamento: [],
+      
+      setUser: (user) => set({ user }),
+      updateCurrentUser: (data) => set((state) => ({
+        user: state.user ? { ...state.user, ...data } : null
+      })),
+      
+      updatePlanoLoja: (lojaId, planoId) => set((state) => ({
+        lojas: state.lojas.map(l => l.id === lojaId ? { ...l, planoId } : l)
+      })),
+      updateLoja: (lojaId, data) => set((state) => ({
+        lojas: state.lojas.map(l => l.id === lojaId ? { ...l, ...data } : l)
+      })),
+      addLoja: (loja) => set((state) => ({
+        lojas: [...state.lojas, loja]
+      })),
+      deleteLoja: (lojaId) => set((state) => ({
+        lojas: state.lojas.filter(l => l.id !== lojaId)
+      })),
+      
+      addProduto: (produto) => set((state) => ({
+        produtos: [...state.produtos, produto]
+      })),
+      updateProduto: (id, data) => set((state) => ({
+        produtos: state.produtos.map(p => p.id === id ? { ...p, ...data } : p)
+      })),
+      deleteProduto: (id) => set((state) => ({
+        produtos: state.produtos.filter(p => p.id !== id)
+      })),
+
+      addToCart: (lojaId, produtoId) => set((state) => {
+        const isSameStore = state.cartLojaId === lojaId;
+        const newCart = isSameStore ? [...state.cart] : [];
+        const existingItem = newCart.find(i => i.produtoId === produtoId);
+
+        if (existingItem) {
+            existingItem.qtd += 1;
+        } else {
+            newCart.push({ produtoId, qtd: 1 });
+        }
+
+        return { cart: newCart, cartLojaId: lojaId };
+      }),
+      updateCartQuantity: (produtoId, delta) => set((state) => ({
+        cart: state.cart.map(item => {
+            if (item.produtoId === produtoId) {
+                return { ...item, qtd: Math.max(0, item.qtd + delta) };
+            }
+            return item;
+        }).filter(item => item.qtd > 0)
+      })),
+      setCartQuantity: (produtoId, qtd) => set((state) => ({
+        cart: state.cart.map(item => {
+            if (item.produtoId === produtoId) {
+                return { ...item, qtd: Math.max(0, qtd) };
+            }
+            return item;
+        }).filter(item => item.qtd > 0)
+      })),
+      clearCart: () => set({ cart: [], cartLojaId: null }),
+
+      addPlano: (plano) => set((state) => ({
+        planos: [...state.planos, plano]
+      })),
+      updatePlano: (id, data) => set((state) => ({
+        planos: state.planos.map(p => p.id === id ? { ...p, ...data } : p)
+      })),
+      deletePlano: (id) => set((state) => ({
+        planos: state.planos.filter(p => p.id !== id)
+      })),
+
+      addEntregador: (entregador) => set((state) => ({
+        entregadores: [...state.entregadores, { 
+          ...entregador, 
+          entregasTotal: 0, 
+          nivel: 'Bronze', 
+          xp: 0, 
+          badges: [], 
+          dataAdesao: new Date().toISOString() 
+        } as Entregador]
+      })),
+      updateEntregador: (id, data) => set((state) => ({
+        entregadores: state.entregadores.map(e => e.id === id ? { ...e, ...data } : e)
+      })),
+      deleteEntregador: (id) => set((state) => ({
+        entregadores: state.entregadores.filter(e => e.id !== id)
+      })),
+
+      addMeioPagamento: (meio) => set((state) => ({
+        meiosPagamento: [...state.meiosPagamento, meio]
+      })),
+      updateMeioPagamento: (id, data) => set((state) => ({
+        meiosPagamento: state.meiosPagamento.map(m => m.id === id ? { ...m, ...data } : m)
+      })),
+      deleteMeioPagamento: (id) => set((state) => ({
+        meiosPagamento: state.meiosPagamento.filter(m => m.id !== id)
+      })),
+
+      addTicket: (ticket) => set((state) => ({
+        tickets: [ticket, ...state.tickets]
+      })),
+      updateTicketStatus: (id, status) => set((state) => ({
+        tickets: state.tickets.map(t => t.id === id ? { ...t, status, dataAtualizacao: new Date().toISOString() } : t)
+      })),
+      replyTicket: (ticketId, message) => set((state) => ({
+        tickets: state.tickets.map(t => t.id === ticketId ? { ...t, mensagens: [...t.mensagens, message], dataAtualizacao: new Date().toISOString() } : t)
+      })),
+
+      addEntrega: (entrega) => set((state) => ({
+        entregas: [entrega, ...state.entregas],
+        myOrderIds: [...state.myOrderIds, entrega.id]
+      })),
+      
+      cancelarAssinatura: (lojaId) => set((state) => ({
+        lojas: state.lojas.map(l => l.id === lojaId ? { ...l, statusAssinatura: 'cancelado' } : l)
+      })),
+      batchUpdatePlano: (lojaIds, planoId) => set((state) => ({
+        lojas: state.lojas.map(l => lojaIds.includes(l.id) ? { ...l, planoId } : l)
+      })),
+      atribuirEntregador: (entregaId, entregadorId) => set((state) => ({
+        entregas: state.entregas.map(e => e.id === entregaId ? { ...e, status: 'em_transito', entregadorId } : e)
+      })),
+      atualizarStatusPedido: (entregaId, novoStatus) => set((state) => ({
+        entregas: state.entregas.map(e => e.id === entregaId ? { ...e, status: novoStatus } : e)
+      })),
+      updateEntrega: (entregaId, data) => set((state) => ({
+        entregas: state.entregas.map(e => e.id === entregaId ? { ...e, ...data } : e)
+      })),
+      solicitarSaque: (saque) => set((state) => ({
+        saques: [saque, ...state.saques],
+        entregadores: state.entregadores.map(e => e.id === saque.entregadorId ? { ...e, saldo: e.saldo - saque.valor } : e)
+      })),
+      resetDemoStore: () => set((state) => ({
+        lojas: [LOJA_DEMO_DEFAULT, ...state.lojas.filter(l => l.id !== 'l1')],
+        produtos: PRODUTOS_DEMO 
+      })),
+      updateSystemSettings: (settings) => set((state) => ({
+        systemSettings: { ...state.systemSettings, ...settings }
+      })),
+      
+      addNotification: (type, message) => set((state) => ({
+        notifications: [...state.notifications, { id: generateID('not-'), type, message }]
+      })),
+      removeNotification: (id) => set((state) => ({
+        notifications: state.notifications.filter(n => n.id !== id)
+      })),
+      toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+      closeSidebar: () => set({ isSidebarOpen: false }),
+
+      // Funcionario Actions Implementation
+      addFuncionario: (funcionario) => set((state) => ({
+        funcionarios: [...state.funcionarios, funcionario]
+      })),
+      updateFuncionario: (id, data) => set((state) => ({
+        funcionarios: state.funcionarios.map(f => f.id === id ? { ...f, ...data } : f)
+      })),
       deleteFuncionario: (id) => set((state) => ({
         funcionarios: state.funcionarios.filter(f => f.id !== id)
       })),
     }),
     {
       name: 'pede-mais-storage',
-      version: 2, // Incrementando versão para forçar a migração
+      version: 3, // Incrementando versão para forçar a nova migração
       storage: createJSONStorage(() => localStorage),
       migrate: (persistedState: any, version: number) => {
-        // Se a versão for anterior a 2, fazemos o merge manual
-        if (version < 2) {
-            // Pega o estado padrão atual (com os novos campos)
-            const defaultState = {
-                systemSettings: {
-                    appName: 'Pede Mais',
-                    maintenanceMode: false,
-                    allowNewRegistrations: true,
-                    globalAnnouncement: '',
-                    supportPhone: '5511999999999',
-                    pixKey: 'financeiro@pedemais.app',
-                    storeCategories: ['Restaurante', 'Mercado & Conveniência', 'Padaria', 'Farmácia', 'Lanches', 'Pet Shop', 'Outros']
-                },
-                // ... outros defaults se necessário
+        // Estado padrão atual (com todos os campos novos)
+        const defaultState = {
+            systemSettings: {
+                appName: 'Pede Mais',
+                maintenanceMode: false,
+                allowNewRegistrations: true,
+                globalAnnouncement: '',
+                supportPhone: '5511999999999',
+                pixKey: 'financeiro@pedemais.app',
+                storeCategories: ['Restaurante', 'Mercado & Conveniência', 'Padaria', 'Farmácia', 'Lanches', 'Pet Shop', 'Outros']
+            },
+            lojas: [LOJA_DEMO_DEFAULT],
+            produtos: PRODUTOS_DEMO,
+            // ... outros defaults se necessário para a estrutura
+        };
+
+        if (version < 3) {
+            // Migração V3: Deep Merge com Defaults
+            // 1. System Settings: Merge profundo
+            const newSystemSettings = {
+                ...defaultState.systemSettings,
+                ...(persistedState.systemSettings || {})
             };
+
+            // 2. Lojas: Adicionar campos faltantes em cada loja existente
+            const newLojas = (persistedState.lojas || []).map((loja: any) => ({
+                ...LOJA_DEMO_DEFAULT, // Começa com o default completo (tem todos os campos)
+                ...loja, // Sobrescreve com o que foi salvo (preserva edições)
+                // Garante campos específicos que podem ser arrays ou objetos
+                categoriasCardapio: loja.categoriasCardapio || LOJA_DEMO_DEFAULT.categoriasCardapio,
+                themeColor: loja.themeColor || LOJA_DEMO_DEFAULT.themeColor,
+                font: loja.font || LOJA_DEMO_DEFAULT.font
+            }));
+
+            // 3. Produtos: Adicionar campos faltantes
+            const newProdutos = (persistedState.produtos || []).map((prod: any) => ({
+                // Template básico de produto novo
+                ingredientes: '',
+                informacoesNutricionais: '',
+                acompanhamentos: [],
+                tempoPreparo: 15,
+                ...prod // Sobrescreve com dados salvos
+            }));
 
             return {
                 ...persistedState,
-                // Garante que systemSettings tenha todos os campos, preservando os existentes
-                systemSettings: {
-                    ...defaultState.systemSettings,
-                    ...(persistedState.systemSettings || {})
-                },
-                // Garante que as lojas tenham os novos campos de tema
-                lojas: (persistedState.lojas || []).map((loja: any) => ({
-                    ...loja,
-                    themeColor: loja.themeColor || '#059669',
-                    font: loja.font || 'Inter',
-                    categoriasCardapio: loja.categoriasCardapio || []
-                })),
-                // Garante que produtos tenham novos campos
-                produtos: (persistedState.produtos || []).map((prod: any) => ({
-                    ...prod,
-                    ingredientes: prod.ingredientes || '',
-                    informacoesNutricionais: prod.informacoesNutricionais || '',
-                    acompanhamentos: prod.acompanhamentos || [],
-                    tempoPreparo: prod.tempoPreparo || 15
-                }))
+                systemSettings: newSystemSettings,
+                lojas: newLojas,
+                produtos: newProdutos
             };
         }
+        
         return persistedState as AppState;
       },
       partialize: (state) => ({ 
