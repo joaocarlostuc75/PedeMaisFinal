@@ -27,12 +27,15 @@ export const LojistaSuporte = () => {
       descricao: ''
   });
 
+  const [lastLocationKey, setLastLocationKey] = useState(location.key);
+
   // Abre modal automaticamente se vier de um link com state (Ex: botão da assinatura)
-  useEffect(() => {
+  if (location.key !== lastLocationKey) {
+      setLastLocationKey(location.key);
       if (location.state && (location.state as any).openNew) {
           setIsModalOpen(true);
       }
-  }, [location]);
+  }
 
   const handleSubmit = () => {
       if (!form.assunto || !form.descricao) {
@@ -41,7 +44,7 @@ export const LojistaSuporte = () => {
       }
 
       const newTicket: SupportTicket = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: crypto.randomUUID().split('-')[0],
           lojaId: currentLojaId,
           lojaNome: minhaLoja?.nome || 'Minha Loja',
           assunto: form.assunto,

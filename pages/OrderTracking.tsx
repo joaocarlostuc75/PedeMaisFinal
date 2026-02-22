@@ -11,10 +11,7 @@ export const OrderTracking = () => {
   const [now, setNow] = useState(new Date());
 
   // Estado local para animação de entrada
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-      setMounted(true);
-  }, []);
+  const [mounted] = useState(true);
 
   useEffect(() => {
     // Atualiza o componente a cada 30s para atualizar tempos relativos

@@ -117,7 +117,7 @@ export const LojistaAreasEntrega = () => {
       addNotification('success', 'Área atualizada!');
     } else {
       // Criar
-      const newId = Math.random().toString(36).substr(2, 9);
+      const newId = crypto.randomUUID().split('-')[0];
       newAreas = [...areas, { ...editingArea, id: newId } as AreaEntrega];
       addNotification('success', 'Nova área criada!');
     }

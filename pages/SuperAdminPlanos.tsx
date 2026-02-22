@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
 import { Plano } from '../types';
+import { sanitizeInput } from '../utils/security';
 
 export const SuperAdminPlanos = () => {
   const { planos, addPlano, updatePlano, deletePlano, addNotification } = useStore();
@@ -35,19 +36,38 @@ export const SuperAdminPlanos = () => {
   };
 
   const handleSave = () => {
-    if (!editingPlano?.nome || editingPlano.preco === undefined) {
+    const sanitizedNome = sanitizeInput(editingPlano?.nome || '');
+    const sanitizedCor = sanitizeInput(editingPlano?.cor || 'bg-gray-100');
+
+    if (!sanitizedNome.trim() || editingPlano?.preco === undefined) {
       addNotification('error', 'Preencha os campos obrigatórios.');
       return;
     }
 
+    if (sanitizedNome.length > 30) {
+        addNotification('error', 'O nome do plano deve ter no máximo 30 caracteres.');
+        return;
+    }
+
+    if (editingPlano.preco < 0) {
+        addNotification('error', 'O preço não pode ser negativo.');
+        return;
+    }
+
+    const cleanPlano = {
+        ...editingPlano,
+        nome: sanitizedNome,
+        cor: sanitizedCor,
+        recursos: editingPlano.recursos?.map(r => sanitizeInput(r)) || []
+    };
+
     if (editingPlano.id) {
-      updatePlano(editingPlano.id, editingPlano);
+      updatePlano(editingPlano.id, cleanPlano as Plano);
       addNotification('success', 'Plano atualizado com sucesso!');
     } else {
       addPlano({
-        ...editingPlano,
+        ...cleanPlano,
         id: Math.random().toString(36).substr(2, 9),
-        recursos: editingPlano.recursos || [],
       } as Plano);
       addNotification('success', 'Novo plano criado!');
     }
@@ -68,11 +88,18 @@ export const SuperAdminPlanos = () => {
   };
 
   const handleAddRecurso = () => {
-      if (!newRecursoInput.trim()) return;
+      const sanitized = sanitizeInput(newRecursoInput.trim());
+      if (!sanitized) return;
+      
+      if (sanitized.length > 50) {
+          addNotification('error', 'O recurso deve ter no máximo 50 caracteres.');
+          return;
+      }
+
       if (editingPlano) {
           setEditingPlano({
               ...editingPlano,
-              recursos: [...(editingPlano.recursos || []), newRecursoInput.trim()]
+              recursos: [...(editingPlano.recursos || []), sanitized]
           });
           setNewRecursoInput('');
       }

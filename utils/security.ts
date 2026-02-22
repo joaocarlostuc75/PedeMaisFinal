@@ -41,7 +41,7 @@ export const validateEmail = (email: string): boolean => {
  * @returns True if valid.
  */
 export const validateAlphanumeric = (str: string): boolean => {
-  const regex = /^[a-zA-Z0-9\s\-\.]+$/;
+  const regex = /^[a-zA-Z0-9\s.-]+$/;
   return regex.test(str);
 };
 

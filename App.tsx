@@ -47,7 +47,7 @@ const HeaderMobile = () => {
     <div className="lg:hidden bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center fixed top-0 left-0 w-full z-40 shadow-sm h-16">
       <h1 className="text-lg font-black text-emerald-700 tracking-tighter">PEDE MAIS</h1>
       <button onClick={toggleSidebar} className="text-gray-500 p-2 bg-gray-50 rounded-lg active:bg-gray-100" title="Abrir menu lateral">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <svg xmlns="https://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
     </div>
   );

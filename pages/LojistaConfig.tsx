@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useStore } from '../store';
 import { Link, useNavigate } from 'react-router-dom';
 import { convertFileToBase64 } from '../utils';
@@ -29,10 +29,12 @@ export const LojistaConfig = () => {
     font: minhaLoja.font || 'Inter'
   });
 
+  const [lastLojaId, setLastLojaId] = useState(minhaLoja.id);
   const [isCustomCategory, setIsCustomCategory] = useState(false);
 
-  // Atualiza o formulário se a loja mudar
-  useEffect(() => {
+  // Sincroniza o formulário se a loja mudar (durante o render, padrão recomendado pelo React)
+  if (minhaLoja.id !== lastLojaId) {
+      setLastLojaId(minhaLoja.id);
       setForm({
         nome: minhaLoja.nome,
         whatsapp: minhaLoja.whatsapp,
@@ -48,14 +50,20 @@ export const LojistaConfig = () => {
         themeColor: minhaLoja.themeColor || '#059669',
         font: minhaLoja.font || 'Inter'
       });
-
+      
       const categories = systemSettings.storeCategories || [];
       const currentCat = minhaLoja.categoria || 'Restaurante';
-      // Se a categoria atual não estiver na lista (e não for vazia), é customizada
       const isCustom = currentCat && !categories.includes(currentCat);
       setIsCustomCategory(!!isCustom);
+  }
 
-  }, [minhaLoja, systemSettings.storeCategories]);
+  // Sincroniza categoria customizada (Sincronização durante o render)
+  const categories = systemSettings.storeCategories || [];
+  const currentCat = form.categoria;
+  const isCustom = currentCat && !categories.includes(currentCat);
+  if (!!isCustom !== isCustomCategory) {
+      setIsCustomCategory(!!isCustom);
+  }
 
   const handleSave = () => {
     // Validação e Sanitização
@@ -155,7 +163,7 @@ export const LojistaConfig = () => {
               Visualizar Loja
            </Link>
            <button onClick={handleSave} className="bg-[#2d7a3a] text-white px-6 py-3 rounded-xl font-black text-sm flex items-center gap-2 shadow-lg shadow-emerald-900/10 hover:bg-[#256631] transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <svg xmlns="https://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               Salvar Alterações
            </button>
         </div>

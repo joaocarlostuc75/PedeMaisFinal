@@ -302,11 +302,38 @@ export const PublicShop = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const currentCartItems = cartLojaId === (loja?.id || '') ? cart : [];
+  const produtosDaLoja = produtos.filter(p => p.lojaId === (loja?.id || ''));
+
+  const categoriasDisponiveis = useMemo(() => {
+    const cats = new Set<string>();
+    produtosDaLoja.forEach(p => cats.add(p.categoria));
+    return Array.from(cats).sort();
+  }, [produtosDaLoja]);
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const [lastCatsLength, setLastCatsLength] = useState(0);
+
+  // Sincroniza categoria ativa (Sincronização durante o render)
+  if (categoriasDisponiveis.length !== lastCatsLength) {
+      setLastCatsLength(categoriasDisponiveis.length);
+      if (categoriasDisponiveis.length > 0 && !activeCategory) {
+          setActiveCategory(categoriasDisponiveis[0]);
+      }
+  }
+
+  // Cálculos do Carrinho
+  const totalItens = useMemo(() => currentCartItems.reduce((acc, curr) => acc + curr.qtd, 0), [currentCartItems]);
+  
+  const subTotal = useMemo(() => currentCartItems.reduce((acc, curr) => {
+    const prod = produtos.find(p => p.id === curr.produtoId);
+    return acc + (prod?.preco || 0) * curr.qtd;
+  }, 0), [currentCartItems, produtos]);
 
   if (!loja) {
     return (
@@ -328,31 +355,6 @@ export const PublicShop = () => {
         </div>
       );
   }
-
-  // Verifica se o carrinho atual pertence a esta loja
-  const currentCartItems = cartLojaId === loja.id ? cart : [];
-
-  const produtosDaLoja = produtos.filter(p => p.lojaId === loja.id);
-
-  const categoriasDisponiveis = useMemo(() => {
-    const cats = new Set<string>();
-    produtosDaLoja.forEach(p => cats.add(p.categoria));
-    return Array.from(cats).sort();
-  }, [produtosDaLoja]);
-
-  useEffect(() => {
-    if (categoriasDisponiveis.length > 0 && !activeCategory) {
-      setActiveCategory(categoriasDisponiveis[0]);
-    }
-  }, [categoriasDisponiveis]);
-
-  // Cálculos do Carrinho
-  const totalItens = useMemo(() => currentCartItems.reduce((acc, curr) => acc + curr.qtd, 0), [currentCartItems]);
-  
-  const subTotal = useMemo(() => currentCartItems.reduce((acc, curr) => {
-    const prod = produtos.find(p => p.id === curr.produtoId);
-    return acc + (prod?.preco || 0) * curr.qtd;
-  }, 0), [currentCartItems, produtos]);
 
   const taxaEntrega = loja.taxaEntrega || 0;
   const totalValor = totalItens > 0 ? subTotal + taxaEntrega : 0;

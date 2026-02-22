@@ -72,7 +72,7 @@ export const Checkout = () => {
     }
 
     // 1. Criar o objeto do Pedido
-    const novoPedidoId = Math.random().toString(36).substr(2, 9);
+    const novoPedidoId = crypto.randomUUID().split('-')[0];
     const novoPedido: Entrega = {
         id: `ped-${novoPedidoId}`,
         lojaId: loja.id,

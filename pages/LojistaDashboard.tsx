@@ -13,6 +13,80 @@ export const LojistaDashboard = () => {
   const minhaLoja = user?.lojaId ? lojas.find(l => l.id === user.lojaId) || lojas[0] : lojas[0];
   const isDemo = user?.id === 'demo-user';
 
+  // 1. Dados Básicos de Hoje
+  const hoje = new Date().toDateString();
+  const pedidosHoje = entregas.filter(e => new Date(e.data).toDateString() === hoje && e.lojaId === minhaLoja.id);
+  const faturamentoHoje = pedidosHoje.reduce((acc, curr) => acc + curr.valor, 0);
+  const entregadoresOnline = entregadores.filter(e => e.lojaId === minhaLoja.id && e.status === 'disponível').length;
+
+  // 2. Processamento de Clientes e Itens (Armazenamento de dados do cliente)
+  const { clientesUnicos, topProdutos, topClientes } = useMemo(() => {
+    const clientesMap = new Map();
+    const produtosMap = new Map();
+
+    const entregasDaLoja = entregas.filter(e => e.lojaId === minhaLoja.id);
+
+    entregasDaLoja.forEach(pedido => {
+        // Processar Cliente
+        if (!clientesMap.has(pedido.clienteNome)) {
+            clientesMap.set(pedido.clienteNome, {
+                nome: pedido.clienteNome,
+                totalGasto: 0,
+                qtdPedidos: 0,
+                ultimosItens: [], // Armazena os itens para referência
+                ultimaData: pedido.data
+            });
+        }
+        
+        const cliente = clientesMap.get(pedido.clienteNome);
+        cliente.totalGasto += pedido.valor;
+        cliente.qtdPedidos += 1;
+        if (new Date(pedido.data) > new Date(cliente.ultimaData)) {
+            cliente.ultimaData = pedido.data;
+        }
+
+        // Processar Produtos
+        pedido.itens.forEach(item => {
+            if (!produtosMap.has(item.nome)) {
+                produtosMap.set(item.nome, { nome: item.nome, total: 0 });
+            }
+            produtosMap.get(item.nome).total += item.qtd;
+        });
+    });
+
+    const topProdutosArr = Array.from(produtosMap.values())
+        .sort((a: any, b: any) => b.total - a.total)
+        .slice(0, 5);
+
+    const topClientesArr = Array.from(clientesMap.values())
+        .sort((a: any, b: any) => b.totalGasto - a.totalGasto)
+        .slice(0, 5);
+
+    return {
+        clientesUnicos: clientesMap.size,
+        topProdutos: topProdutosArr,
+        topClientes: topClientesArr
+    };
+  }, [entregas, minhaLoja.id]);
+
+  // 3. Dados para o Gráfico de Vendas (Últimos 7 dias)
+  const chartData = useMemo(() => {
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toDateString();
+      const label = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+      
+      const total = entregas
+        .filter(e => new Date(e.data).toDateString() === dateStr && e.lojaId === minhaLoja.id)
+        .reduce((acc, curr) => acc + curr.valor, 0);
+        
+      data.push({ name: label, total });
+    }
+    return data;
+  }, [entregas, minhaLoja.id]);
+
   // --- LÓGICA DE BLOQUEIO PARA CONTA PENDENTE ---
   if (minhaLoja.statusAssinatura === 'pendente') {
       return (
@@ -69,65 +143,6 @@ export const LojistaDashboard = () => {
       );
   }
 
-  // --- CÁLCULOS ESTRATÉGICOS (Código existente para dashboard ATIVO) ---
-
-  // 1. Dados Básicos de Hoje
-  const hoje = new Date().toDateString();
-  const pedidosHoje = entregas.filter(e => new Date(e.data).toDateString() === hoje && e.lojaId === minhaLoja.id);
-  const faturamentoHoje = pedidosHoje.reduce((acc, curr) => acc + curr.valor, 0);
-  const entregadoresOnline = entregadores.filter(e => e.lojaId === minhaLoja.id && e.status === 'disponível').length;
-
-  // 2. Processamento de Clientes e Itens (Armazenamento de dados do cliente)
-  const { clientesUnicos, topProdutos, topClientes } = useMemo(() => {
-    const clientesMap = new Map();
-    const produtosMap = new Map();
-
-    const entregasDaLoja = entregas.filter(e => e.lojaId === minhaLoja.id);
-
-    entregasDaLoja.forEach(pedido => {
-        // Processar Cliente
-        if (!clientesMap.has(pedido.clienteNome)) {
-            clientesMap.set(pedido.clienteNome, {
-                nome: pedido.clienteNome,
-                totalGasto: 0,
-                qtdPedidos: 0,
-                ultimosItens: [], // Armazena os itens para referência
-                ultimaData: pedido.data
-            });
-        }
-        
-        const cliente = clientesMap.get(pedido.clienteNome);
-        cliente.totalGasto += pedido.valor;
-        cliente.qtdPedidos += 1;
-        // Atualiza últimos itens se o pedido for mais recente
-        if (new Date(pedido.data) >= new Date(cliente.ultimaData)) {
-            cliente.ultimosItens = pedido.itens.map((i: any) => i.nome);
-            cliente.ultimaData = pedido.data;
-        }
-
-        // Processar Produtos
-        pedido.itens.forEach((item: any) => {
-            produtosMap.set(item.nome, (produtosMap.get(item.nome) || 0) + item.qtd);
-        });
-    });
-
-    // Ordenar Top Produtos
-    const sortedProdutos = Array.from(produtosMap.entries())
-        .map(([name, qtd]) => ({ name, qtd }))
-        .sort((a, b) => b.qtd - a.qtd)
-        .slice(0, 5); // Top 5
-
-    // Ordenar Top Clientes (LTV)
-    const sortedClientes = Array.from(clientesMap.values())
-        .sort((a, b) => b.totalGasto - a.totalGasto)
-        .slice(0, 5); // Top 5
-
-    return {
-        clientesUnicos: clientesMap.size,
-        topProdutos: sortedProdutos,
-        topClientes: sortedClientes
-    };
-  }, [entregas, minhaLoja.id]);
 
   const stats = [
     { label: 'Pedidos Hoje', value: pedidosHoje.length.toString(), icon: '📦', color: 'bg-blue-100 text-blue-600' },

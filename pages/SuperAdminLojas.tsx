@@ -3,6 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import { formatCurrency, convertFileToBase64, formatDate } from '../utils';
 import { Link } from 'react-router-dom';
+import { sanitizeInput, validateEmail } from '../utils/security';
 
 export const SuperAdminLojas = () => {
   const { lojas, planos, updateLoja, deleteLoja, addLoja, addNotification } = useStore();
@@ -15,13 +16,17 @@ export const SuperAdminLojas = () => {
   // Estado para criação de loja
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newLoja, setNewLoja] = useState({ nome: '', email: '', planoId: '' });
+  const [lastModalState, setLastModalState] = useState(false);
 
-  // Define um plano padrão ao abrir o modal
-  useEffect(() => {
-    if (planos.length > 0 && !newLoja.planoId) {
-        setNewLoja(prev => ({ ...prev, planoId: planos[0].id }));
-    }
-  }, [planos, isCreateModalOpen]);
+  // Define um plano padrão ao abrir o modal (Sincronização durante o render)
+  if (isCreateModalOpen && !lastModalState) {
+      setLastModalState(true);
+      if (planos.length > 0 && !newLoja.planoId) {
+          setNewLoja(prev => ({ ...prev, planoId: planos[0].id }));
+      }
+  } else if (!isCreateModalOpen && lastModalState) {
+      setLastModalState(false);
+  }
   
   // Estado para a concessão de acesso
   const [grantAmount, setGrantAmount] = useState(1);
@@ -46,28 +51,52 @@ export const SuperAdminLojas = () => {
 
   const handleSaveEdit = () => {
       if (editingLoja) {
-          updateLoja(editingLoja.id, editingLoja);
+          const sanitizedNome = sanitizeInput(editingLoja.nome);
+          const sanitizedEmail = sanitizeInput(editingLoja.email);
+
+          if (!sanitizedNome.trim()) {
+              addNotification('error', 'O nome da loja é obrigatório.');
+              return;
+          }
+
+          if (sanitizedEmail && !validateEmail(sanitizedEmail)) {
+              addNotification('error', 'E-mail inválido.');
+              return;
+          }
+
+          updateLoja(editingLoja.id, {
+              ...editingLoja,
+              nome: sanitizedNome,
+              email: sanitizedEmail
+          });
           addNotification('success', 'Loja atualizada com sucesso!');
           setEditingLoja(null);
       }
   };
 
   const handleCreateLoja = () => {
-      // Validação reforçada com trim()
-      if (!newLoja.nome.trim() || !newLoja.email.trim() || !newLoja.planoId) {
+      const sanitizedNome = sanitizeInput(newLoja.nome.trim());
+      const sanitizedEmail = sanitizeInput(newLoja.email.trim());
+
+      if (!sanitizedNome || !sanitizedEmail || !newLoja.planoId) {
           addNotification('error', 'Preencha todos os campos obrigatórios.');
           return;
       }
 
+      if (!validateEmail(sanitizedEmail)) {
+          addNotification('error', 'E-mail inválido.');
+          return;
+      }
+
       const id = Math.random().toString(36).substr(2, 9);
-      const slug = newLoja.nome.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+      const slug = sanitizedNome.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
       addLoja({
           id: `loja-${id}`,
-          nome: newLoja.nome.trim(),
+          nome: sanitizedNome,
           slug: slug,
           planoId: newLoja.planoId,
-          email: newLoja.email.trim(),
+          email: sanitizedEmail,
           statusAssinatura: 'ativo',
           proximoVencimento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
           whatsapp: '',

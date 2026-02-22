@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
 import { Entrega } from '../types';
+import { sanitizeInput } from '../utils/security';
 
 export const LojistaPedidos = () => {
   const navigate = useNavigate();
@@ -66,6 +67,10 @@ export const LojistaPedidos = () => {
     const janela = window.open('', '', 'width=350,height=600');
     
     if (janela) {
+        const sanitizedLojaNome = sanitizeInput(loja?.nome || 'Pede Mais');
+        const sanitizedClienteNome = sanitizeInput(pedido.clienteNome);
+        const sanitizedEndereco = sanitizeInput(pedido.endereco || '');
+
         janela.document.write(`
             <html>
             <head>
@@ -89,15 +94,15 @@ export const LojistaPedidos = () => {
             </head>
             <body>
                 <div class="header">
-                    <h2>${loja?.nome || 'Pede Mais'}</h2>
+                    <h2>${sanitizedLojaNome}</h2>
                     <p>Pedido: <strong>#${pedido.id.slice(-4)}</strong></p>
                     <p>${new Date(pedido.data).toLocaleString('pt-BR')}</p>
                 </div>
                 
                 <div class="info">
                     <strong>CLIENTE:</strong><br/>
-                    ${pedido.clienteNome}<br/>
-                    ${pedido.tipoEntrega === 'retirada' ? '⚠️ RETIRADA NO BALCÃO' : `📍 ${pedido.endereco}`}
+                    ${sanitizedClienteNome}<br/>
+                    ${pedido.tipoEntrega === 'retirada' ? '⚠️ RETIRADA NO BALCÃO' : `📍 ${sanitizedEndereco}`}
                 </div>
 
                 <table class="items">
@@ -109,8 +114,8 @@ export const LojistaPedidos = () => {
                             <tr>
                                 <td class="qty">${item.qtd}</td>
                                 <td>
-                                    ${item.nome}
-                                    ${item.detalhe ? `<br/><i style="font-size:10px">(${item.detalhe})</i>` : ''}
+                                    ${sanitizeInput(item.nome)}
+                                    ${item.detalhe ? `<br/><i style="font-size:10px">(${sanitizeInput(item.detalhe)})</i>` : ''}
                                 </td>
                                 <td class="price">${((item.preco || 0) * item.qtd).toFixed(2)}</td>
                             </tr>
@@ -280,7 +285,7 @@ export const LojistaPedidos = () => {
                                                         {order.tipoEntrega === 'retirada' ? '🛍️ Pegue e Leve' : '🛵 Entrega'}
                                                     </button>
                                                     <button onClick={() => imprimirComanda(order)} className="text-gray-400 hover:text-gray-900 transition-colors ml-1" title="Imprimir Comanda">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1 2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                                        <svg xmlns="https://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1 2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                                                     </button>
                                                 </div>
                                                 <h4 className="font-bold text-gray-800 text-base leading-tight mt-0.5">{order.clienteNome}</h4>
