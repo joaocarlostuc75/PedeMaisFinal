@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
+import { sanitizeInput, validateEmail } from '../utils/security';
 
 type Step = 1 | 2 | 3;
 
@@ -34,10 +35,32 @@ export const Onboarding = () => {
   const handleNext = () => {
     if (step === 1) {
         // VALIDAÇÃO RIGOROSA DO PASSO 1
-        if (!form.responsavel.trim() || !form.whatsapp.trim() || !form.email.trim() || !form.nomeLoja.trim() || !form.endereco.trim()) {
+        const sanitizedResponsavel = sanitizeInput(form.responsavel);
+        const sanitizedWhatsapp = sanitizeInput(form.whatsapp);
+        const sanitizedEmail = sanitizeInput(form.email);
+        const sanitizedNomeLoja = sanitizeInput(form.nomeLoja);
+        const sanitizedEndereco = sanitizeInput(form.endereco);
+
+        if (!sanitizedResponsavel.trim() || !sanitizedWhatsapp.trim() || !sanitizedEmail.trim() || !sanitizedNomeLoja.trim() || !sanitizedEndereco.trim()) {
             addNotification('error', 'Por favor, preencha todos os campos obrigatórios (Responsável, WhatsApp, E-mail, Nome da Loja e Endereço).');
             return;
         }
+
+        if (!validateEmail(sanitizedEmail)) {
+            addNotification('error', 'E-mail inválido.');
+            return;
+        }
+
+        // Atualiza o form com os dados sanitizados
+        setForm({
+            ...form,
+            responsavel: sanitizedResponsavel,
+            whatsapp: sanitizedWhatsapp,
+            email: sanitizedEmail,
+            nomeLoja: sanitizedNomeLoja,
+            endereco: sanitizedEndereco
+        });
+
         setStep((step + 1) as Step);
     } else if (step === 2) {
         // Validação opcional para o passo 2 se desejar forçar logo/banner

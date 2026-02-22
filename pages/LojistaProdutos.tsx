@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { formatCurrency, convertFileToBase64 } from '../utils';
 import { Produto } from '../types';
+import { sanitizeInput } from '../utils/security';
 
 export const LojistaProdutos = () => {
   const { produtos, addProduto, updateProduto, deleteProduto, addNotification, user, updateLoja, lojas } = useStore();
@@ -64,15 +65,30 @@ export const LojistaProdutos = () => {
   };
 
   const handleSave = () => {
-    if (!editingProduto?.nome || !editingProduto?.preco) {
+    // Sanitização
+    const sanitizedNome = sanitizeInput(editingProduto?.nome || '');
+    const sanitizedDescricao = sanitizeInput(editingProduto?.descricao || '');
+    const sanitizedIngredientes = sanitizeInput(editingProduto?.ingredientes || '');
+    const sanitizedCategoria = sanitizeInput(editingProduto?.categoria || '');
+
+    if (!sanitizedNome || !editingProduto?.preco) {
       addNotification('error', 'Nome e preço são obrigatórios.');
       return;
     }
 
+    if (editingProduto.preco < 0) {
+        addNotification('error', 'O preço não pode ser negativo.');
+        return;
+    }
+
     const produtoData = {
         ...editingProduto,
+        nome: sanitizedNome,
+        descricao: sanitizedDescricao,
+        ingredientes: sanitizedIngredientes,
+        categoria: sanitizedCategoria,
         lojaId: currentLojaId,
-        tags: Array.isArray(editingProduto.tags) ? editingProduto.tags : (typeof editingProduto.tags === 'string' ? (editingProduto.tags as string).split(',').map((t: string) => t.trim()) : [])
+        tags: Array.isArray(editingProduto.tags) ? editingProduto.tags : (typeof editingProduto.tags === 'string' ? (editingProduto.tags as string).split(',').map((t: string) => sanitizeInput(t).trim()) : [])
     } as Produto;
 
     if (editingProduto.id) {
@@ -97,12 +113,13 @@ export const LojistaProdutos = () => {
 
   // Funções de Gestão de Categoria
   const handleAddCategory = () => {
-      if (!newCategoryName.trim()) return;
-      if (categoriasDisponiveis.includes(newCategoryName)) {
+      const sanitizedCat = sanitizeInput(newCategoryName).trim();
+      if (!sanitizedCat) return;
+      if (categoriasDisponiveis.includes(sanitizedCat)) {
           addNotification('error', 'Categoria já existe.');
           return;
       }
-      const newCats = [...categoriasDisponiveis, newCategoryName.trim()];
+      const newCats = [...categoriasDisponiveis, sanitizedCat];
       updateLoja(currentLojaId, { categoriasCardapio: newCats });
       setNewCategoryName('');
       addNotification('success', 'Categoria adicionada!');

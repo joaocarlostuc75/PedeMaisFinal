@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store';
 import { Role } from '../types';
+import { sanitizeInput, validateEmail } from '../utils/security';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -11,12 +12,26 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
+    // Sanitização e Validação
+    const sanitizedEmail = sanitizeInput(email).toLowerCase().trim();
+    const sanitizedPassword = sanitizeInput(password);
+
+    if (!sanitizedEmail) {
+        addNotification('error', 'Por favor, informe seu e-mail.');
+        return;
+    }
+
+    if (!validateEmail(sanitizedEmail)) {
+        addNotification('error', 'E-mail inválido.');
+        return;
+    }
+
     // Validação Hardcoded para Super Admin
-    if (email === 'joaocarlostuc75@gmail.com') {
+    if (sanitizedEmail === 'joaocarlostuc75@gmail.com') {
         setUser({
             id: 'super-admin-id',
             nome: 'João Carlos (Super Admin)',
-            email: email,
+            email: sanitizedEmail,
             role: 'super_admin'
         });
         navigate('/super-admin/dashboard');
@@ -24,18 +39,16 @@ export const LoginPage = () => {
     }
 
     // Tenta encontrar uma loja vinculada ao e-mail fornecido (excluindo a demo se possível, ou priorizando a real)
-    // Normalizamos o email para comparação
-    const emailBusca = email.toLowerCase().trim();
     
     // Procura na lista de lojas persistidas
-    const minhaLoja = lojas.find(l => l.email?.toLowerCase() === emailBusca && l.id !== 'l1');
+    const minhaLoja = lojas.find(l => l.email?.toLowerCase() === sanitizedEmail && l.id !== 'l1');
 
     if (minhaLoja) {
         // Usuário encontrado com loja real
         setUser({
             id: `user-${minhaLoja.id}`,
             nome: 'Lojista Pede Mais', // Poderíamos salvar o nome do dono na loja para recuperar aqui
-            email: emailBusca,
+            email: sanitizedEmail,
             role: 'lojista',
             lojaId: minhaLoja.id
         });
@@ -43,7 +56,7 @@ export const LoginPage = () => {
         navigate('/admin/dashboard');
     } else {
         // Se digitou um email mas não achou loja, sugere criar conta ou entra na demo se for vazio
-        if (emailBusca && emailBusca !== 'lojista@pedemais.app') {
+        if (sanitizedEmail && sanitizedEmail !== 'lojista@pedemais.app') {
             const confirmar = window.confirm('Não encontramos uma loja com este e-mail. Deseja criar uma nova loja agora?');
             if (confirmar) {
                 navigate('/onboarding');

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { formatCurrency } from '../utils';
 import { Entrega } from '../types';
+import { sanitizeInput, validateAlphanumeric } from '../utils/security';
 
 export const Checkout = () => {
   const { slug } = useParams();
@@ -46,15 +47,21 @@ export const Checkout = () => {
   };
 
   const finalizarPedido = () => {
+    // Sanitização
+    const sanitizedNome = sanitizeInput(nome);
+    const sanitizedTelefone = sanitizeInput(telefone);
+    const sanitizedEndereco = sanitizeInput(endereco);
+    const sanitizedTroco = sanitizeInput(troco);
+
     if (items.length === 0) return alert('Seu carrinho está vazio.');
-    if (!nome) return alert('Por favor, informe seu nome.');
-    if (!telefone) return alert('Por favor, informe seu telefone/whatsapp.');
-    if (tipo === 'entrega' && !endereco) return alert('Por favor, informe o endereço.');
+    if (!sanitizedNome) return alert('Por favor, informe seu nome.');
+    if (!sanitizedTelefone) return alert('Por favor, informe seu telefone/whatsapp.');
+    if (tipo === 'entrega' && !sanitizedEndereco) return alert('Por favor, informe o endereço.');
 
     // Lógica de Pagamento e Troco
     let detalhePagamento = pagamento;
     if (pagamento === 'Dinheiro') {
-        if (troco) {
+        if (sanitizedTroco) {
             if (isNaN(valorEntregue) || valorEntregue < total) {
                 return alert('O valor para troco deve ser maior que o total do pedido.');
             }
@@ -69,9 +76,9 @@ export const Checkout = () => {
     const novoPedido: Entrega = {
         id: `ped-${novoPedidoId}`,
         lojaId: loja.id,
-        clienteNome: nome,
-        clienteTelefone: telefone, // Salva o telefone para CRM
-        endereco: tipo === 'entrega' ? endereco : 'Retirada na Loja',
+        clienteNome: sanitizedNome,
+        clienteTelefone: sanitizedTelefone, // Salva o telefone para CRM
+        endereco: tipo === 'entrega' ? sanitizedEndereco : 'Retirada na Loja',
         tipoEntrega: tipo,
         metodoPagamento: detalhePagamento,
         valor: total,
@@ -94,10 +101,10 @@ export const Checkout = () => {
     // 4. Montar mensagem do WhatsApp
     let msg = `*NOVO PEDIDO #${novoPedidoId.toUpperCase()}*\n`;
     msg += `--------------------------------\n`;
-    msg += `👤 *Cliente:* ${nome}\n`;
-    msg += `📱 *Tel:* ${telefone}\n`;
+    msg += `👤 *Cliente:* ${sanitizedNome}\n`;
+    msg += `📱 *Tel:* ${sanitizedTelefone}\n`;
     msg += `🚚 *Tipo:* ${tipo.toUpperCase()}\n`;
-    if (tipo === 'entrega') msg += `📍 *Endereço:* ${endereco}\n`;
+    if (tipo === 'entrega') msg += `📍 *Endereço:* ${sanitizedEndereco}\n`;
     msg += `💰 *Pagamento:* ${detalhePagamento}\n`;
     msg += `--------------------------------\n`;
     msg += `*ITENS DO PEDIDO:*\n`;
@@ -209,14 +216,14 @@ export const Checkout = () => {
                <div className="space-y-6">
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Seu Nome</label>
-                     <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: João Silva" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
+                     <input type="text" value={nome} onChange={e => setNome(sanitizeInput(e.target.value))} placeholder="Ex: João Silva" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
                   </div>
                   <div className="space-y-2">
                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">WhatsApp / Telefone</label>
                      <input 
                         type="text" 
                         value={telefone} 
-                        onChange={e => setTelefone(e.target.value)} 
+                        onChange={e => setTelefone(sanitizeInput(e.target.value))} 
                         placeholder="(00) 00000-0000" 
                         className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" 
                      />
@@ -226,7 +233,7 @@ export const Checkout = () => {
                     <>
                       <div className="space-y-2">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Endereço Completo</label>
-                         <input type="text" value={endereco} onChange={e => setEndereco(e.target.value)} placeholder="Rua das Flores, 123 - Centro" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
+                         <input type="text" value={endereco} onChange={e => setEndereco(sanitizeInput(e.target.value))} placeholder="Rua das Flores, 123 - Centro" className="w-full bg-[#f8fafc] border border-gray-100 rounded-xl py-4 px-6 text-xs font-bold outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" />
                       </div>
                       <div className="space-y-2">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Complemento / Ref.</label>
@@ -252,7 +259,7 @@ export const Checkout = () => {
                               <input 
                                  type="number" 
                                  value={troco}
-                                 onChange={e => setTroco(e.target.value)}
+                                 onChange={e => setTroco(sanitizeInput(e.target.value))}
                                  className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/20"
                                  placeholder="0,00"
                               />
